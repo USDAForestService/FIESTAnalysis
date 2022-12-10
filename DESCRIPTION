@@ -1,0 +1,49 @@
+Package: FIESTAnalysis
+Type: Package
+Title: Analysis Functions for the FIESTA Package
+Version: 0.2.1
+Date: 2022-11-12
+Authors@R:
+    c(person(given = "Tracey",
+             family = "Frescino",
+             role = "aut",
+             email = "tracey.frescino@usda.gov"),
+      person(given = "Grayson",
+             family = "White",
+             role = c("aut", "cre"),
+             email = "graysonwhite13@gmail.com"))
+Description: The objective of this package is to provide 
+    useful analysis functions to support research done
+    with the FIESTA R package.
+License: file LICENSE
+Additional_repositories: https://github.com/USDAForestService/FIESTA
+Depends: 
+    R (>= 4.0),
+    FIESTA,
+    FIESTAutils
+Imports: 
+    data.table,
+    sf,
+    methods,
+    grDevices,
+    graphics,
+    utils,
+    sp,
+    rgdal,
+    DBI,
+    RColorBrewer,
+    RSQLite,
+    knitr,
+    mase,
+    raster,
+    rmarkdown,
+    sqldf,
+    units,
+    xml2
+Suggests:
+    arcgisbinding,
+    xlsx
+VignetteBuilder: knitr
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.0

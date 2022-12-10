@@ -1,0 +1,378 @@
+---
+output:
+  word_document:
+    reference_docx: anGBtemplate.docx
+params:
+  estimates: ''
+  small_area: ''
+  large_area: ''
+  attribute: ''
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r Data_Inputs, echo=FALSE, warning=FALSE, message=FALSE}
+library(FIESTA)
+library(tidyverse)
+library(RColorBrewer)
+
+ggplot2::theme_set(theme_bw())
+
+# still need to stop hard coding small area and large area names...
+small_area <- params$small_area
+large_area <- params$large_area
+attribute <- params$attribute
+multest <- params$estimates[[attribute]]$multest
+```
+
+
+```{r}
+# sets up tidy estimation dataframe
+estimates <- multest %>% #  params$data[[attribute]]$multest %>%
+  magrittr::extract(.$AOI == 1,) %>%
+  tibble() %>%
+  mutate(attribute = attribute) %>%
+  select(c(attribute, large_area, small_area, NBRPLT,
+           DIR, DIR.se, maseGREG, maseGREG.se, JU.GREG, JU.GREG.se,
+           JU.EBLUP, JU.EBLUP.se.1, JFH, JFH.se,
+           PS, PS.se, hbsaeU, hbsaeU.se, hbsaeA, hbsaeA.se),
+         -c(AOI)) %>%
+  rename(Direct_est = DIR,
+         mase_GREG = maseGREG,
+         mod_GREG = JU.GREG,
+         JU_EBLUP = JU.EBLUP,
+         JFH_est = JFH,
+         Post_strat = PS,
+         HB_AREA = hbsaeA,
+         HB_UNIT = hbsaeU,
+         Direct_est.se = DIR.se,
+         mase_GREG.se = maseGREG.se,
+         mod_GREG.se = JU.GREG.se,
+         JU_EBLUP.se = JU.EBLUP.se.1,
+         JFH_est.se = JFH.se,
+         Post_strat.se = PS.se,
+         HB_AREA.se = hbsaeA.se,
+         HB_UNIT.se = hbsaeU.se) %>%
+  pivot_longer(cols = c(Direct_est, mase_GREG, mod_GREG, JU_EBLUP, JFH_est,
+                        Post_strat, HB_AREA, HB_UNIT, Direct_est.se,
+                        mase_GREG.se, mod_GREG.se, JU_EBLUP.se, JFH_est.se,
+                        Post_strat.se, HB_AREA.se, HB_UNIT.se),
+               names_to = c("estimate_type", "se"),
+               names_pattern = "([[:alpha:]]+_[[:alpha:]]+).?(.*)",
+               values_to = "value") %>%
+  mutate(value_type = str_replace(se,
+                                  pattern = "^$",
+                                  replacement = "estimate")) %>%
+  select(-se) %>%
+  pivot_wider(names_from = value_type,
+              values_from = value)
+
+# calculates proportion of NAs for each estimator
+na_prop <- estimates %>%
+  group_by(estimate_type) %>%
+  summarize(
+    na_avg = (mean(is.na(estimate)) + mean(is.na(se))) / 2
+  )
+
+# filters out estimators with greater than or equal to 50% NA
+estimates <- estimates %>%
+  left_join(na_prop) %>%
+  filter(na_avg < 0.5) %>% 
+  select(-na_avg)
+
+# estimates_summary <- estimates %>%
+#   filter(estimate_type == "Direct_est") %>%
+#   group_by(params$large_area) %>%
+#   summarize(
+#     N.Domains = length(unique(DOMAIN)),
+#     N.Plots = sum(NBRPLT, na.rm = T),
+#     Mean.N.Plots = mean(NBRPLT, na.rm = T),
+#     Med.N.Plots = median(NBRPLT, na.rm = T),
+#     Min.N.Plots = min(NBRPLT, na.rm = T),
+#     Max.N.Plots = max(NBRPLT, na.rm = T)
+#   )
+# 
+# head(estimates_summary)
+```
+
+
+# Diagnostics and Comparisons of the Estimators
+
+## Indirect Estimators Compared to Horvitz-Thompson on Scatter Plot
+
+```{r}
+dir_ests <- estimates %>%
+  filter(estimate_type == "Direct_est") %>%
+  rename(dir.estimate = estimate,
+         dir.se = se) %>%
+  full_join(estimates, by = c("attribute", "NBRPLT",
+                              "PROVINCE", "DOMAIN"))
+
+dir_ests %>%
+  filter(estimate_type.y != "Direct_est") %>%
+  mutate(
+    estimate_type.y = factor(
+      case_when(
+        estimate_type.y == "HB_AREA" ~ "HB Area",
+        estimate_type.y == "HB_UNIT" ~ "HB Unit",
+        estimate_type.y == "JFH_est" ~ "EBLUP Area",
+        estimate_type.y == "JU_EBLUP" ~ "EBLUP Unit",
+        estimate_type.y == "mase_GREG" ~ "GREG",
+        estimate_type.y == "mod_GREG" ~ "Modified GREG",
+        estimate_type.y == "Post_strat" ~ "Post-Stratified"
+        ),
+      levels = c("Post-Stratified", "Modified GREG", "GREG", "EBLUP Unit",
+                 "HB Unit", "EBLUP Area", "HB Area")
+      )
+    ) %>%
+  ggplot(aes(x = dir.estimate,
+             y = estimate)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(color = "steelblue") +
+  facet_wrap(~estimate_type.y) +
+  labs(x = "Direct Estimator (Horvitz-Thompson)",
+       y = "Indirect Estimator")
+```
+
+## Boxplot Standard Error Comparisons
+
+```{r}
+estimates %>%
+    mutate(
+    estimate_type = factor(
+      case_when(
+        estimate_type == "HB_AREA" ~ "HB Area",
+        estimate_type == "HB_UNIT" ~ "HB Unit",
+        estimate_type == "JFH_est" ~ "EBLUP Area",
+        estimate_type == "JU_EBLUP" ~ "EBLUP Unit",
+        estimate_type == "mase_GREG" ~ "GREG",
+        estimate_type == "mod_GREG" ~ "Modified GREG",
+        estimate_type == "Post_strat" ~ "Post-Stratified",
+        estimate_type == "Direct_est" ~ "Horvitz-Thompson"
+        ),
+      levels = c("Horvitz-Thompson", "Post-Stratified", "Modified GREG",
+                 "GREG", "EBLUP Unit", "HB Unit", "EBLUP Area", "HB Area")
+      )
+    ) %>%
+  ggplot(aes(x = estimate_type,
+             y = se)) +
+  geom_boxplot(fill = "forestgreen",
+               alpha = 0.5) + 
+  labs(x = "Estimator",
+       y = "Standard Error") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.6))
+```
+
+## Median Relative Efficiency Comparison
+
+```{r}
+na_filter <- na_prop %>%
+  mutate(estimator = case_when(
+    estimate_type == "Direct_est" ~ 'Horvitz-Thompson',
+    estimate_type == "mase_GREG" ~ 'GREG',
+    estimate_type == 'mod_GREG' ~ 'Modified GREG',
+    estimate_type == 'JU_EBLUP' ~ 'Unit EBLUP',
+    estimate_type == 'JFH_est' ~ 'Area EBLUP',
+    estimate_type == 'Post_strat' ~ 'Post-Stratified',
+    estimate_type == 'HB_AREA' ~ 'Area HB',
+    estimate_type == 'HB_UNIT' ~ 'Unit HB'
+  )) %>%
+  filter(na_avg >= 0.5) %>%
+  pull(estimator)
+
+dat <- multest %>% # change to params$estimates
+  select(ends_with(".se"), ends_with(".se.1")) %>%
+  select(-ends_with("tot.se")) %>%
+  select(-saeA.se, -JA.synth.se) %>%
+  relocate(DIR.se, PS.se, JU.GREG.se, maseGREG.se,
+           JU.EBLUP.se.1, hbsaeU.se, JFH.se, hbsaeA.se) %>%
+  rename(
+    "Horvitz-Thompson" = "DIR.se",
+    "GREG" = "maseGREG.se",
+    "Modified GREG" = "JU.GREG.se",
+    "Area EBLUP" = "JFH.se",
+    "Unit HB" = "hbsaeU.se",
+    "Area HB" = "hbsaeA.se",
+    "Post-Stratified" = "PS.se",
+    "Unit EBLUP" = "JU.EBLUP.se.1"
+  ) %>%
+  select(-na_filter) %>%
+  na.omit()
+
+
+mat <- matrix(nrow = length(dat), ncol = length(dat))
+for (i in 1:length(dat)) {
+  for (j in 1:length(dat)) {
+    mat[i,j] <- median(dat[[j]]^2 / dat[[i]]^2, na.rm = T)
+  }
+}
+
+colnames(mat) <- colnames(dat)
+rownames(mat) <- colnames(dat)
+
+# mat[lower.tri(mat, diag = FALSE)] <- NA
+
+
+df <- as.data.frame(mat) %>%
+  mutate(rn = rownames(mat))
+
+
+
+pal <- function(x) {
+  f_neg <- scales::col_numeric(
+    palette = c('steelblue', 'white'),
+    domain = c(min(mat), 1)
+  )
+  f_pos <- scales::col_numeric(
+    palette = c('white', 'red'),
+    domain = c(1, max(mat))
+  )
+  ifelse(x < 1, f_neg(x), f_pos(x))
+}
+
+
+library(gt)
+tab <- gt(df,
+          rowname_col = "rn") %>%
+  data_color(columns = colnames(as.data.frame(mat)),
+             colors = pal) %>%
+  fmt_number(
+    columns = colnames(as.data.frame(mat)), decimals = 3
+  ) %>%
+  cols_width(
+    "rn" ~ px(150),
+    colnames(dat) ~ px(90) # this might break... 
+  ) %>%
+  tab_spanner(
+    label = "Estimator (Numerator)", 
+    columns = everything()
+  ) %>%
+  tab_header(title = params$small_area) %>%
+  tab_stubhead(label = "Estimator (Denominator)")
+
+temp <- tempdir()
+
+gtsave(tab, file.path(temp, "tab.png")) # this turns out to print the table...
+
+# so we do not need this...
+# knitr::include_graphics(path = file.path(temp, "tab.png"))
+```
+
+## Number of Plots by Standard Error
+
+```{r}
+se_smooth_dat <- multest %>% 
+  select(DIR.se, PS.se, JU.EBLUP.se.1, JFH.se, hbsaeU.se, hbsaeA.se, NBRPLT, maseGREG.se, JU.GREG.se) %>%
+  pivot_longer(cols = c(DIR.se, PS.se, JU.EBLUP.se.1, JFH.se, hbsaeU.se, hbsaeA.se, maseGREG.se, JU.GREG.se),
+               names_to = "estimator") %>%
+  mutate(estimator = factor(
+    case_when(
+      estimator == "DIR.se" ~ "Horvitz-Thompson",
+      estimator == "hbsaeA.se" ~ "HB Area Level",
+      estimator == "hbsaeU.se" ~ "HB Unit Level",
+      estimator == "JFH.se" ~ "EBLUP Area Level",
+      estimator == "JU.EBLUP.se.1" ~ "EBLUP Unit Level",
+      estimator == "maseGREG.se" ~ "GREG",
+      estimator == "JU.GREG.se" ~ "Modified GREG",
+      estimator == "PS.se" ~ "Post-Stratified"
+    ),
+    levels = c(
+      "Horvitz-Thompson",
+      "Post-Stratified",
+      "Modified GREG",
+      "GREG",
+      "EBLUP Unit Level",
+      "HB Unit Level",
+      "EBLUP Area Level",
+      "HB Area Level"
+    ),
+    ordered = TRUE
+  )) %>%
+  na.omit()
+
+se_smooth_max <- quantile(se_smooth_dat$NBRPLT, .95, na.rm = T)
+
+
+se_smooth_dat %>%
+  mutate(facet = paste0("Small Area: ", params$small_area)) %>%
+  ggplot(aes(x = NBRPLT,
+             y = value,
+             color = estimator)) +
+  geom_smooth(se = F) +
+  scale_color_brewer(type = "qual", palette = "Dark2") +
+  theme_bw() +
+  theme(
+    legend.position = "bottom"
+  ) +
+  labs(
+    x = "Number of plots",
+    y = "Standard error",
+    color = "Estimator"
+  ) +
+  xlim(0,se_smooth_max) +
+  facet_wrap(~facet)
+```
+
+## Compare model coefficients for area level models
+
+```{r}
+model_data <- params$estimates[[attribute]]$raw$SAobjlst[["1"]]
+
+reg_coef_df_area <- list()
+for (i in 1:length(model_data)) {
+  if (names(model_data)[[i]] == "area.JoSAE.obj") {
+    reg_coef_df_area$variable <- str_sub(rownames(model_data$area.JoSAE.obj$beta.hat),
+                                         start = 1,
+                                         end = -7)
+    reg_coef_df_area$JoSAE_area_beta_hat <- unname(model_data$area.JoSAE.obj$beta.hat[,1])
+    reg_coef_df_area$JoSAE_area_beta_hat.se <- sqrt(diag(model_data[["area.JoSAE.obj"]][["var.beta.hat"]]))
+  }
+  if (names(model_data)[[i]] == "area.sae.obj") {
+    reg_coef_df_area$sae_area_beta_hat <- model_data$area.sae.obj$est$fit$estcoef$beta
+    reg_coef_df_area$sae_area_beta_hat.se <-
+      model_data[["area.sae.obj"]][["est"]][["fit"]][["estcoef"]][["std.error"]]
+  }
+  if (names(model_data)[[i]] == "area.hbsae.obj") {
+    reg_coef_df_area$hbsae_area_beta_hat <- unname(model_data$area.hbsae.obj$beta)
+    reg_coef_df_area$hbsae_area_beta_hat.se <- sqrt(unname(diag(model_data[["area.hbsae.obj"]][["Vbeta"]])))
+  }
+  if (i == length(model_data)) {
+    reg_coef_df_area <- bind_rows(reg_coef_df_area)
+    reg_coef_df_area$variable[1] <- "(Intercept)"
+  }
+}
+
+
+tidy_betas <- reg_coef_df_area %>%
+  pivot_longer(cols = colnames(reg_coef_df_area)[-1],
+               names_to = c("estimate_type", "se"),
+               names_pattern = "([[:alpha:]]+_[[:alpha:]]+_[[:alpha:]]+_[[:alpha:]]+).?(.*)",
+               values_to = "value") %>%
+  mutate(value_type = str_replace(se,
+                                  pattern = "^$",
+                                  replacement = "estimate")) %>%
+  select(-se) %>%
+  pivot_wider(names_from = value_type,
+              values_from = value) 
+
+tidy_betas %>%
+  mutate(estimate_type = str_sub(estimate_type, 1, -15)) %>%
+  ggplot(aes(x = estimate_type,
+             y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = estimate - 1.96*se,
+                    ymax = estimate + 1.96*se)) +
+  facet_wrap(~variable, scales = "free") +
+  labs(x = "Small Area Estimation Package",
+       y = "Parameter Estimate",
+       title = "Parameter Estimates for Area Level Models",
+       subtitle = "Error bars represent 1.96 standard deviations from estimate")
+```
+
+
+
+
+
+

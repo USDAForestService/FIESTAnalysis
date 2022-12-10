@@ -1,0 +1,732 @@
+---
+title: "FIESTA - Analysis Functions - xlsx"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{FIESTA Tutorial - xlxs Tools}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+
+```{r setup, include = F}
+library(knitr)
+knitr::opts_chunk$set(message = F, warning = F)
+```
+
+```{r, include=FALSE}
+# Sets up output folding
+hooks = knitr::knit_hooks$get()
+hook_foldable = function(type) {
+  force(type)
+  function(x, options) {
+    res = hooks[[type]](x, options)
+    
+    if (isFALSE(options[[paste0("fold.", type)]])) return(res)
+    
+    paste0(
+      "<details><summary>", type, "</summary>\n\n",
+      res,
+      "\n\n</details>"
+    )
+  }
+}
+knitr::knit_hooks$set(
+  output = hook_foldable("output"),
+  plot = hook_foldable("plot")
+)
+```
+
+
+## Export to xlsx overview
+
+Estimates generated from `FIESTA` are typically exported to comma-delimited files which can be opened as an Excel Spreadsheet. The write2xlsx function allows capability to output directly to an Excel Spreadsheet in a format ready for publication. 
+
+The main objective of this tutorial is to demonstrate the use of the xlsx function for outputting `FIESTA` tables. 
+
+
+### Example Data
+<details>
+  <summary>View Example Data</summary>
+
+*Example FIA plot data from FIADB*
+
+The examples use FIA plot data and auxiliary data from FIA Evaluation 561301, including three inventory years of field measurements in the state of Wyoming, from FIADB_1.7.2.00, last updated June 20, 2018, downloaded on June 25, 2018, and stored as internal data objects in `FIESTA`. 
+
+
+
+**Wyoming (WY), Inventory Years 2011-2013 (Evaluation 561301)**
+
+Data Frame  | Description
+:-----------| :-----------------------------------------------------------------------------------
+WYplt       | WY plot-level data
+WYcond      | WY condition-level data
+WYtree      | WY tree-level data
+WYpltassgn  | WY plot-level data with strata and estimation unit assignments
+WYunitarea  | WY estimation unit look-up table with total acres by estimation unit (ESTUNIT)
+WYstratalut | WY strata look-up table with pixel counts (P1POINTCNT) by strata and estimation unit
+
+</details>
+
+
+
+### Set up
+
+First, you'll need to load the necessary libraries:
+
+```{r, warning = F, message = F}
+library(FIESTA)
+library(FIESTAnalysis)
+
+if (Sys.getenv("JAVA_HOME")!="") 
+  Sys.setenv(JAVA_HOME="") 
+loadjava <- tryCatch(library(rJava), 
+      	 	error=function(e) {
+      	 	message(e, "\n")
+			return(NULL) })
+runchunk <- ifelse (is.null(loadjava), FALSE, TRUE)
+if (!runchunk) {
+  message("check if 64-bit java is installed")
+}
+
+loadxlsx <- tryCatch(library(xlsx), 
+      	 	error=function(e) {
+      	 	message(e, "\n")
+			return(NULL) })
+runchunk <- ifelse (is.null(loadxlsx), FALSE, TRUE)                   
+
+```
+
+
+Next, you'll need to set up an "outfolder". This is just a file path to a folder where you'd like `FIESTA` to send your data output. For this vignette, we have saved our outfolder file path as the `outfolder` object in a temporary directory. We also set a few default options preferred for this vignette.
+
+```{r}
+outfolder <- tempdir()
+#outfolder <- "E:/workspace/FIESTA/FIESTA_xlsx/outfolder"
+```
+
+
+Then define a name for our Excel spreadsheet.
+```{r, eval=runchunk}
+wbnm <- paste(outfolder, "WYestimates.xlsx", sep="/") 
+```
+
+
+
+Next, generate the population data for the state of Wyoming using the example data described above. 
+```{r, eval=runchunk}
+
+popdat <- modGBpop(popTabs = list(cond=WYcond),
+                   pltassgn = WYpltassgn,
+                   pltassgnid = "CN", 
+                   unitarea = WYunitarea,
+                   unitvar = "ESTN_UNIT",
+                   stratalut = WYstratalut,
+                   strata_opts = list(getwt = TRUE, 
+                                      getwtvar = "P1POINTCNT")
+                   )
+                                
+```
+
+
+
+Next, using the population data above, generate a table of estimates to add to worksheet. 
+In this example, we generate area estimates by forest type group and site class code for forest land in the state of Wyoming. 
+Note: here we include col.add0=TRUE in the table options (table_opts) to include all site productivity classes, even if their is no data in the population in all categories.
+```{r, eval=runchunk}
+
+rowvar <- "FORTYPGRPCD"
+colvar <- "SITECLCD"
+landarea <- "FOREST"
+
+estdat <- modGBarea(GBpopdat = popdat, 
+                    landarea = landarea, 
+                    sumunits = TRUE, 
+		                rowvar = rowvar,
+		                colvar = colvar, 
+		                returntitle = TRUE,
+		                table_opts = list(row.FIAname = TRUE, 
+		                                  col.FIAname = TRUE, 
+		                                  col.add0 = TRUE, 
+		                                  estround = 1, 
+		                                  divideby = "thousand")
+                    )
+```
+
+To get the names of the list components associated with the output of our call of `modGBarea`, we run the following code:
+
+```{r, results = T}
+names(estdat)
+```
+
+To easily access our estimate and percent sampling error of estimate we can just grab the `est` and `pse` object from out outputted list: 
+
+```{r, results = T}
+estdat$est
+estdat$pse
+```
+
+We can also output and look at the titles for estimate, as shown below:
+
+```{r, results = TRUE}
+tabtitle <- estdat$titlelst$title.est
+title.colvar <- estdat$titlelst$title.colvar
+title.rowvar <- estdat$titlelst$title.rowvar
+
+tabtitle
+title.colvar
+title.rowvar
+
+```
+
+
+<details>
+  <summary>View Example</summary>
+
+Here, we create a sheet in the spreadsheet and export the output table of estimates formatted with no fill. We use the output title information to create pretty titles.
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 1"
+
+## NO FILL
+write2xlsx(esttab = estdat$est, 
+           tabtitle = paste0(tabnm, ". ", tabtitle),  
+           title.colvar = title.colvar, 
+           title.rowvar = title.rowvar, 
+           fill = FALSE, 
+           wbnm = wbnm,	
+           sheetnm = tabnm
+           )
+
+```
+
+</details>
+
+
+<details>
+  <summary>View Example</summary>
+
+Here, we create another sheet in the same spreadsheet and export the output table of estimates formatted with fill. We again use the output title information to create pretty titles.
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 2"
+
+## WITH FILL
+write2xlsx(esttab = estdat$est, 
+           tabtitle = paste0(tabnm, ". ", tabtitle),  
+           title.colvar = title.colvar, 
+           title.rowvar = title.rowvar, 
+           fill = TRUE, 
+           wbnm = wbnm,	
+           sheetnm = tabnm
+           )
+
+```
+
+</details>
+
+
+<details>
+  <summary>View Example</summary>
+
+Next, we create another sheet in the same spreadsheet and export the example table formatted with no fill, adding a separate column for standard errors. We again use the output title information to create pretty titles. Notice, we need to include the table standard errors as well (psetab=esttab$pse).
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 3"
+
+## WITH FILL
+write2xlsx(esttab = estdat$est, 
+           psetab = estdat$pse, 
+           tabtitle = paste0(tabnm, ". ", tabtitle),  
+           title.colvar = title.colvar, 
+           title.rowvar = title.rowvar, 
+           fill = FALSE,
+           addSEcol = TRUE,
+           wbnm = wbnm,	
+           sheetnm = tabnm
+           )
+```
+
+</details>
+
+
+<details>
+  <summary>View Example</summary>
+
+Next, we create another sheet in the same spreadsheet and export the example table formatted with fill, adding a separate column for standard errors. We again use the output title information to create pretty titles.
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 4"
+
+## WITH FILL
+write2xlsx(esttab = estdat$est, 
+           psetab = estdat$pse, 
+           tabtitle = paste0(tabnm, ". ", tabtitle),  
+           title.colvar = title.colvar, 
+           title.rowvar = title.rowvar, 
+           fill = TRUE,
+           addSEcol = TRUE,
+           wbnm = wbnm,	
+           sheetnm = tabnm
+           )
+```
+
+</details>
+
+
+Now, using the same population data, generate the same table, but include the standard error in the same cell as the estimate (allin1=TRUE).
+
+```{r, eval=runchunk}
+
+rowvar <- "FORTYPGRPCD"
+colvar <- "SITECLCD"
+landarea <- "FOREST"
+
+estdat2 <- modGBarea(GBpopdat = popdat, 
+                    landarea = landarea, 
+                    sumunits = TRUE, 
+		                rowvar = rowvar,
+		                colvar = colvar, 
+		                returntitle = TRUE,
+		                table_opts = list(row.FIAname = TRUE, 
+		                                  col.FIAname = TRUE, 
+		                                  col.add0 = TRUE, 
+		                                  estround = 1, 
+		                                  divideby = "thousand",
+		                                  allin1 = TRUE)
+                    )
+```
+
+
+Access the estimate and percent sampling error of estimate by grabbing the `est` object from out outputted list: 
+
+```{r, results = T}
+estdat2$est
+```
+
+
+We can also look at the difference in titles for estimate, as shown below:
+
+```{r, results = TRUE}
+tabtitle2 <- estdat2$titlelst$title.est
+title.colvar2 <- estdat2$titlelst$title.colvar
+title.rowvar2 <- estdat2$titlelst$title.rowvar
+
+tabtitle2
+title.colvar2
+title.rowvar2
+
+```
+
+
+<details>
+  <summary>View Example</summary>
+
+Create another sheet in the same spreadsheet and export the example table formatted with no fill, again, using the output title information to create pretty titles.
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 5"
+
+## WITH FILL
+write2xlsx(esttab = estdat2$est, 
+           tabtitle = paste0(tabnm, ". ", tabtitle2),  
+           title.colvar = title.colvar2, 
+           title.rowvar = title.rowvar2, 
+           fill = FALSE,
+           allin1 = TRUE,
+           wbnm = wbnm,	
+           sheetnm = tabnm
+           )
+```
+
+</details>
+
+
+<details>
+  <summary>View Example</summary>
+
+And then create another sheet in the same spreadsheet and export the example table formatted with fill, again, using the output title information to create pretty titles. Notice, you only need to include one table and we add allin1=TRUE.
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 6"
+
+## WITH FILL
+write2xlsx(esttab = estdat2$est, 
+           tabtitle = paste0(tabnm, ". ", tabtitle2),  
+           title.colvar = title.colvar2, 
+           title.rowvar = title.rowvar2, 
+           fill = TRUE,
+           allin1 = TRUE,
+           wbnm = wbnm,	
+           sheetnm = tabnm
+           )
+```
+
+</details>
+
+
+Now, using the same population data, generate the same table, but include the standard error in the same cell as the estimate (allin1=TRUE).
+
+```{r, eval=runchunk}
+
+rowvar <- "FORTYPCD"
+colvar <- "SITECLCD"
+landarea <- "FOREST"
+
+estdat3 <- modGBarea(GBpopdat = popdat, 
+                    landarea = landarea, 
+                    sumunits = TRUE, 
+		                rowvar = rowvar,
+		                colvar = colvar, 
+		                returntitle = TRUE,
+		                table_opts = list(row.FIAname = TRUE, 
+		                                  col.FIAname = TRUE, 
+		                                  col.add0 = TRUE, 
+		                                  estround = 1, 
+		                                  divideby = "thousand",
+		                                  allin1 = TRUE,
+		                                  rowgrp = TRUE)
+                    )
+```
+
+
+
+Again, access the estimate and percent sampling error of estimate by grabbing the `est` and `pse` object from out outputted list. Notice both Forest Type and Forest Type group are included in the tables.
+
+```{r, results = T}
+estdat3$est
+```
+
+And titles for estimate, as shown below:
+
+```{r, results = TRUE}
+tabtitle3 <- estdat3$titlelst$title.est
+title.colvar3 <- estdat3$titlelst$title.colvar
+title.rowvar3 <- estdat3$titlelst$title.rowvar
+
+tabtitle3
+title.colvar3
+title.rowvar3
+
+```
+
+
+<details>
+  <summary>View Example</summary>
+
+Create another sheet in the same spreadsheet and export this new table formatted with both estimates and standard errors and with fill, again, using the output title information to create pretty titles. Notice, we need to set a new parameter to include this new column (rowgrp=TRUE).
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 7"
+
+## WITH FILL
+write2xlsx(esttab = estdat3$est, 
+           tabtitle = paste0(tabnm, ". ", tabtitle3),  
+           title.colvar = title.colvar3, 
+           title.rowvar = title.rowvar3, 
+           fill = TRUE,
+           allin1 = TRUE,
+           rowgrp = TRUE,
+           wbnm = wbnm,	
+           sheetnm = tabnm
+           )
+```
+
+</details>
+
+
+Again, using the same population data, generate a table of area by forest type and site productivity class, grouped by forest type group.
+
+```{r, eval=runchunk}
+rowvar <- "FORTYPCD"
+colvar <- "SITECLCD"
+title.rowgrp <- "Forest type group"
+landarea <- "FOREST"
+
+estdat4 <- tabgrp(GBpopdat = popdat, 
+                  esttype = "AREA", 
+                  rowvar = rowvar, 
+                  colvar = colvar, 
+                  title.rowgrp = title.rowgrp, 
+                  landarea = "FOREST", 
+                  unitvar="ESTN_UNIT", 
+                  table_opts = list(row.FIAname = TRUE, 
+                                    col.FIAname = TRUE, 
+                                    rowgrp = TRUE, 
+                                    col.add0 = TRUE)
+                  ) 
+```
+
+Access the estimate and percent sampling error of estimate by grabbing the `est` object from out outputted list: 
+
+```{r, results = T}
+estdat4$esttab
+estdat4$psetab
+```
+
+
+We can also look at the difference in titles for estimate, as shown below:
+
+```{r, results = TRUE}
+tabtitle4 <- estdat4$esttab.title
+title.colvar4 <- estdat4$title.colvar
+title.rowvar4 <- estdat4$title.rowvar
+title.rowgrp4 <- estdat4$title.rowgrp
+
+tabtitle4
+title.colvar4
+title.rowvar4
+title.rowgrp4
+
+estdat4$esttab.title
+estdat4$psetab.title
+```
+
+
+<details>
+  <summary>View Example</summary>
+
+Create another sheet in the same spreadsheet and export the new table formatted with both estimates and standard errors and with no fill, again, using the output title information to create pretty titles. Notice, we need to set a new parameter to include subtotals (rowgrp.subtot=TRUE).
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 8"
+
+write2xlsx(esttab = estdat4$esttab, 
+           tabtitle = paste0(tabnm, ". ", tabtitle4),  
+           title.colvar = title.colvar4, 
+           title.rowvar = title.rowvar4, 
+		       title.rowgrp = title.rowgrp4, 
+		       rowgrp = TRUE, 
+		       psetab = estdat4$psetab, 
+		       rowgrp.subtot = TRUE, 
+		       fill = FALSE, 
+		       wbnm = wbnm,	
+		       sheetnm = tabnm
+		       )
+```
+
+</details>
+
+
+<details>
+  <summary>View Example</summary>
+
+Create another sheet in the same spreadsheet and export the new table formatted with both estimates and standard errors and with fill, again, using the output title information to create pretty titles. Notice, we need to set a new parameter to include subtotals (rowgrp.subtot=TRUE).
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 9"
+
+write2xlsx(esttab = estdat4$esttab, 
+           tabtitle = paste0(tabnm, ". ", tabtitle4),  
+           title.colvar = title.colvar4, 
+           title.rowvar = title.rowvar4, 
+		       title.rowgrp = title.rowgrp4, 
+		       rowgrp = TRUE, 
+		       psetab = estdat4$psetab, 
+		       rowgrp.subtot = TRUE, 
+		       fill = TRUE, 
+		       wbnm = wbnm,	
+		       sheetnm = tabnm
+		       )
+```
+
+</details>
+
+
+<details>
+  <summary>View Example</summary>
+
+Create another sheet in the same spreadsheet and export the new table formatted with both estimates and standard errors and with fill and standard errors in adjacent columns, again, using the output title information to create pretty titles. Notice, we need to set a new parameter to include subtotals (rowgrp.subtot=TRUE).
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 10"
+
+write2xlsx(esttab = estdat4$esttab, 
+           tabtitle = paste0(tabnm, ". ", tabtitle4),  
+           title.colvar = title.colvar4, 
+           title.rowvar = title.rowvar4, 
+		       title.rowgrp = title.rowgrp4, 
+		       rowgrp = TRUE, 
+		       psetab = estdat4$psetab, 
+		       rowgrp.subtot = TRUE, 
+		       addSEcol = TRUE,
+		       fill = TRUE, 
+		       wbnm = wbnm,	
+		       sheetnm = tabnm
+		       )
+```
+
+</details>
+
+
+Again, using the same population data, generate a table of area by forest type and site productivity class, grouped by forest type group. Here, we include the estimates and standard errors in the same cell (allin1=TRUE).
+
+```{r, eval=runchunk}
+rowvar <- "FORTYPCD"
+colvar <- "SITECLCD"
+title.rowgrp <- "Forest type group"
+landarea <- "FOREST"
+
+estdat5 <- tabgrp(GBpopdat = popdat, 
+                  esttype = "AREA", 
+                  rowvar = rowvar, 
+                  colvar = colvar, 
+                  title.rowgrp = title.rowgrp, 
+                  landarea = "FOREST", 
+                  unitvar="ESTN_UNIT", 
+                  table_opts = list(row.FIAname = TRUE, 
+                                    col.FIAname = TRUE, 
+                                    rowgrp = TRUE, 
+                                    col.add0 = TRUE,
+                                    allin1 = TRUE)
+                  ) 
+
+```
+
+Access the estimate and percent sampling error of estimate by grabbing the `est` object from out outputted list: 
+
+```{r, results = T}
+estdat5$esttab
+```
+
+We can also look at the difference in titles for estimate, as shown below:
+
+```{r, results = TRUE}
+tabtitle5 <- estdat5$titlelst$title.esttab
+title.colvar5 <- estdat5$titlelst$title.colvar
+title.rowvar5 <- estdat5$titlelst$title.rowvar
+title.rowgrp5 <- estdat5$titlelst$title.rowgrp
+
+tabtitle5
+title.colvar5
+title.rowvar5
+title.rowgrp5
+
+```
+
+
+<details>
+  <summary>View Example</summary>
+
+Create another sheet in the same spreadsheet and export the new table formatted with both estimates and standard errors and with fill and standard errors in adjacent columns, again, using the output title information to create pretty titles. Notice, we need to set a new parameter to include subtotals (rowgrp.subtot=TRUE).
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 11"
+
+write2xlsx(esttab = estdat5$esttab, 
+           tabtitle = paste0(tabnm, ". ", tabtitle5),  
+           title.colvar = title.colvar5, 
+           title.rowvar = title.rowvar5, 
+		       title.rowgrp = title.rowgrp5, 
+		       rowgrp = TRUE, 
+		       psetab = estdat5$psetab, 
+		       rowgrp.subtot = TRUE, 
+		       fill = TRUE, 
+		       allin1 = TRUE,
+		       wbnm = wbnm,	
+		       sheetnm = tabnm
+		       )
+```
+
+</details>
+
+
+Now, using the same population data, generate a table of area by forest type and site productivity class, grouped by forest type group and owner group. Here, we include the estimates and standard errors in the same cell (allin1=TRUE).
+
+```{r, eval=runchunk}
+rowvar <- "FORTYPCD"
+colvar <- "SITECLCD"
+title.rowgrp <- "Forest type group"
+colgrpcd <- "OWNGRPCD"
+title.cgrp <- "Owner group"
+
+estdat6 <- tabgrp(GBpopdat = popdat, 
+                  esttype = "AREA", 
+                  rowvar = rowvar, 
+                  colvar = colvar, 
+                  colgrp = TRUE, 
+                  colgrpcd = colgrpcd, 
+                  colgrptot = FALSE,
+                  title.rowgrp = title.rowgrp, 
+                  landarea = "FOREST", 
+                  unitvar="ESTN_UNIT", 
+                  table_opts = list(row.FIAname = TRUE, 
+                                    col.FIAname = TRUE, 
+                                    rowgrp = TRUE, 
+                                    col.add0 = TRUE,
+                                    allin1 = TRUE)
+                  ) 
+
+```
+
+
+Access the estimate and percent sampling error of estimate by grabbing the `est` object from out outputted list: 
+
+```{r, results = T}
+estdat6$esttab
+```
+
+```{r, results = TRUE}
+tabtitle6 <- estdat6$titlelst$title.esttab
+title.colvar6 <- estdat6$titlelst$title.colvar
+title.rowvar6 <- estdat6$titlelst$title.rowvar
+title.rowgrp6 <- estdat6$titlelst$title.rowgrp
+
+tabtitle6
+title.colvar6
+title.rowvar6
+title.rowgrp6
+
+```
+
+
+
+<details>
+  <summary>View Example</summary>
+
+Create another sheet in the same spreadsheet and export the new table formatted with both estimates and standard errors and with fill and standard errors in adjacent columns, again, using the output title information to create pretty titles. Notice, we need to set a new parameter to include subtotals (rowgrp.subtot=TRUE).
+
+```{r, eval=runchunk}
+
+## Create a name for the table to add as a prefix to the tabtitle and to use as the sheet name.
+tabnm <- "Table 12"
+
+write2xlsx(esttab = estdat6$esttab, 
+           tabtitle = paste0(tabnm, ". ", tabtitle6),  
+           title.colvar = title.colvar6, 
+           title.rowvar = title.rowvar6, 
+		       title.rowgrp = title.rowgrp6, 
+		       rowgrp = TRUE, 
+		       rowgrp.subtot = TRUE,
+		       colgrp = TRUE,
+		       cnames = estdat6$cnames,
+		       coltotal = TRUE, 
+		       fill = TRUE, 
+		       allin1 = TRUE,
+		       wbnm = wbnm,	
+		       sheetnm = tabnm
+		       )
+```
+
+</details>
