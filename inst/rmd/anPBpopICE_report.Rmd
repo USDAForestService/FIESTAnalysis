@@ -1,15 +1,16 @@
 ---
 output:
-  word_document:
-    reference_docx: anPBtemplateICE.docx
-  pdf_document: default
+  html_document:
+    df_print: paged
+    fig_caption: true
 params:
-  rawfolder: ""
-  AOInm: ""
-  T1: ""
-  T2: ""
-  ice.QAQCfn: ""
-  outfn.pre: ""
+  rawfolder: ''
+  AOInm: ''
+  T1: ''
+  T2: ''
+  QAQC.self: ''
+  QAQC.cross: ''
+  outfn.pre: ''
 ---
 
 ```{r info, include=FALSE, echo=FALSE} 
@@ -114,23 +115,25 @@ suppressMessages(library(pheatmap))
 ```
 
 
+
 ```{r inputs, echo=FALSE, warning=FALSE, message=FALSE}
-#library(FIESTA)
+library(FIESTA)
 rawfolder <- params$rawfolder
 AOInm <- params$AOInm
 yearT1 <- params$T1
 yearT2 <- params$T2
-ice.QAQCfn <- params$ice.QAQCfn
+QAQC.self <- params$QAQC.self
+QAQC.cross <- params$QAQC.cross
 outfn.pre <- params$outfn.pre
 
-# # ## Set the following parameters to run report
-#  rawfolder <- "E:/workspace/FIESTA/FIESTA_PB/outfolder/estimates/rawdata"
-#  AOInm <- "Caribbean"
-#  yearT1 <- 2017
-#  yearT2 <- 2018
-#  #ice.QAQCfn <- "E:/workspace/ICE/prototype/_reports/gtac_ICE/states/Caribbean/Photo_data/StJohns_QAQC.csv"
-#  ice.QAQCfn <- NULL
-#  outfn.pre <- AOInm
+# ## Set the following parameters to run report
+# rawfolder <- "F:/FIESTA_testing/PBmodule/ME_2015_2018/FIESTA_20230210/estimates/rawdata"
+# AOInm <- "Maine"
+# yearT1=T1 <- 2015
+# yearT2=T2 <- 2018
+# QAQC.self <- NULL
+# QAQC.cross <- NULL
+# outfn.pre <- AOInm
 
 
 if (is.null(rawfolder) || rawfolder == "") stop("rawfolder is NULL")
@@ -141,40 +144,40 @@ if (is.null(yearT2) || T1 == "") stop("T2 is NULL")
 if (is.null(outfn.pre) || outfn.pre == "") outfn.pre <- AOInm
 
 
-## Import ICE QAQC data
-#ice.QAQC <- pcheck.table(ice.QAQCfn)
-if (is.null(ice.QAQCfn) || ice.QAQCfn == "") {
-  ice.QAQC <- NULL
-} else {
-  if (!file.exists(ice.QAQCfn)) stop(ice.QAQCfn, " does not exist")
-  ice.QAQC <- fread(ice.QAQCfn)
-  
-  if (!all(c("QAQC_check", "Result") %in% names(ice.QAQC))) {
-    warning("ice.QAQC table must include QAQC_check and Result columns")
-    ice.QAQC <- NULL
-  } else {
-    check.vals <- c("PC_self_check", "PC_cross_check", "LC1_2_self_check", 
-	      "LC1_2_cross_check", "LU1_2_self_check", "LU1_2_cross_check")
-    if (!all(check.vals %in% ice.QAQC[["QAQC_check"]])) {
-      miss.vals <- check.vals[!check.vals %in% ice.QAQC[["QAQC_check"]]]
-      warning("ice.QAQC table must include following values in QAQC_check column: ",
-	  toString(miss.vals))
-      ice.QAQC <- NULL
-    }
-  }  
-}
+## Check QAQC data
+# if (is.null(QAQC.self)) {
+#   QAQC.self <- NULL
+# } else {
+#   if (all(!is.vector(QAQC.self), !is.numeric(QAQC.self), length(QAQC.self) != 4)) {
+#     warning("QAQC.self must be a vector of 4 numbers")
+#     QAQC.self <- NULL
+#   } else if (!all(QAQC.self > 0 & QAQC.self < 100)) {
+#     warning("all values of QAQC.self must be between 0 and 100")
+#     QAQC.self <- NULL
+#   }    
+# }
+# if (is.null(QAQC.cross)) {
+#   QAQC.cross <- NULL
+# } else {
+#   if (all(!is.vector(QAQC.cross), !is.numeric(QAQC.cross), length(QAQC.cross) != 4)) {
+#     warning("QAQC.cross must be a vector of 4 numbers")
+#     QAQC.cross <- NULL
+#   } else if (!all(QAQC.cross > 0 & QAQC.cross < 100)) {
+#     warning("all values of QAQC.cross must be between 0 and 100")
+#     ice.QAQC <- NULL
+#   }    
+# }
 
 
 #if (is.null(outfolder)) outfolder <- rawfolder
 figNum <- 0
 
-## Define variable names in raw tables
-use1nm <- "T1-Use"  # "use_1_nm"
-use2nm <- "T2-Use"  # "use_2_nm"
-cover1nm <- "T1-Cover"  # "cover_1_nm"
-cover2nm <- "T2-Cover"  # "cover_2_nm"
-agentnm <- "Change Agent-GRP"  # "chg_ag_2_GRP_nm"
 
+## Define function to wrap text
+wraptitle <- function(x, len=10) {
+  sapply(x, function(y) paste(strwrap(y, len),
+         collapse = "\n"), USE.NAMES = FALSE)
+}
 
 ```
 
@@ -188,6 +191,26 @@ agentnm <- "Change Agent-GRP"  # "chg_ag_2_GRP_nm"
 # -------------------------------------------------------------------------------------
 Input6 <- list.files(rawfolder, pattern=utils::glob2rx("03*unit*rowest*csv"))
 Input6 <- read.csv(file.path(rawfolder, Input6[length(Input6)]), stringsAsFactors=FALSE, check.names=FALSE)
+
+## Define variable names in raw tables
+if ("use_1_nm" %in% names(Input6)) {
+  use1nm <- "use_1_nm"
+  use2nm <- "use_2_nm"
+  cover1nm <- "cover_1_nm"
+  cover2nm <- "cover_2_nm"
+  agentnm <- "chg_ag_2_GRP_nm"
+} else {
+  use1nm <- "T1-Use"  # "use_1_nm"
+  use2nm <- "T2-Use"  # "use_2_nm"
+  cover1nm <- "T1-Cover"  # "cover_1_nm"
+  cover2nm <- "T2-Cover"  # "cover_2_nm"
+  agentnm <- "Change Agent-GRP"  # "chg_ag_2_GRP_nm"
+}
+use1cd <- "use_1"
+use2cd <- "use_2"
+cover1cd <- "cover_1"
+cover2cd <- "cover_2"
+agentcd <- "chg_ag_2_GRP"
 
 #### INPUT 7: Land Use (LU) data for Time 2 (T2: Year 2) ####
 # --------------------------------------------------------------------------------------
@@ -253,22 +276,53 @@ Input18 <- read.csv(file.path(rawfolder, Input18[length(Input18)]), stringsAsFac
 # ----------------------------------------------------------------------------------------------
 Input19 <- list.files(rawfolder, pattern=utils::glob2rx("09*unit*grpest*csv"))
 Input19 <- read.csv(file.path(rawfolder, Input19[length(Input19)]), stringsAsFactors=FALSE, check.names=FALSE)
+Input19a <- list.files(rawfolder, pattern=utils::glob2rx("09*unit*rowest*csv"))
+Input19a <- read.csv(file.path(rawfolder, Input19a[length(Input19a)]), stringsAsFactors=FALSE, check.names=FALSE)
+Input19b <- list.files(rawfolder, pattern=utils::glob2rx("09*unit*colest*csv"))
+Input19b <- read.csv(file.path(rawfolder, Input19b[length(Input19b)]), stringsAsFactors=FALSE, check.names=FALSE)
+Input19c <- list.files(rawfolder, pattern=utils::glob2rx("09*unit*totest*csv"))
+Input19c <- read.csv(file.path(rawfolder, Input19c[length(Input19c)]), stringsAsFactors=FALSE, check.names=FALSE)
+
+df19 <- Input19[, c(use1cd, use1nm, use2cd, use2nm, "est", "est.var", "est.se")]
+df19 <- rbindlist(list(df19, data.frame(Input19a[, c(use1cd, use1nm)], 9999, "TOTAL", Input19a[, c("est", "est.var", "est.se")])), use.names=FALSE)
+df19 <- rbindlist(list(df19, data.frame(9999, "TOTAL", Input19b[, c(use2cd, use2nm, "est", "est.var", "est.se")])), use.names=FALSE)
+df19 <- rbindlist(list(df19, data.frame(9999, "TOTAL", 9999, "TOTAL", Input19c[, c("est", "est.var", "est.se")])), use.names=FALSE)
+
 
 ## Input 20: Checkerboard figure (Figure 8) 
 # ----------------------------------------------------------------------------------------------
 Input20 <- list.files(rawfolder, pattern=utils::glob2rx("10*unit*grpest*csv"))
 Input20 <- read.csv(file.path(rawfolder, Input20[length(Input20)]), stringsAsFactors=FALSE, check.names=FALSE)
+Input20a <- list.files(rawfolder, pattern=utils::glob2rx("10*unit*rowest*csv"))
+Input20a <- read.csv(file.path(rawfolder, Input20a[length(Input20a)]), stringsAsFactors=FALSE, check.names=FALSE)
+Input20b <- list.files(rawfolder, pattern=utils::glob2rx("10*unit*colest*csv"))
+Input20b <- read.csv(file.path(rawfolder, Input20b[length(Input20b)]), stringsAsFactors=FALSE, check.names=FALSE)
+Input20c <- list.files(rawfolder, pattern=utils::glob2rx("10*unit*totest*csv"))
+Input20c <- read.csv(file.path(rawfolder, Input20c[length(Input20c)]), stringsAsFactors=FALSE, check.names=FALSE)
 
-## Input 20: Checkerboard figure (Figure 8) 
+df20 <- Input20[, c(cover1cd, cover1nm, cover2cd, cover2nm, "est", "est.var", "est.se")]
+df20 <- rbindlist(list(df20, data.frame(Input20a[, c(cover1cd, cover1nm)], 9999, "TOTAL", Input20a[, c("est", "est.var", "est.se")])), use.names=FALSE)
+df20 <- rbindlist(list(df20, data.frame(9999, "TOTAL", Input20b[, c(cover2cd, cover2nm, "est", "est.var", "est.se")])), use.names=FALSE)
+df20 <- rbindlist(list(df20, data.frame(9999, "TOTAL", 9999, "TOTAL", Input20c[, c("est", "est.var", "est.se")])), use.names=FALSE)
+
+## Input 21: Table Estimated percent of T2-Cover within T2-Use (Figure 9) 
 # ----------------------------------------------------------------------------------------------
 Input21.n <- list.files(rawfolder, pattern=utils::glob2rx("13a*unit*grpest*csv"))
 Input21.n <- read.csv(file.path(rawfolder, Input21.n[length(Input21.n)]), stringsAsFactors=FALSE, check.names=FALSE)
 
-## Input 21: Table Estimated percent of T2-Cover within T2-Use; Vermont 2012-2014 (Figure 9) 
-# ----------------------------------------------------------------------------------------------
 Input21 <- list.files(dirname(rawfolder), pattern=utils::glob2rx("13a*csv"))
 Input21 = read.csv(file.path(dirname(rawfolder), Input21[length(Input21)]), stringsAsFactors=FALSE, 
             skip = 3, nrows = length(unique(Input21.n[[cover2nm]])), check.names=FALSE)
+
+
+## Input 22: Table Estimated percent of T2-Cover within T2-Use  (Figure 10) 
+# ----------------------------------------------------------------------------------------------
+Input22.n <- list.files(rawfolder, pattern=utils::glob2rx("13b*unit*grpest*csv"))
+Input22.n <- read.csv(file.path(rawfolder, Input22.n[length(Input22.n)]), stringsAsFactors=FALSE, check.names=FALSE)
+
+Input22 <- list.files(dirname(rawfolder), pattern=utils::glob2rx("13b*csv"))
+Input22 = read.csv(file.path(dirname(rawfolder), Input22[length(Input22)]), stringsAsFactors=FALSE, 
+            skip = 3, nrows = length(unique(Input22.n[[cover2nm]])), check.names=FALSE)
 
 
 #==========================================================================
@@ -286,6 +340,8 @@ Input21 = read.csv(file.path(dirname(rawfolder), Input21[length(Input21)]), stri
 #--------------------------------------------------------------------------
 knitr::opts_chunk$set(fig.width=8)
 knitr::opts_chunk$set(fig.height=6)
+knitr::opts_chunk$set(dev = 'svg', fig.path = "figs/", dpi=300) # set output device to svg
+
 
 #==========================================================================
 # Figure settings ---- lables, etc. 
@@ -391,6 +447,8 @@ plotNetChangesByClass = function(datatype='LU',inFile=NULL,figTitle="") {
 
   # read in data  
   tabInfo = inFile
+  tabInfo$diff.SEleft <- tabInfo$diff.est - tabInfo$diff.se
+  tabInfo$diff.SEright <- tabInfo$diff.est + tabInfo$diff.se
 
   # file structure change on 4/9/2018 in estimate files - code around these
   category = unlist(strsplit(tabInfo$gain.val,split=" to "))
@@ -418,9 +476,9 @@ plotNetChangesByClass = function(datatype='LU',inFile=NULL,figTitle="") {
       } else {
         barData[Idx] = tabInfo[tabInfo[,1] == allLUClasses[Idx],]$diff.est
 
-        barUncData[Idx] = tabInfo[tabInfo[,1] == allLUClasses[Idx],]$diff.CI95left
+        barUncData[Idx] = tabInfo[tabInfo[,1] == allLUClasses[Idx],]$diff.SEleft
         if (barData[Idx] > 0) {
-          barUncData[Idx] = tabInfo[tabInfo[,1] == allLUClasses[Idx],]$diff.CI95right
+          barUncData[Idx] = tabInfo[tabInfo[,1] == allLUClasses[Idx],]$diff.SEright
         }         
         
         if (barData[Idx] == 0) {
@@ -442,9 +500,9 @@ plotNetChangesByClass = function(datatype='LU',inFile=NULL,figTitle="") {
         barData[Idx] = tabInfo[tabInfo[,1] == allLCClasses[Idx],]$diff.est
 
 
-        barUncData[Idx] = tabInfo[tabInfo[,1] == allLCClasses[Idx],]$diff.CI95left
+        barUncData[Idx] = tabInfo[tabInfo[,1] == allLCClasses[Idx],]$diff.SEleft
         if (barData[Idx] > 0) {
-          barUncData[Idx] = tabInfo[tabInfo[,1] == allLCClasses[Idx],]$diff.CI95right
+          barUncData[Idx] = tabInfo[tabInfo[,1] == allLCClasses[Idx],]$diff.SEright
         }        
         
         if (barData[Idx] == 0) {
@@ -493,7 +551,7 @@ plotNetChangesByClass = function(datatype='LU',inFile=NULL,figTitle="") {
   invisible(split.screen(subpanel_coords)) # invisible suppresses the "##[1] 1 2" output
 
   screen(1)
-  
+      
   # bottom, left, top, and right
   par(mar=c(3,2,0,0)) # leave space for class names along xaxis and room for % labels 
                       # along yaxis
@@ -565,12 +623,12 @@ plotNetChangesByClass = function(datatype='LU',inFile=NULL,figTitle="") {
 
   # add legend to explain that gray line = 95% confidence interval
   par(xpd=NA) # allow drawing outside of box plot area
-  legend("topright",
-                    legend=c("95% Confidence Interval"),
-                    col=c("darkgray"),
-                    lty=c("solid"),lwd=3,
-                    bty='n',text.col="black",cex=0.8,horiz=TRUE,
-                    inset=c(-0.00,-0.15))
+  # legend("topright",
+  #                   legend=c("95% Confidence Interval"),
+  #                   col=c("darkgray"),
+  #                   lty=c("solid"),lwd=3,
+  #                   bty='n',text.col="black",cex=0.8,horiz=TRUE,
+  #                   inset=c(-0.00,-0.15))
 
   legend("topleft",
                     legend=c("Gain","Loss"),
@@ -582,11 +640,13 @@ plotNetChangesByClass = function(datatype='LU',inFile=NULL,figTitle="") {
         
   box()
 
+
   # flush out graphics
   close.screen(all.screens=TRUE)
-
+    
   # add overall figure title
   title(main=figTitle,line=3,cex.main=1.2)
+    
 } 
 
 
@@ -619,13 +679,17 @@ plotGainLossSingClass = function(datatype='LU',grouping='fine',
   category = category[seq(2,length(category),by=2)] # get only even elements on the right hand side of the "to" equation
 
   tabInfo = cbind(category, tabInfo)
+  tabInfo$gain.SEright <- tabInfo$gain.est + tabInfo$gain.se
+  tabInfo$gain.SEleft <- tabInfo$gain.est - tabInfo$gain.se
+  tabInfo$loss.SEright <- tabInfo$loss.est + tabInfo$loss.se
+  tabInfo$loss.SEleft <- tabInfo$loss.est - tabInfo$loss.se
 
   gainVal = tabInfo[tabInfo[,1] == class2Plot,]$gain.est
   lossVal = (tabInfo[tabInfo[,1] == class2Plot,]$loss.est)*(-1) # loss is reported as + val in TF tables
   
-  gainUncVal = tabInfo[tabInfo[,1] == class2Plot,]$gain.CI95right
+  gainUncVal = tabInfo[tabInfo[,1] == class2Plot,]$gain.SEright
 #  lossUncVal = tabInfo[tabInfo[,1] == class2Plot,]$loss.CI95left
-  lossUncVal = tabInfo[tabInfo[,1] == class2Plot,]$loss.CI95right*(-1) # loss CI's are reported as positive in TF tables
+  lossUncVal = tabInfo[tabInfo[,1] == class2Plot,]$loss.SEright*(-1) # loss CI's are reported as positive in TF tables
 
   barData = as.numeric(c(gainVal,lossVal))
   barUncData = as.numeric(c(gainUncVal,lossUncVal))
@@ -713,8 +777,8 @@ plotGainLossSingClass = function(datatype='LU',grouping='fine',
  
   # add legend to explain that gray line = 95% confidence interval
   par(xpd=NA) # allow drawing outside of box plot area
-  legend("top",legend=c("95% Conf. Interval"),col="darkgray",lty="solid",lwd=3,
-      bty='n',text.col="black",cex=0.6,ncol=1,inset=c(-0.08,-0.08),xjust=1)
+#  legend("top",legend=c("95% Conf. Interval"),col="darkgray",lty="solid",lwd=3,
+#      bty='n',text.col="black",cex=0.6,ncol=1,inset=c(-0.08,-0.08),xjust=1)
   
   legend("top",
          legend=c("Gain","Loss"),
@@ -744,7 +808,7 @@ plotGainLossSingClass = function(datatype='LU',grouping='fine',
 
 plotCheckerboard = function(datatype='LU',inFile,
                             use1nm, use2nm, cover1nm, cover2nm,
-                            allClasses=as.character(0),
+                            allClasses = as.character(0),
                             allClassesPretty=as.character(0),
                             cellWidth=NA,cellHeight=NA) {
 
@@ -838,26 +902,57 @@ plotCheckerboard = function(datatype='LU',inFile,
       } 
 
       # persistence on the diagonal of the matrix
-      if (T1Idx == T2Idx & !(is.na(estStr) & is.na(seStr)) ) { 
+      if (T1Idx == T2Idx && !(is.na(estStr) & is.na(seStr)) ) { 
         rectColor = "gray"
-        cellLabel = paste0(setDecPlaces(estStr,2),"%\n",
-                          "(",setDecPlaces(seStr,2),"%)")
-      
+        if (setDecPlaces(estStr,2) == 0 && estStr > 0.005) {
+          cellLabel = paste0(setDecPlaces(estStr,2),"*\n",
+                          "(",setDecPlaces(seStr,2),")")
+        } else {
+          cellLabel = paste0(setDecPlaces(estStr,2),"\n",
+                          "(",setDecPlaces(seStr,2),")")
+        }
         drawRect = TRUE
       } 
 
       # change occurred - plot orange cell 
-      if (T1Idx != T2Idx & !(is.na(estStr) & is.na(seStr))) { 
+      if (T1Idx != 1 && T2Idx != 1 && 
+          T1Idx != T2Idx && (!(is.na(estStr) & is.na(seStr)) & !(estStr == 0 & seStr == 0))) {  
         rectColor = "orange"
-        cellLabel = paste0(setDecPlaces(estStr,2),"%\n",
-                          "(",setDecPlaces(seStr,2),"%)")
+        if (setDecPlaces(estStr,2) == "0.00") {
+          cellLabel = paste0(setDecPlaces(estStr,2),"*\n",
+                          "(",setDecPlaces(seStr,2),")")
+        } else {
+          cellLabel = paste0(setDecPlaces(estStr,2),"\n",
+                          "(",setDecPlaces(seStr,2),")")
+        }
         drawRect = TRUE
-      } 
+      } else {
+        drawRect = TRUE
+      }
+      
+      ## Totals 
+      if ((T1Idx == 1 || T2Idx == 1) && !(is.na(estStr) && is.na(seStr)) ) { 
+        if (setDecPlaces(estStr,2) == "0.00") {
+          cellLabel = paste0(setDecPlaces(estStr,2),"*\n",
+                          "(",setDecPlaces(seStr,2),")")
+        } else {
+          cellLabel = paste0(setDecPlaces(estStr,2),"\n",
+                          "(",setDecPlaces(seStr,2),")")
+        }
+        #drawRect = TRUE
+        polygon(x=rectXCoord,y=rectYCoord,col=rectColor)  
+        text(x=labX,y=labY,labels=cellLabel,col="black",cex=0.8, font=2)
 
-      if (drawRect) {
-        polygon(x=rectXCoord,y=rectYCoord,col=rectColor) 
+      } else {
+        #drawRect = TRUE
+        polygon(x=rectXCoord,y=rectYCoord,col=rectColor)  
         text(x=labX,y=labY,labels=cellLabel,col="black",cex=0.8)
       }
+
+      # if (drawRect) {
+      #   polygon(x=rectXCoord,y=rectYCoord,col=rectColor) 
+      #   text(x=labX,y=labY,labels=cellLabel,col="black",cex=0.8)
+      # }
     
       # Add T1 class name to left of grid
       if ((T2Idx %% nClasses) == 1) {
@@ -1021,27 +1116,59 @@ plotCheckerboard2 = function(datatype='LU',inFile,
       } 
 
       # persistence on the diagonal of the matrix
-      if (T1Idx == T2Idx & !(is.na(estStr) & is.na(seStr)) ) { 
+      if (T1Idx == T2Idx && !(is.na(estStr) & is.na(seStr)) ) { 
         rectColor = "gray"
-        cellLabel = paste0(setDecPlaces(estStr,2),"%\n",
-                          "(",setDecPlaces(seStr,2),"%)")
-      
+        if (setDecPlaces(estStr,2) == 0 && estStr > 0.005) {
+          cellLabel = paste0(setDecPlaces(estStr,2),"*\n",
+                          "(",setDecPlaces(seStr,2),")")
+        } else {
+          cellLabel = paste0(setDecPlaces(estStr,2),"\n",
+                          "(",setDecPlaces(seStr,2),")")
+        }
         drawRect = TRUE
       } 
 
       # change occurred - plot orange cell 
-      if (T1Idx != T2Idx & !(is.na(estStr) & is.na(seStr))) { 
+      if (T1Idx != 1 && T2Idx != 1 && 
+          T1Idx != T2Idx && (!(is.na(estStr) & is.na(seStr)) & !(estStr == 0 & seStr == 0))) { 
         rectColor = "orange"
-        cellLabel = paste0(setDecPlaces(estStr,2),"%\n",
-                          "(",setDecPlaces(seStr,2),"%)")
+        if (setDecPlaces(estStr,2) == "0.00") {
+          cellLabel = paste0(setDecPlaces(estStr,2),"*\n",
+                          "(",setDecPlaces(seStr,2),")")
+        } else {
+          cellLabel = paste0(setDecPlaces(estStr,2),"\n",
+                          "(",setDecPlaces(seStr,2),")")
+        }
         drawRect = TRUE
-      } 
+      } else {
+        drawRect = TRUE
+      }
+      
+      # Totals 
+      if ((T1Idx == 1 || T2Idx == 1) && !(is.na(estStr) && is.na(seStr)) ) { 
+        if (setDecPlaces(estStr,2) == "0.00") {
+          cellLabel = paste0(setDecPlaces(estStr,2),"*\n",
+                          "(",setDecPlaces(seStr,2),")")
+        } else {
+          cellLabel = paste0(setDecPlaces(estStr,2),"\n",
+                          "(",setDecPlaces(seStr,2),")")
+        }
+        #drawRect = TRUE
+        polygon(x=rectXCoord,y=rectYCoord,col=rectColor)  
+        text(x=labX,y=labY,labels=cellLabel,col="black",cex=0.8, font=2)
 
-      if (drawRect) {
-        polygon(x=rectXCoord,y=rectYCoord,col=rectColor) 
+      } else {
+        #drawRect = TRUE
+        polygon(x=rectXCoord,y=rectYCoord,col=rectColor)  
         text(x=labX,y=labY,labels=cellLabel,col="black",cex=0.8)
       }
-    
+
+      # if (drawRect) {
+      #   polygon(x=rectXCoord,y=rectYCoord,col=rectColor) 
+      #   text(x=labX,y=labY,labels=cellLabel,col="black",cex=0.8)
+      # }
+      # 
+      
       # Add T1 class name to left of grid
       if ((T2Idx %% nClasses) == 1) {
 
@@ -1149,7 +1276,7 @@ plotCheckerboard2 = function(datatype='LU',inFile,
 ### Create an empty dataframe and fields to populate (summaryInfo dataframe) 
 ## The following code populates the fields created below in the summaryInfo dataframe 
 # -------------------------------------------------------------------------------------
-summaryInfo = as.data.frame(matrix(nrow=1,ncol=22))
+summaryInfo = as.data.frame(matrix(nrow=1,ncol=24))
 names(summaryInfo) = c("forLuEstT1",
                        "forLuUncT1",
                        "forLuEstT2",
@@ -1158,6 +1285,7 @@ names(summaryInfo) = c("forLuEstT1",
                        "forLuAmtChangeUnc",
                        "forLuAmtChangeAnn",
                        "forLuAmtChangeAnnUnc",
+                       "forLuAmtChangeNet",
                        "forLuDecrIncr",
                        "forLuClassDescT1",
                        "forLuClassDescT2",
@@ -1169,6 +1297,7 @@ names(summaryInfo) = c("forLuEstT1",
                        "treeLcAmtChangeUnc",
                        "treeLcAmtChangeAnn",
                        "treeLcAmtChangeAnnUnc",
+                       "treeLcAmtChangeNet",
                        "treeLcDecrIncr",
                        "treeLcClassDescT1",
                        "treeLcClassDescT2")
@@ -1203,6 +1332,9 @@ summaryInfo[1,]$forLuAmtChangeUnc = Input8[Input8[,1] == 'Forest',]$diff.se
 ## Average annual change 
 summaryInfo[1,]$forLuAmtChangeAnn = summaryInfo[1,]$forLuAmtChange / (T2 - T1)
 summaryInfo[1,]$forLuAmtChangeAnnUnc = sqrt(summaryInfo[1,]$forLuAmtChangeUnc^2 / (T2 - T1)^2)
+
+## Net change 
+summaryInfo[1,]$forLuAmtChangeNet = (summaryInfo[1,]$forLuEstT1 - summaryInfo[1,]$forLuEstT2) / summaryInfo[1,]$forLuEstT1 * 100
 
 
 ## INPUT 9: Determines if LU change decrease or increased based on forLuAmtChange field value in SummaryInfo table
@@ -1294,7 +1426,6 @@ summaryInfo[1,]$treeLcEstT1 = Input10[Input10[[cover1nm]] == "Tree - Live",]$est
 summaryInfo[1,]$treeLcUncT1 = Input10[Input10[[cover1nm]] == "Tree - Live",]$est.se
 
 
-
 ## INPUT 11: Percent of Tree Landcover (LC) for T2 (Year 2)
 # ----------------------------------------------------------------------------------------------
 summaryInfo[1,]$treeLcEstT2 = Input11[Input11[[cover2nm]] == "Tree - Live",]$est
@@ -1318,6 +1449,9 @@ summaryInfo[1,]$treeLcAmtChangeUnc = Input12[Input12[,1] == 'Tree - Live',]$diff
 ## Average annual change 
 summaryInfo[1,]$treeLcAmtChangeAnn = summaryInfo[1,]$treeLcAmtChange / (T2 - T1)
 summaryInfo[1,]$treeLcAmtChangeAnnUnc = sqrt(summaryInfo[1,]$treeLcAmtChangeUnc^2 / (T2 - T1)^2)
+
+## Net change 
+summaryInfo[1,]$treeLcAmtChangeNet = (summaryInfo[1,]$treeLcEstT1 - summaryInfo[1,]$treeLcEstT2) / summaryInfo[1,]$treeLcEstT1 * 100
 
 
 ## INPUT 13: Overall tree LC increase or decrease -- What forest changed to for T1 and T2 (year1 and year 2) 
@@ -1387,12 +1521,12 @@ if (summaryInfo[1,]$treeLcAmtChange == 0) {
   treeLcChgStmt1 = ""
 } else { # there was change
 
-  treeLcChgStmt1 = paste0(
+  treeLcChgStmt1 =   treeLcChgStmt1 = paste0(
                    "This change was due to conversion of lands from ",
-                   summaryInfo[1,]$treeLcClassDescT1," to ",
+                   summaryInfo[1,]$treeLcClassDescT1," to: ",
                    summaryInfo[1,]$treeLcClassDescT2," LC.")
-} # end if/define Tree LC change statement
 
+} # end if/define Tree LC change statement
 
 ```
 
@@ -1401,10 +1535,16 @@ if (summaryInfo[1,]$treeLcAmtChange == 0) {
 
 ## Input 21: T2 Cover heatmap setup 
 
-d = data.frame(Input21[,-1],row.names = Input21[,1])
+d = data.frame(Input21[,-1],row.names = Input21[,1], check.names = FALSE)
 
 ## Convert to matrix for heat map 
 d = as.matrix(d, replace=TRUE)
+
+
+d2 = data.frame(Input22[,-1],row.names = Input22[,1], check.names = FALSE)
+
+## Convert to matrix for heat map 
+d2 = as.matrix(d2, replace=TRUE)
 
 ## Round values to first decimal 
 #mat = round(as.numeric(d),1)
@@ -1425,49 +1565,36 @@ __Date:__ `r format(Sys.time(), "%B %d, %Y")`
 &nbsp;
 &nbsp;
 
-The Image-based Change Estimation (ICE) program allows FIA to quickly create information about LU and LC composition and the causes of landscape changes. The ICE protocol is a relatively quick and simple, image-based approach of producing reliable estimates of LC and LU change for a population. Data are collected using multi-date image interpretation (Fig. 1). The plot design used for this project consists of a plot center and a 144-foot radius plot.
 
-&nbsp;
+#### Overview
 
-`r figNum=0`
-
-############### ![](ICE.PNG)
-
-``` {r iceOverviewGraphicCapGen,include=FALSE, fig.height=2,fig.width=8}
-#===================================================================================================================
-# Figure 1 caption and text created here 
-#===================================================================================================================
+The Image-based Change Estimation (ICE) project from the USDA Forest Service, Forest Inventory and Analysis (FIA) Program provides information about land use and land cover composition and the causes of landscape changes. The ICE protocol is a relatively quick and simple, image-based approach of producing reliable estimates of land cover and land use change for a population. Data are collected using multi-date image interpretation of sample plot locations. The plot design used for this project consists of a plot center and a 144-foot radius plot.    
 
 
-figNum = figNum+1
-figCap = paste0("Figure ",figNum,": High resolution imagery from two time periods (top) ",
-                                   "is used to quantify the type(s) of change occurring on ",
-                                   "the ground (bottom).  In this case, forest management ",
-                                   "practices have cleared the understory to allow seedlings to emerge.")
+ICE data for land use, land cover, and agent of change were collected for the population of `r AOInm`, on all lands. To determine and analyze land use, land cover, and agent of change for `r AOInm`, National Agriculture Imagery Program (NAIP) imagery was interpreted from `r yearT1` and `r yearT2`. Estimates were generated using the *FIESTA* R Package (Frescino et al. 2023).   
+
+
+Over the analysis period (`r yearT1` and `r yearT2`), Forest land use in `r AOInm` `r summaryInfo[1,]$forLuDecrIncr` by `r setDecPlaces(summaryInfo[1,]$forLuAmtChangeNet,3)`%, from `r paste0(setDecPlaces(summaryInfo[1,]$forLuEstT1, 3),"%", "(+/-",setDecPlaces(summaryInfo[1,]$forLuUncT1,3)," SE)")` in `r yearT1` to `r paste0(setDecPlaces(summaryInfo[1,]$forLuEstT2, 3),"%", "(+/-",setDecPlaces(summaryInfo[1,]$forLuUncT2,3)," SE)")` in `r yearT2`; this is an average annual change of `r paste0(setDecPlaces(abs(summaryInfo[1,]$forLuAmtChangeAnn),3), "% (+/-",setDecPlaces(summaryInfo[1,]$forLuAmtChangeAnnUnc,3)," SE)")`. Tree land cover in `r AOInm` `r summaryInfo[1,]$treeLcDecrIncr` by `r setDecPlaces(summaryInfo[1,]$treeLcAmtChangeNet,3)`%, from `r paste0(setDecPlaces(summaryInfo[1,]$treeLcEstT1, 3),"%", "(+/-",setDecPlaces(summaryInfo[1,]$treeLcUncT1,3)," SE)")` in `r yearT1` to `r paste0(setDecPlaces(summaryInfo[1,]$treeLcEstT2, 3),"%", "(+/-",setDecPlaces(summaryInfo[1,]$forLuUncT2,3)," SE)")` in `r yearT2`; this is an average annual change of `r paste0(setDecPlaces(abs(summaryInfo[1,]$treeLcAmtChangeAnn),3), "% (+/-",setDecPlaces(summaryInfo[1,]$treeLcAmtChangeAnnUnc,3)," SE)")`. 
+ 
+
+<br>
+
+#### Land Use 
+
+```{r echo=FALSE}
+df19max <- df19[df19$est < 100 & df19[[use1nm]] != "TOTAL" & df19[[use2nm]] != "TOTAL"
+			& df19[[use1nm]] != df19[[use2nm]], ]
+df19max <- df19max[df19max$est == max(df19max$est, na.rm=TRUE),]
+
 ```
-########## `r figCap`
 
-ICE data for Land Use (LU), Land Cover (LC), and Agent of Change were collected for the population of `r AOInm`, on all lands.  To determine and analyze LU, LC, and Agent of Change for `r AOInm`, National Agriculture Imagery Program (NAIP) imagery was interpreted from `r yearT1` and `r yearT2`.
+
+Land use describes the management and modification of the land. Figure `r figNum+1` shows the estimated land use change for `r AOInm` between `r yearT1` and `r yearT2` among all land use classes. This provides information on transitional changes across the state by category. Here, we see the highest change in land use in `r AOInm` between `r yearT1` and `r yearT2` was  *`r df19max[[use1nm]]`* to *`r df19max[[use2nm]]`*, with an estimated `r round(df19max$est, 2)`% (`r paste(round(df19max$est.se, 2), "SE)")`. The orange cells represent transitions where change occurred.  
+
 
 &nbsp;
-&nbsp;
 
-
-Over the analysis period (`r yearT1` to `r yearT2`), Forest LU in `r AOInm` `r summaryInfo[1,]$forLuDecrIncr` by `r paste0(abs(as.numeric(setDecPlaces(summaryInfo[1,]$forLuAmtChange,3))),"% (+/-",setDecPlaces(summaryInfo[1,]$forLuAmtChangeUnc,3),"%)")`, from `r paste0(setDecPlaces(summaryInfo[1,]$forLuEstT1,3),"%")` (+/-`r paste0(setDecPlaces(summaryInfo[1,]$forLuUncT1,3),"%")`) in `r yearT1` to `r paste0(setDecPlaces(summaryInfo[1,]$forLuEstT2,3),"%")` (+/-`r paste0(setDecPlaces(summaryInfo[1,]$forLuUncT2,3),"%")`) in `r yearT2`; 
-this is an average annual change of `r paste0(abs(as.numeric(setDecPlaces(summaryInfo[1,]$forLuAmtChangeAnn,3))),"% (+/-",setDecPlaces(summaryInfo[1,]$forLuAmtChangeAnnUnc,3),"%)")`. `r forLuChgStmt1`
-
-&nbsp; 
-&nbsp;
-
-Tree LC in `r AOInm` `r summaryInfo[1,]$treeLcDecrIncr` over the analysis period by `r paste0(abs(as.numeric(setDecPlaces(summaryInfo[1,]$treeLcAmtChange,3))),"% (+/-",setDecPlaces(summaryInfo[1,]$treeLcAmtChangeUnc,3),"%)")`, from `r paste0(setDecPlaces(summaryInfo[1,]$treeLcEstT1,3),"%")` (+/-`r paste0(setDecPlaces(summaryInfo[1,]$treeLcUncT1,3),"%")`) in `r yearT1` to `r paste0(setDecPlaces(summaryInfo[1,]$treeLcEstT2,3),"%")` (+/-`r paste0(setDecPlaces(summaryInfo[1,]$treeLcUncT2,3),"%")`) in `r yearT2`; 
-this is an average annual change of `r paste0(abs(as.numeric(setDecPlaces(summaryInfo[1,]$treeLcAmtChangeAnn,3))),"% (+/-",setDecPlaces(summaryInfo[1,]$treeLcAmtChangeAnnUnc,3),"%)")`. `r treeLcChgStmt1`
-
-
-
-
-################ Estimated Land Use Changes for `r AOInm` between `r yearT1` and `r yearT2` among all Land Use Classes
-&nbsp;
-````{r luCheckerboard,echo=FALSE,fig.height=8,fig.width=11.5, dpi=300}
+````{r luCheckerboard,echo=FALSE,fig.height=8,fig.width=11.5, dpi=300, fig.alt="Matrix with estimates of land use change from Time 1 to Time2."}
 
 
 #===================================================================================================================
@@ -1503,11 +1630,11 @@ par(mar = c(0, 5, 0, 0))
 par(oma = c(0, 0, 0, 0))
 
 
-object = plotCheckerboard2(datatype='LU',inFile=Input19,
+object = plotCheckerboard2(datatype='LU',inFile=df19,
                  use1nm=use1nm, use2nm=use2nm,
                  cover1nm=cover1nm, cover2nm=cover2nm,
-                 allClasses = allLUClasses,
-                 allClassesPretty = allLUClassLabs,
+                 allClasses = c("TOTAL", allLUClasses),
+                 allClassesPretty = c("Total", allLUClassLabs),
                  cellWidth=1,cellHeight=1)
  
 ##axis(1,pos=1)
@@ -1525,109 +1652,35 @@ close.screen(all = TRUE)
 
 ```` {r luCheckerboardCapGen,include=FALSE}
 figNum = figNum + 1
-figCap = paste0("Figure ",figNum,": Estimated Land Use Change for ", AOInm," from ",
-                 yearT1," to ", yearT2, ", with standard error values in parentheses.")
+figCap = paste0("Figure ",figNum,": Estimated percent land use for ", AOInm," from ",
+                 yearT1," to ", yearT2, ", with standard error values in parentheses.",
+                "*Less than 0.005%.")
 
 
 
 ````
 ########## `r figCap`
 
+<br>
 
-############ 
-################ Agent of Change for `r AOInm` (`r yearT1` to `r yearT2`)
+``` {r echo=FALSE}
 
-``` {r chgAgBarChart,echo=FALSE, fig.height=3}
+highgain <- Input14[Input14$gain.est == max(Input14$gain.est, na.rm=TRUE), ]
+highgain$category <- unlist(strsplit(highgain$gain.val,split=" to "))[2]
 
-#===================================================================================================================
-# Figure 6 - Percent of Area Changed, by Agent of Change -- This part adds in caption text &
-# plots data using plotGainLossSingClass function created above 
-#===================================================================================================================
+highloss <- Input14[Input14$loss.est == max(Input14$loss.est, na.rm=TRUE), ]
+highloss$category <- unlist(strsplit(highloss$loss.val,split=" to "))[1]
 
-## Input 18: Forest Land Use Change input (Figure 6) 
+forgain <- Input15[Input15$gain.val == "Not-Forest to Forest", ]
+forloss <- Input15[Input15$loss.val == "Forest to Not-Forest", ]
 
-# Don't include "No Change"
-tabInfo = Input18[Input18[[agentnm]] != 'No Change',]
-
-barData = as.numeric(tabInfo$est)
-barLabels = tabInfo[[agentnm]]
-
-# replace "Stress" with "Stress and Mortality" on the y axis labels
-barLabels[barLabels == 'Stress'] = 'Stress and Mortality'
-
-# set xticks to accommodate CIs, which extend beyond the bars themselves 
-xLeft = min(tabInfo$CI95left,na.rm=TRUE)
-if (min(tabInfo$CI95left,na.rm=TRUE) < 0) {
-  xLeft = 0
-}
-
-xticks = pretty(c(xLeft,
-                max(tabInfo$CI95right,na.rm=TRUE))) 
-
-xmin = xticks[1] 
-xmax = tail(xticks,n=1)
-
-# set color ramp
-colorsInRamp = c("darkgray","white")
-colRamp = colorRampPalette(colorsInRamp)
-
-# add bar plot to graphic, with margins to accommodate labels and titles.
-# bottom, left, top, and right
-par(mar=c(3,9,3,1))
-barp = barplot(rev(barData),col = rev(colRamp(length(barData))),xlim=c(xmin,xmax),
-               beside=FALSE,horiz=TRUE,
-               space=0.25,axes=FALSE,
-               xlab="",names.arg=rev(barLabels),font=1,las=1,cex.names=0.8)
-
-# add 95% confidence intervals
-ycoords = rev(barp[,1])
-par(xpd=NA)
-for (i in 1:length(ycoords)) {
-#  xLeft = max(0,tabInfo$CI95left[i])
-  xLeft = max(0,barData[i])
-  lines(x=c(xLeft,tabInfo$CI95right[i]),y=rep(ycoords[i],2))
-}
-
-# add reference lines
-par(xpd=FALSE)
-abline(v=xticks,lty="dotted",col="gray")
-
-# add legend to explain that black line = 95% confidence interval
-par(xpd=NA) # allow drawing outside of box plot area
-legend("topright",legend=c("95% Confidence Interval"),col="black",lty="solid",
-      bty='n',text.col="black",cex=0.8,ncol=1,inset=c(0.00,-0.25))
-
-# add x-axis ticks and labels
-axis(1,at=xticks,labels=paste0(setDecPlaces(xticks,1)," %"))
-
-# add y-axis title
-#axis(2,at=median(ycoords),labels=c("Agent of Change"),
-#     las=3,cex.axis=1.2,font=2,mgp=c(3,7,0),tick=FALSE) # default mgp = 3,1,0
-
-# Add Main title.
-par(xpd=FALSE)
-##mtext(text=paste0("Percent of Area Changed, by Agent of Change"),
-      ##side=3,line=2,font=2,cex=1.5)
-
-box()
 ```
 
-``` {r aocCapGen,include=FALSE}  
-figNum = figNum + 1
-figCap = paste0("Figure ",figNum,": Estimated percent area of ", AOInm,
-                 " that changed between ",yearT1," and ",yearT2,
-                 " by Agent of Change, on all lands.")
-                 
-```
-########## `r figCap`
+Net change shows the overall change across `r AOInm`. Figure `r figNum+1` presents the net land use change among all classes for `r AOInm` (`r yearT1` to `r yearT2`). Here, the blue bars reflect a positive change and the red bars reflect a negative change. The largest net gain in `r AOInm` was *`r highgain$category`* land use with `r paste0(round(highgain$diff.est, 3), "% (", round(highgain$diff.se, 3), " SE)")`. The largest net loss in `r AOInm` was *`r highloss$category`* land use with `r paste0(round(highloss$diff.est, 3), "% (", round(highloss$diff.se, 3), " SE)")`. Figure `r figNum+2` focuses on forest land use change only showing a gain of `r paste0(round(forgain$gain.est, 3), " (", round(forgain$gain.se, 3), "% SE)")` and loss of `r paste0(round(forloss$loss.est, 3), "% (", round(forloss$loss.se, 3), " SE)")`.
 
-
-
-############
-################ Land Use for `r AOInm` (`r yearT1` to `r yearT2`)
 &nbsp;
 &nbsp;
-``` {r luNetChange,echo=FALSE,fig.height=3,dpi=300}
+``` {r luNetChange,echo=FALSE,fig.height=3,dpi=300, fig.alt="Bar plot showing net land cover change for all classes."}
 
 #===================================================================================================================
 # Figures 2 - are created from plot frameworks, and functions called above &
@@ -1656,13 +1709,14 @@ plotNetChangesByClass(datatype='LU',inFile=Input14,figTitle=titleStr)
 figNum = figNum+1
 figCap = paste0("Figure ",figNum,": Estimated percent net land use change for ",
                  AOInm, " for all classes from ",yearT1," to ",yearT2,".  ",
-                "Class names in gray text were not captured by the sample in ", AOInm,".")
+                "Class names in gray text were not captured by the sample in ", AOInm,
+                ". Error bars represent one standard error (upper limit).")
 ```
 ########## `r figCap`
  
 
 
-``` {r luForGainLoss_tab3,echo=FALSE,fig.height=4,dpi=300}
+``` {r luForGainLoss_tab3,echo=FALSE,fig.height=4,dpi=300, fig.alt="Bar plot showing net land use change for forest land."}
 
 #===================================================================================================================
 # Figure 3 - Forest Land Use Change -- Title added, open map added &
@@ -1710,16 +1764,101 @@ title(main=titleStr,line=1.5,cex.main=1.2)
 
 
 figNum = figNum+1
-figCap = paste0("Figure ",figNum,": Estimated percent of ", AOInm,"'s area that experienced Forest LU Gain (left bar) and Loss                 (right bar) between ",yearT1," and ",yearT2,".  " )
+figCap = paste0("Figure ",figNum,": Estimated percent of ", AOInm,
+                "'s area that experienced Forest land use gain (left bar) and loss (right bar) between ",
+                yearT1," and ",yearT2, ". Error bars represent one standard error (upper limit)." )
 
 ```
 ########## `r figCap`
 
-############ 
-################ Land Cover for `r AOInm` (`r yearT1` to `r yearT2`)
+<br>
+<br>
+
+#### Land Cover 
+
+```{r echo=FALSE}
+df20max <- df20[df20$est < 100 & df20[[cover1nm]] != "TOTAL" & df20[[cover2nm]] != "TOTAL"
+			& df20[[cover1nm]] != df20[[cover2nm]], ]
+df20max <- df20max[df20max$est == max(df20max$est, na.rm=TRUE),]
+
+```
+
+
+Land cover describes the physical land type observed on the ground. Figure `r figNum+1` shows the estimated land cover change for `r AOInm` between `r yearT1` and `r yearT2` among all land cover classes. This provides information on transitional changes across the state by category. Here, we see the highest change in land cover in `r AOInm` between `r yearT1` and `r yearT2` was  *`r df20max[[cover1nm]]`* to *`r df20max[[cover2nm]]`*, with an estimated `r round(df20max$est, 2)`% (`r paste(round(df20max$est.se, 2), "SE)")`. The orange cells represent transitions where change occurred.  
+
+
+```{r lcCheckerboard,echo=FALSE,fig.height=7,fig.width=11.5,dpi=300, fig.alt="Matrix with estimates of land cover change from Time 1 to Time2."}
+
+#===================================================================================================================
+# Figure 8 - Checkerboard 2 
+#===================================================================================================================
+
+
+
+
+# set up layout to accommodate grid itself + T1 and T2 class names/labels
+# set up multi-paneled plot layout
+subpanel_coords = matrix(NA,nrow=1,ncol=4) # nrow = nSubPanels
+                                           # ncol = L,R,B,T
+# subpanel #1
+subpanel_coords[1,1] = 0.0 
+subpanel_coords[1,2] = 0.95 
+subpanel_coords[1,3] = 0.0
+subpanel_coords[1,4] = 0.87
+invisible(split.screen(subpanel_coords))
+
+# subpanel #1 - checkerboard itself (only 1 panel in this graphic)
+screen(1)
+
+## bottom, left, top, and right
+par(mar = c(0, 5, 0, 0))
+
+plotCheckerboard(datatype='LC',inFile=df20,
+                 use1nm=use1nm, use2nm=use2nm, 
+                 cover1nm=cover1nm, cover2nm=cover2nm,
+                 allClasses = c("TOTAL", allLCClasses),
+                 allClassesPretty = c("Total", allLCClassLabs),
+                 cellWidth=1,cellHeight=1)
+
+# close up subpanel screens
+close.screen(all = TRUE)
+
+# add overall figure title
+#title(main=titleStr,line=.6,cex.main=1.5)
+```
+
+``` {r lcCheckerboardCapGen,include=FALSE}
+figNum = figNum + 1
+figCap = paste0("Figure ",figNum,": Estimated land cover change for ", 
+                AOInm," ", yearT1," to ", yearT2, ", with standard error values in parentheses.",
+                "*Less than 0.005%.")
+#                "  (Data file: ",basename(dataFile),")")
+```
+########## `r figCap`
+
+
+<br>
+
+``` {r echo=FALSE}
+
+LChighgain <- Input16[Input16$gain.est == max(Input16$gain.est, na.rm=TRUE), ]
+LChighgain$category <- unlist(strsplit(LChighgain$gain.val,split=" to "))[2]
+
+LChighloss <- Input16[Input16$loss.est == max(Input16$loss.est, na.rm=TRUE), ]
+LChighloss$category <- unlist(strsplit(LChighloss$loss.val,split=" to "))[1]
+
+LCtreegain <- Input17[Input17$gain.val == "Not-Tree to Tree", ]
+LCtreeloss <- Input17[Input17$loss.val == "Tree to Not-Tree", ]
+
+```
+
+
+Figure `r figNum+1`  presents the net land cover change among all classes for `r AOInm` (`r yearT1` to `r yearT2`). Again, the blue bars reflect a positive change and the red bars reflect a negative change. The largest net gain in `r AOInm` was *`r LChighgain$category`* land cover with `r paste0(round(LChighgain$diff.est, 3), "% (", round(LChighgain$diff.se, 3), " SE)")`. The largest net loss in `r AOInm` was *`r LChighloss$category`* land cover with `r paste0(round(LChighloss$diff.est, 3), "% (", round(LChighloss$diff.se, 3), " SE)")`. Figure `r figNum+2` focuses on tree (live and dead standing) cover change only, with a gain of `r paste0(round(LCtreegain$gain.est, 3), " (", round(LCtreegain$gain.se, 3), "% SE)")` and loss of `r paste0(round(LCtreeloss$loss.est, 3), "% (", round(LCtreeloss$loss.se, 3), " SE)")`.
+
+
 &nbsp;
 &nbsp;
-``` {r lcNetChange,echo=FALSE,fig.height=3,dpi=300}
+``` {r lcNetChange,echo=FALSE,fig.height=3,dpi=300, fig.alt="Bar plot showing net land cover change for all classes."}
 
 #===================================================================================================================
 # Figure 4 - Net Land Cover Change Among All Classes -- This part adds in caption text & 
@@ -1737,12 +1876,13 @@ plotNetChangesByClass(datatype='LC',inFile=Input16,figTitle=titleStr)
 figNum = figNum+1
 figCap = paste0("Figure ",figNum,": Estimated percent net land cover change for ",
                  AOInm, " for all classes from ",yearT1," to ",yearT2,".  ",
-                "Class names in gray text were not captured by the sample in ", AOInm,".")
+                "Class names in gray text were not captured by the sample in ", AOInm,
+                ". Error bars represent upper 95% confidence interval.")
 ```
 ########## `r figCap`
 
 
-``` {r lcTreeGainLoss,echo=FALSE, fig.height=4,dpi=300}
+``` {r lcTreeGainLoss,echo=FALSE, fig.height=4,dpi=300, fig.alt="Bar plot showing net land cover change for tree (live and standing dead) cover change."}
 
 #===================================================================================================================
 # Figure 5 - Tree Land Cover Change -- This part adds in caption text &
@@ -1751,7 +1891,7 @@ figCap = paste0("Figure ",figNum,": Estimated percent net land cover change for 
 
 ## Input 17: Forest Land Use Change input (Figure 5) 
 
-titleStr=paste("Tree Land Cover Change")
+titleStr=paste("Tree (Live and Standing Dead) Cover Change")
 
 # set up multi-paneled plot layout
 subpanel_coords = matrix(NA,nrow=3,ncol=4) # nrow = nSubPanels
@@ -1787,69 +1927,132 @@ title(main=titleStr,line=1.5,cex.main=1.2)
 
 figNum = figNum+1
 figCap = paste0("Figure ",figNum,
-                ": Estimated percent of ", AOInm,"'s area that experienced Tree LC Gain (left bar) and Loss (right bar) between                 ",yearT1," and ",yearT2,".  ")
+                ": Estimated percent of ", AOInm,
+                "'s area that experienced tree (live and standing dead) cover gain (left bar) and loss (right bar) between ",
+                yearT1," and ",yearT2,". Error bars represent one standard error (upper limit).")
                 
 ```
 ########## `r figCap`
 
 
-\newpage
+<br>
+<br>
 
 
-################ Estimated Land Cover changes for `r AOInm` between `r yearT1` and `r yearT2` among all Land Cover Classes
+#### Agent of Change
 
-```{r lcCheckerboard,echo=FALSE,fig.height=7,fig.width=11.5,dpi=300}
+Figure `r figNum+1` displays the percent change by agent of change for `r AOInm` from `r yearT1` to `r yearT2`. The largest agent of change across `r AOInm` was *`r Input18[Input18$est == max(Input18$est, na.rm=TRUE), agentnm]`* with `r paste0(round(Input18[Input18$est == max(Input18$est, na.rm=TRUE), "est"],2), "%  (", round(Input18[Input18$est == max(Input18$est, na.rm=TRUE),"est.se"],2), " SE)")` change in percentage points.
+
+``` {r chgAgBarChart,echo=FALSE, fig.height=3,  dpi=300, fig.alt="Bar plot showing percent change by agent of change from Time 1 to Time 2."}
 
 #===================================================================================================================
-# Figure 8 - Checkerboard 2 
+# Figure 6 - Percent of Area Changed, by Agent of Change -- This part adds in caption text &
+# plots data using plotGainLossSingClass function created above 
 #===================================================================================================================
 
+## Input 18: Forest Land Use Change input (Figure 6) 
 
+# Don't include "No Change"
+tabInfo = Input18[Input18[[agentnm]] != 'No Change',]
+tabInfo$SEleft <- tabInfo$est - tabInfo$est.se
+tabInfo$SEright <- tabInfo$est + tabInfo$est.se
 
+barData = as.numeric(tabInfo$est)
+barLabels = tabInfo[[agentnm]]
 
-# set up layout to accommodate grid itself + T1 and T2 class names/labels
-# set up multi-paneled plot layout
-subpanel_coords = matrix(NA,nrow=1,ncol=4) # nrow = nSubPanels
-                                           # ncol = L,R,B,T
-# subpanel #1
-subpanel_coords[1,1] = 0.0 
-subpanel_coords[1,2] = 0.95 
-subpanel_coords[1,3] = 0.0
-subpanel_coords[1,4] = 0.87
-invisible(split.screen(subpanel_coords))
+# replace "Stress" with "Stress and Mortality" on the y axis labels
+barLabels[barLabels == 'Stress'] = 'Stress and Mortality'
 
-# subpanel #1 - checkerboard itself (only 1 panel in this graphic)
-screen(1)
+# set xticks to accommodate CIs, which extend beyond the bars themselves 
+xLeft = min(tabInfo$SEleft,na.rm=TRUE)
+if (min(tabInfo$SEleft,na.rm=TRUE) < 0) {
+  xLeft = 0
+}
 
-## bottom, left, top, and right
-par(mar = c(0, 5, 0, 0))
+xticks = pretty(c(xLeft,
+                max(tabInfo$SEright,na.rm=TRUE))) 
 
-plotCheckerboard(datatype='LC',inFile=Input20,
-                 use1nm=use1nm, use2nm=use2nm, 
-                 cover1nm=cover1nm, cover2nm=cover2nm,
-                 allClasses = allLCClasses,
-                 allClassesPretty = allLCClassLabs,
-                 cellWidth=1,cellHeight=1)
+xmin = xticks[1] 
+xmax = tail(xticks,n=1)
 
-# close up subpanel screens
-close.screen(all = TRUE)
+# set color ramp
+colorsInRamp = c("darkgray","white")
+colRamp = colorRampPalette(colorsInRamp)
 
-# add overall figure title
-#title(main=titleStr,line=.6,cex.main=1.5)
+# add bar plot to graphic, with margins to accommodate labels and titles.
+# bottom, left, top, and right
+par(mar=c(3,7,2,1))
+barp = barplot(rev(barData),col = rev(colRamp(length(barData))),xlim=c(xmin,xmax),
+               beside=FALSE,horiz=TRUE,
+               space=0.25,axes=FALSE,
+               xlab="",names.arg=rev(barLabels),font=1,las=1,cex.names=0.8)
+
+# add 95% confidence intervals
+ycoords = rev(barp[,1])
+par(xpd=NA)
+for (i in 1:length(ycoords)) {
+#  xLeft = max(0,tabInfo$CI95left[i])
+  xLeft = max(0,barData[i])
+  lines(x=c(xLeft,tabInfo$SEright[i]),y=rep(ycoords[i],2))
+}
+
+# add reference lines
+par(xpd=FALSE)
+abline(v=xticks,lty="dotted",col="gray")
+
+# add legend to explain that black line = 95% confidence interval
+#par(xpd=NA) # allow drawing outside of box plot area
+#legend("topright",legend=c("95% Confidence Interval"),col="black",lty="solid",
+#      bty='n',text.col="black",cex=0.8,ncol=1,inset=c(0.00,-0.25))
+
+# add x-axis ticks and labels
+axis(1,at=xticks,labels=paste0(setDecPlaces(xticks,1)," %"))
+
+# add y-axis title
+#axis(2,at=median(ycoords),labels=c("Agent of Change"),
+#     las=3,cex.axis=1.2,font=2,mgp=c(3,7,0),tick=FALSE) # default mgp = 3,1,0
+
+# Add Main title.
+#par(xpd=FALSE)
+##mtext(text=paste0("Percent of Area Changed, by Agent of Change"),
+      ##side=3,line=2,font=2,cex=1.5)
+
+box()
 ```
 
-``` {r lcCheckerboardCapGen,include=FALSE}
+
+``` {r aocCapGen,include=FALSE}  
 figNum = figNum + 1
-figCap = paste0("Figure ",figNum,": Estimated Land Cover change for ", AOInm," ", yearT1," to ", yearT2, ", with standard error values in parentheses.")
-#                "  (Data file: ",basename(dataFile),")")
+figCap = paste0("Figure ",figNum,": Estimated percent area of ", AOInm,
+                 " that changed between ",yearT1," and ",yearT2,
+                 " by agent of change, on all lands. Error bars represent one standard error (upper limit).")
+                 
 ```
 ########## `r figCap`
 
+\newpage
 
-################ %T2-LC within T2-LU for `r AOInm` (`r yearT1` to `r yearT2`)
+
+<br>
+<br>
+
+#### Land Use and Land Cover
+
+``` {r echo=FALSE}
+
+LChigh2nm <- row.names(d)[1]
+LChigh2 <- sort(d[1,], decreasing=TRUE)[1:2]
+
+LUhigh2nm <- row.names(d2)[1]
+LUhigh2 <- sort(d2[row.names="Tree - Live",], decreasing=TRUE)[1:2]
+
+```
+
+Now, let's look at land cover and land use together for `r AOInm`, `r yearT2`. Figure `r figNum+1` shows percent of land cover (X axis) within land use classes (Y axis), while figure `r figNum+2` shows percent land use (X axis) within land cover classes (Y axis) across `r AOInm`. In Figure 8 we see the largest amount of land cover within *`r LChigh2nm`* land use is *`r names(LChigh2[1])`* with `r LChigh2[1]`% cover, followed by *`r names(LChigh2[2])`* with `r LChigh2[2]`% cover. Similarly, *`r names(LUhigh2[1])`* is the largest land use within the *`r LUhigh2nm`* land cover with *`r LUhigh2[1]`% cover, followed by *`r names(LUhigh2[2])`* with `r LUhigh2[2]`% cover (Figure 9). 
+
 &nbsp;
 &nbsp;
-```{r T2-LCover_LUse,echo=FALSE, fig.height=4.5, fig.width = 10, dpi=300}
+```{r T2-LCover_LUse,echo=FALSE, fig.height=4.5, fig.width = 10, dpi=300, fig.alt="Matrix showing percent land cover within land use classes."}
 
 # #===================================================================================================================
 # # Figure 9 - Heatmap 
@@ -1859,8 +2062,8 @@ col1 = colorRampPalette(c("gray50", 'gray90'))(10)
 if (any(colSums(d) == 0)) {
   d[1, colSums(d) == 0] <- 0.0001
 }
-pheatmap(d, display_numbers = T,
-         cluster_rows = TRUE, cluster_cols = TRUE,
+pheatmap(d[, nrow(d):1], display_numbers = T,
+         cluster_rows = FALSE, cluster_cols = FALSE,
          treeheight_col = 0,
          treeheight_row = 0,
          cutree_cols = 5,
@@ -1869,10 +2072,65 @@ pheatmap(d, display_numbers = T,
          clustering_distance_rows = "correlation",
          color = col1,
          border_color = "Black",
-         cellwidth = 50,
+         cellwidth = 40,
          cellheight = 20,
-         xlab = "Landclass1",
-         ylab = "Landclass2",
+         xlab = "Land use",
+         ylab = "Land class",
+         fontsize = 14,
+         fontsize_row = 10,
+         fontsize_col = 10,
+         fontsize_number = 8,
+         angle_col = 45,
+         number_color = "Black",
+         number_format = "%.1f",
+         legend = TRUE,
+         scale = "none",
+         legend_breaks = c(0, 20, 40, 60, 80, 100, max(d)),
+         legend_labels = c("0", "20", "40", "60", "80", "100", "\n"),
+         na_col = "Black"
+)
+```
+
+
+``` {r T2LCCapGen,include=FALSE}
+figNum = figNum + 1
+figCap = paste0("Figure ",figNum,": The percent of ", AOInm,
+                 " land cover (X axis) within different land use classes (Y axis) in ", yearT2,
+                 ". Lighter shaded cells represent higher percentage of land cover within a given",
+                 " land use.")
+```
+
+########## `r figCap`
+
+<br>
+
+
+&nbsp;
+&nbsp;
+```{r T2-LUse_LCover,echo=FALSE, fig.height=4.5, fig.width = 10, dpi=300, fig.alt="Matrix showing percent land use within land cover classes."}
+
+# #===================================================================================================================
+# # Figure 10 - Heatmap 
+# #===================================================================================================================
+# 
+col1 = colorRampPalette(c("gray50", 'gray90'))(10)
+if (any(colSums(d2) == 0)) {
+  d2[1, colSums(d2) == 0] <- 0.0001
+}
+pheatmap(d2[, nrow(d2):1], display_numbers = T,
+         cluster_rows = FALSE, cluster_cols = FALSE,
+         treeheight_col = 0,
+         treeheight_row = 0,
+         cutree_cols = 5,
+         cutree_rows = 6,
+         clustering_distance_cols = "correlation",
+         clustering_distance_rows = "correlation",
+         color = col1,
+         border_color = "Black",
+         cellwidth = 40,
+         cellheight = 20,
+         xlab = "Landuse1",
+         ylab = "Landuse2",
          fontsize = 14,
          fontsize_row = 10,
          fontsize_col = 10,
@@ -1892,72 +2150,113 @@ pheatmap(d, display_numbers = T,
 ``` {r T2LUCapGen,include=FALSE}
 figNum = figNum + 1
 figCap = paste0("Figure ",figNum,": The percent of ", AOInm,
-                 " landcover that correspond to different land uses between ",yearT1," and ",yearT2,
-                 ". Lighter shaded cells represent higher percentage of landcover that correspond to a given",
-                 " land use.")
+                 " land use (X axis) within different land cover classes (Y axis) in ", yearT2,
+                 ". Lighter shaded cells represent higher percentage of land use within a given",
+                 " land cover.")
 ```
 
 ########## `r figCap`
 
 
-############
-############## Quality Assessment and Quality Control (QAQC) report
+<br>
+<br>
+
+
+
+#### Quality Assessment and Quality Control (QAQC) report
+
+A quality assessment and quality control (QAQC) report was generated for `r AOInm` for `r yearT1` to `r yearT2` that compares agreement between original photo interpretations and blind re-interpretations by the same interpreter on the same plot (self checks), and also to blind interpretations made by another interpreter on the same plots (cross checks). The results are outlined below.
 
 &nbsp;
 
-A Quality Assessment and Quality Control (QAQC) report was generated for `r AOInm` for `r yearT1` to `r yearT2` that compares agreement between original photo interpretations and blind re-interpretations by the same interpreter on the same plot (self checks), and also to blind interpretations made by another interpreter on the same plots (cross checks). The results are outlined below.
 
-&nbsp;
+```{r qctext, include=FALSE} 
 
-  - For Presence of Change, agreement was `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'PC_self_check'][["Result"]], "%")` in self checks and `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'PC_cross_check'][["Result"]], "%")` in cross checks.
-  - For Land Cover 1 and 2, agreement was `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'LC1_2_self_check'][["Result"]], "%")` in self checks and `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'LC1_2_cross_check'][["Result"]], "%")` in cross checks.
-  - For Land Use 1 and 2, agreement was `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'LU1_2_self_check'][["Result"]], "%")` in self checks and `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'LU1_2_cross_check'][["Result"]], "%")` in cross checks.
-  - For Change Agent, agreement was `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'CA_self_check'][["Result"]], "%")` in self checks and `r paste0(ice.QAQC[ice.QAQC$QAQC_check == 'CA_cross_check'][["Result"]], "%")` in cross checks.
+chgtext <- "For presence of change, agreement was "
+if (!is.null(QAQC.self)) {
+  chgtext <- paste0(chgtext, QAQC.self[1], "% in self checks")
+  if (!is.null(QAQC.cross)) {
+    chgtext <- paste0(chgtext, " and ", QAQC.cross[1], "% in cross checks.")
+  } else {
+    chgtext <- paste0(chgtext, ".")
+  }
+} else {
+  chgtext <- paste0(chgtext, QAQC.cross[1], "% in cross checks")
+} 
+LUtext <- "For land use Time 1 and Time 2, agreement was "
+if (!is.null(QAQC.self)) {
+  LUtext <- paste0(LUtext, QAQC.self[2], "% in self checks")
+  if (!is.null(QAQC.cross)) {
+    LUtext <- paste0(LUtext, " and ", QAQC.cross[2], "% in cross checks.")
+  } else {
+    LUtext <- paste0(LUtext, ".")
+  }
+} else {
+  LUtext <- paste0(LUtext, QAQC.cross[2], "% in cross checks")
+}
+LCtext <- "For land cover Time 1 and Time 2, agreement was "
+if (!is.null(QAQC.self)) {
+  LCtext <- paste0(LCtext, QAQC.self[3], "% in self checks")
+  if (!is.null(QAQC.cross)) {
+    LCtext <- paste0(LCtext, " and ", QAQC.cross[3], "% in cross checks.")
+  } else {
+    LCtext <- paste0(LCtext, ".")
+  }
+} else {
+  LCtext <- paste0(LCtext, QAQC.cross[3], "% in cross checks")
+}
+CAtext <- "For change agent, agreement was "
+if (!is.null(QAQC.self)) {
+  CAtext <- paste0(CAtext, QAQC.self[4], "% in self checks")
+  if (!is.null(QAQC.cross)) {
+    CAtext <- paste0(CAtext, " and ", QAQC.cross[4], "% in cross checks.")
+  } else {
+    CAtext <- paste0(CAtext, ".")
+  }
+} else {
+  CAtext <- paste0(CAtext, QAQC.cross[4], "% in cross checks")
+}
+
+```
+
+
+`r chgtext`  
+`r LUtext`  
+`r LCtext`  
+`r CAtext`  
+
 
 &nbsp;
 
 For more information on the QAQC analysis, reference ICE_`r outfn.pre`_`r yearT1`_`r yearT2`_QAQC.xlsx
 
 
+<br>
+<br>
 
-##############
-############## Reference Information
 
-## Glossary
 
-&nbsp;
-&nbsp;
+#### Glossary
 
-_Agent of Change:_ Interpreted for each point that experienced change between the assessed time periods. Note: seasonal and expected changes, such as Crop Rotation and High Water, may be collected by interpreters but are not included in the change estimates reported.
+_Agent of Change:_ Interpreted for each point that experienced change between the assessed time periods. Note: seasonal and expected changes, such as *Crop Rotation* and *High Water*, may be collected by interpreters but are not included in the change estimates reported.
 
-&nbsp;
-&nbsp;
+_Land Cover:_ Assessed at each of the sample points to determine what type of cover is present at the sample point. No MMU is required for land cover.
 
-_Land Cover (LC):_ Assessed at each of the sample points to determine what type of cover is present at the sample point. No MMU is required for LC.
+_Land Use:_ Assessed at each of the sample points to determine what type of use is present. For land use, a minimum mapping unit (MMU) of 1.0 acres in size and greater than 120 feet wide must be met in order for select LUs to be recorded for each point.
 
-&nbsp;
-&nbsp;
 
-_Land Use (LU):_ Assessed at each of the sample points to determine what type of use is present. For LU, a minimum mapping unit (MMU) of 1.0 acres in size and greater than 120 feet wide must be met in order for select LUs to be recorded for each point.
+<br>
+<br>
 
-&nbsp;
-&nbsp;
+#### Reference Information
 
-## References
+Bechtold, W.A.; Patterson, P.L. [Editors] 2005. The enhanced forest inventory and analysis program - national sampling design and estimation procedures. Gen. Tech. Rep. SRS-80. Asheville, NC: U.S. Department of Agriculture, Forest Service, Southern Research Station. 85 p.  
 
-&nbsp;
-&nbsp;
+Frescino, T.S.; Moisen, G.G.; Patterson, P.L.; Toney, C.; White, G.W. 2023. FIESTA. A Forest Inventory Estimation and Analysis R Package. Ecography Software Note [DOI: 10.1111/ecog.06428]. 
 
-Bechtold, William A.; Patterson, Paul L.; [Editors] 2005. The enhanced forest inventory and analysis program - national sampling design and estimation procedures. Gen. Tech. Rep. SRS-80. Asheville, NC: U.S. Department of Agriculture, Forest Service, Southern Research Station. 85 p.  
-
-&nbsp;
-&nbsp;
-
-Patterson, Paul L. 2012. Photo-based estimators for the Nevada photo-based inventory. Res. Pap. RMRS-RP-92. Fort Collins, CO: U.S. Department of Agriculture, Forest Service, Rocky Mountain Research Station. 14 p.
-
-&nbsp;
-&nbsp;
+Patterson, P.L. 2012. Photo-based estimators for the Nevada photo-based inventory. Res. Pap. RMRS-RP-92. Fort Collins, CO: U.S. Department of Agriculture, Forest Service, Rocky Mountain Research Station. 14 p.
 
 U.S. Department of Agriculture, Forest Service. 2016. Image-based Change Estimation (ICE) Protocol Guide, Version 3, 19 p. Unpublished protocol guide on file at: Geospatial Technology and Applications Center, Salt Lake City, Utah. 
 
+<br>
 

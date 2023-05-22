@@ -35,6 +35,9 @@ anGetData_list <- function(bndlst,
 		names(formals(anGetData)),
 		names(formals(spGetPlots)),
            names(formals(spGetAuxiliary)))
+print("TEST")
+print(formallst)
+
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]
     stop("invalid parameter: ", toString(miss))
@@ -52,7 +55,6 @@ anGetData_list <- function(bndlst,
       message("must be numeric vector of length 1")
     } 
   }
-
 
 
   ##################################################################
@@ -79,8 +81,7 @@ anGetData_list <- function(bndlst,
     if (!is.na(getext(listobjnm))) {
       listobjnm <- basename.NoExt(listobjnm)
     }
-  } 
-  
+  }   
 
   ## Extract FIA data and model data
   ###########################################################################
@@ -101,7 +102,7 @@ anGetData_list <- function(bndlst,
       splitbnd <- FALSE
     }
   }  
-
+ 
   ## Split bndlst
   SAbndlist <- list()
   if (splitbnd) {

@@ -121,7 +121,6 @@ anGetData <- function(bnd_layer,
     stop("invalid parameter: ", toString(miss))
   }
 
-
   ## Set savedata defaults
   savedata_defaults_list <- formals(savedata_options)[-length(formals(savedata_options))]
   

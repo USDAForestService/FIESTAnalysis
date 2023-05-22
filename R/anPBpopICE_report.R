@@ -13,6 +13,10 @@
 #' @param AOInm String. Name of area of interest.
 #' @param T1 String. Time 1 description (e.g., YYYY).
 #' @param T2 String. Time 2 description (e.g., YYYY).
+#' @param QAQC.self Numeric vector. Vector of percentages corresponding to 
+#' self checks of: Change, LU, LC, Agent of Change, in that order. Optional.
+#' @param QAQC.cross Numeric vector. Vector of percentages corresponding to 
+#' cross checks of: Change, LU, LC, Agent of Change, in that order. Optional.
 #' @param outfn.pre String. Short name of file name. If NULL, using AOInm.
 #' @param ice.QAQCfn String. Name of file with summarize QAQC data (See details
 #' for file structure). If no file is given, the QAQC section is removed from
@@ -26,6 +30,8 @@ anPBpopICE_report <- function(rawfolder,
                               AOInm, 
                               T1, 
                               T2, 
+                              QAQC.self = NULL,
+                              QAQC.cross = NULL,
                               outfn.pre = NULL, 
                               photofn = NULL, 
                               outfolder = NULL) {
@@ -39,12 +45,40 @@ anPBpopICE_report <- function(rawfolder,
   #outfolder <- normalizePath(outfolder)
   reportfolder <- tempdir()
 
-
-# ice.QAQCfn String. Name of file with summarize QAQC data (See details for 
-# file structure). If no file is given, the QAQC section is removed from report.
-  ice.QAQCfn = NULL
-
-
+  ## Check QAQC data
+  if (is.null(QAQC.self) || all(is.na(QAQC.self))) {
+    QAQC.self <- NULL
+  } else {
+    if (all(!is.vector(QAQC.self), !is.numeric(QAQC.self), length(QAQC.self) != 4)) {
+      warning("QAQC.self must be a vector of 4 numbers")
+      QAQC.self <- NULL
+    } else if (sum(is.na(QAQC.self)) < 4) {
+      QAQC.chk <- QAQC.self[!is.na(QAQC.self)]
+      if (any(QAQC.chk < 0, QAQC.chk > 100)) {
+        warning("all values of QAQC.self must be between 0 and 100")
+      }     
+    } else if (any(QAQC.self < 0, QAQC.self > 100)) {
+      warning("all values of QAQC.self must be between 0 and 100")
+      QAQC.self <- NULL
+    }    
+  }
+  if (is.null(QAQC.cross) || all(is.na(QAQC.cross))) {
+    QAQC.cross <- NULL
+  } else {
+    if (all(!is.vector(QAQC.cross), !is.numeric(QAQC.cross), length(QAQC.cross) != 4)) {
+      warning("QAQC.cross must be a vector of 4 numbers")
+      QAQC.cross <- NULL
+    } else if (sum(is.na(QAQC.cross)) < 4) {
+      QAQC.chk <- QAQC.cross[!is.na(QAQC.cross)]
+      if (any(QAQC.chk < 0, QAQC.chk > 100)) {
+        warning("all values of QAQC.cross must be between 0 and 100")
+      }     
+    } else if (any(QAQC.cross < 0, QAQC.cross > 100)) {
+      warning("all values of QAQC.cross must be between 0 and 100")
+      ice.QAQC <- NULL
+    }    
+  }
+ 
 #  if (any(lapply(strsplit(outfolder, "/"), substr, 1, 1)[[1]] == "_")) {
 #    reportfolder <- tempdir()
 #  }
@@ -54,9 +88,6 @@ anPBpopICE_report <- function(rawfolder,
   #  dir.create(reportfolder)
   #}
   rawfolder <- normalizePath(rawfolder, mustWork=TRUE)
-  if (!is.null(ice.QAQCfn)) {
-    ice.QAQCfn <- normalizePath(ice.QAQCfn, mustWork=TRUE)
-  }
 
   if (is.null(outfn.pre)) {
     outfn.pre <- gsub(" ", "_", AOInm)
@@ -65,12 +96,13 @@ anPBpopICE_report <- function(rawfolder,
   
   ## Copy files to outfolder
   rmdfn <- file.path(reportfolder, paste0(AOInm, '_report.Rmd'))
-  reportnm <- paste0(AOInm, '_report.docx')
+  #reportnm <- paste0(AOInm, '_report.docx')
+  reportnm <- paste0(AOInm, '_report.html')
   reportfn <- file.path(reportfolder, reportnm)
   file.copy(system.file("rmd", "anPBpopICE_report.Rmd", package="FIESTAnalysis"),
 	rmdfn, overwrite=TRUE)
-  file.copy(system.file("rmd", "anPBtemplateICE.docx", package="FIESTAnalysis"),
-	file.path(reportfolder, "anPBtemplateICE.docx"), overwrite=TRUE)
+#  file.copy(system.file("rmd", "anPBtemplateICE.docx", package="FIESTAnalysis"),
+#	file.path(reportfolder, "anPBtemplateICE.docx"), overwrite=TRUE)
   if (is.null(photofn)) {
     file.copy(system.file("rmd", "ICE.PNG", package="FIESTAnalysis"), 
 		file.path(reportfolder, "ICE.PNG"), overwrite=TRUE)
@@ -83,16 +115,16 @@ anPBpopICE_report <- function(rawfolder,
   #file.copy("C:/_tsf/_GitHub/FIESTA/inst/rmd/anPBtemplateICE.docx", reportfn, overwrite=TRUE)
   #file.copy("C:/_tsf/_GitHub/FIESTA/inst/rmd/ICE.PNG", file.path(reportfolder, "ICE.PNG"), overwrite=TRUE)
 
-#  if (is.null(ice.QAQCfn)) {
-#    # Lines 1889-1908 contain text for QAQC
-#    # Starting before the following:
-#    ############
-#    ############## Quality Assessment and Quality Control (QAQC) report
-#    # And ending before:
-#    ##############
-#    ############## Reference Information
-#    system(paste("sed -i '1902,1922d'", rmdfn)) 
-#  }
+  if (all(is.null(QAQC.self), is.null(QAQC.cross))) {
+    # Lines 2164-2236 contain text for QAQC
+    # Starting before the following:
+    ############
+    ############## Quality Assessment and Quality Control (QAQC) report
+    # And ending before:
+    ##############
+    ############## Reference Information
+    system(paste("sed -i '2165,2238d'", rmdfn)) 
+  }
 
   ## Set working directory to reportfolder
   setwd(reportfolder) 
@@ -100,9 +132,10 @@ anPBpopICE_report <- function(rawfolder,
   test <- tryCatch(
     rmarkdown::render(
       input = rmdfn,
+      output_format = "html_document",
       output_file = reportfn,
       params = list(rawfolder=rawfolder, AOInm=AOInm, T1=T1, T2=T2,
-		  outfn.pre=outfn.pre, ice.QAQCfn=ice.QAQCfn),
+		  outfn.pre=outfn.pre, QAQC.self=QAQC.self, QAQC.cross=QAQC.cross),
       envir = parent.frame()
     ),
     error=function(e) {
@@ -114,7 +147,7 @@ anPBpopICE_report <- function(rawfolder,
   }
 
   ## Copy report from temporary folder to outfolder
-  file.copy(reportfn, outfolder)
+  file.copy(reportfn, outfolder, overwrite=TRUE)
   message("saving report to ", file.path(outfolder, reportnm))
   
 

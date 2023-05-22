@@ -240,7 +240,6 @@ knitr::kable(EST1, "simple", align=c("lrr"), digits=c(0,2,0),
 &nbsp;    
 
 ```{r EST1_Barplot, echo=FALSE, warning=FALSE, message=FALSE, fig.width=7.5}
-
 anMOD_barplot(estdat_EST1, barplot.row=TRUE, 
               barplot.nplt=TRUE, barplot.ord=NULL)
 ```

@@ -15,6 +15,7 @@
 #' @param largebnd.unique String. The FIESTAnalysis::ecomap layer is used
 #' as default for the borrowing large extent. The unique id can be
 #' 'SECTION', 'PROVINCE', or NULL.
+#' @param strvar String. Name of strata variable. Note. Must be in rastlst.cat. 
 #' @param landarea String. The sample area filter for estimates ('ALL',
 #' 'FOREST', 'TIMBERLAND').  If landarea=FOREST, filtered to COND_STATUS_CD =
 #' 1; If landarea=TIMBERLAND, filtered to SITECLCD in(1:6) and RESERVCD = 0.
@@ -23,7 +24,6 @@
 #' @param estvarlst String vector. One or more tree-level estimate variable
 #' (e.g., 'VOLCFNET').
 #' @param tfilterlst String vector. One or more tree filters ('live', 'dead').
-#' @param strvar String. Name of strata variable. Note. Must be in rastlst.cat. 
 #' @param byeach Logical. If TRUE, creates an SAdom for each smallbnd polygon.
 #' @param prednames String vector. One or more predictors to use for estimation. 
 #' Names must match names in SAdatalst$prednames
@@ -39,6 +39,7 @@
 #' of options. Only used when savedata = TRUE. 
 #' @param SAdomdat List object. Output from spGetSAdoms(). 
 #' @param SAdatalst List object. Output from anGetData_list(). 
+#' @param ... Parameters for input to anGetData_list().
 #' @return Estimates
 #' @author Tracey S. Frescino
 #' @keywords data
@@ -47,12 +48,12 @@ anMODcompare <- function(bnd,
                          bnd_dsn = NULL, 
                          bnd.att = NULL, 
                          bnd.filter = NULL, 
-                         largebnd.unique = "SECTION", 
+                         largebnd.unique = "SECTION",
+                         strvar, 
                          landarea = "FOREST", 
                          pcfilter = NULL, 
                          estvarlst = c("BA", "VOLCFNET", "VOLBFNET", "TPA_UNADJ", "DRYBIO_AG", "CARBON_AG"),
                          tfilterlst = "live",
-                         strvar,
                          byeach = FALSE, 
                          prednames = NULL,
                          modelselect = TRUE,
@@ -64,14 +65,53 @@ anMODcompare <- function(bnd,
                          SAdomdat = NULL,
                          SAdatalst = NULL,
                          ...) {
+
+  ## Check input parameters
+  input.params <- names(as.list(match.call()))[-1]
+  formallst <- unique(c(names(formals(anMODcompare)), names(formals(anGetData_list)), 
+			names(formals(anGetData)), names(formals(spGetPlots)), 
+			names(formals(spGetAuxiliary))))
+  if (!all(input.params %in% formallst)) {
+    miss <- input.params[!input.params %in% formallst]
+    stop("invalid parameter: ", toString(miss))
+  }
+
+  ## Check parameter lists
+  pcheck.params(input.params, savedata_opts=savedata_opts)
   
+  ## Set savedata defaults
+  savedata_defaults_list <- formals(savedata_options)[-length(formals(savedata_options))]
   
+  for (i in 1:length(savedata_defaults_list)) {
+    assign(names(savedata_defaults_list)[[i]], savedata_defaults_list[[i]])
+  }
+  
+  ## Set user-supplied savedata values
+  if (length(savedata_opts) > 0) {
+    if (!savedata) {
+      message("savedata=FALSE with savedata parameters... no data are saved")
+    }
+    for (i in 1:length(savedata_opts)) {
+      if (names(savedata_opts)[[i]] %in% names(savedata_defaults_list)) {
+        assign(names(savedata_opts)[[i]], savedata_opts[[i]])
+      } else {
+        stop(paste("Invalid parameter: ", names(savedata_opts)[[i]]))
+      }
+    }
+  }
+
+  ## Check strvar
+  if (!exists("strvar") || is.null(strvar) || !is.character(strvar) || strvar == "") {
+    stop("invalid strvar")
+  }
+
   ## Get modeling domains
   ##############################################################
   if (is.null(SAdomdat)) {
     SAdomdat <- spGetSAdoms(smallbnd = bnd, 
                           smallbnd_dsn = bnd_dsn,
                           smallbnd.unique = bnd.att, 
+                          smallbnd.filter = bnd.filter,
                           helperbnd = ecomap, 
                           helperbnd.unique = "SUBSECTION",
                           largebnd = ecomap, 
@@ -87,7 +127,6 @@ anMODcompare <- function(bnd,
                           byeach = byeach)
     #names(SAdomdat$SAdomlst$SAbnd)
     #head(SAdomdat$SAdomlst$SAbnd)
-
     if (saveobj) {
       message("saving SAdomdat to ", file.path(outfolder, "SAdomdat.rds"))
       saveRDS(SAdomdat, file.path(outfolder, "SAdomdat.rds"))

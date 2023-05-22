@@ -69,6 +69,7 @@
 #' @param savedata_opts List. See help(savedata_options()) for a list
 #' of options. Only used when savedata = TRUE.  
 #' @param pltdat R object. FIA plot data, output from spGetPlots().
+#' @param auxdat R object. Auxiliary data, output from spGetAuxiliary().
 #' @param ncores R object. Number of cores to use for data extraction.
 #' (Note: needs parallel package).
 #' @param ...  Other parameters for DBgetPlots.
@@ -123,6 +124,7 @@ anGetData_tsum <- function(bnd_layer,
                            objnm = "tsumdat", 
                            savedata_opts = NULL, 
                            pltdat = NULL, 
+                           auxdat = NULL,
                            ncores = 1,
                            ...) {
 
@@ -142,7 +144,7 @@ anGetData_tsum <- function(bnd_layer,
   ##################################################################
   input.params <- names(as.list(match.call()))[-1]
   formallst <- c(names(formals(anGetData_tsum)),
-		names(formals(spGetPlots)))
+		names(formals(spGetPlots)), "istree", "isseed")
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]
     stop("invalid parameter: ", toString(miss))
@@ -234,7 +236,7 @@ anGetData_tsum <- function(bnd_layer,
     step_dsn <- NULL
     step_fmt <- "shp"
   }
-
+ 
   ####################################################################
   ## Get FIA plot data from SQLite within boundary
   ####################################################################
@@ -252,10 +254,7 @@ anGetData_tsum <- function(bnd_layer,
     }
   } else {
     pltdat.names <- c("bnd", "xy.uniqueid", "puniqueid", "pjoinid", "tabs")
-    if (!all(pltdat.names %in% names(pltdat))) {
-      stop("missing components in pltdat list: ",
-		toString(pltdat.names[!pltdat.names %in% names(pltdat)]))
-    }
+    pltdat <- pcheck.object(pltdat, list.items = pltdat.names)
   }
 
   ## Extract list objects
@@ -384,27 +383,34 @@ anGetData_tsum <- function(bnd_layer,
   ####################################################################
   ## Get auxiliary data
   ####################################################################
-  message("summarizing auxiliary model data...")
-  auxdat <- spGetAuxiliary(xyplt = spxy, 
-                           uniqueid = xy.uniqueid,
-                           unit_layer = bnd,
-                           unitvar = bnd.att,
-                           rastfolder = rastfolder,
-                           rastlst.cont = rastlst.cont, 
-                           rastlst.cont.name = rastlst.cont.name, 
-                           rastlst.cont.NODATA = rastlst.cont.NODATA, 
-                           rastlst.cat = rastlst.cat, 
-                           rastlst.cat.name = rastlst.cat.name, 
-                           rastlst.cat.NODATA = rastlst.cat.NODATA, 
-                           keepNA = keepNA,
-                           npixels = TRUE, 
-                           ncores = ncores,
-                           vars2keep = vars2keep, 
-                           savedata = FALSE)
+  if (is.null(auxdat)) {
+    message("summarizing auxiliary model data...")
+    auxdat <- spGetAuxiliary(xyplt = spxy, 
+                             uniqueid = xy.uniqueid,
+                             unit_layer = bnd,
+                             unitvar = bnd.att,
+                             rastfolder = rastfolder,
+                             rastlst.cont = rastlst.cont, 
+                             rastlst.cont.name = rastlst.cont.name, 
+                             rastlst.cont.NODATA = rastlst.cont.NODATA, 
+                             rastlst.cat = rastlst.cat, 
+                             rastlst.cat.name = rastlst.cat.name, 
+                             rastlst.cat.NODATA = rastlst.cat.NODATA, 
+                             keepNA = keepNA,
+                             npixels = TRUE, 
+                             ncores = ncores,
+                             vars2keep = vars2keep, 
+                             savedata = FALSE)
+    if (is.null(auxdat)) return(NULL)
+    if (saveobj) {
+      message("saving auxdat object to: ", file.path(outfolder, "auxdat.rda"), "...")
+      save(auxdat, file=file.path(outfolder, "auxdat.rda"))
+    }
+  } else {
+    auxdat.names <- c("pltassgn", "unitarea", "unitzonal")
+    auxdat <- pcheck.object(auxdat, list.items = auxdat.names)
+  }
   pltassgn <- auxdat$pltassgn
-dim(pltassgn)
-dim(spxy)
-
   unitzonal <- auxdat$unitzonal
   unitvar <- auxdat$unitvar
   prednames <- auxdat$prednames
@@ -417,123 +423,114 @@ dim(spxy)
   npixels <- unitzonal[, c(unitvar, npixelvar)]
 
 
+  if (strata) { 
+    if (is.null(strvar)) {    
+      if (!is.null(predfac) && length(predfac) == 1) {
+        strvar <- predfac
+      } else {
+        stop("must include strvar if strata=TRUE")
+      }
+    } 
+    strwtvar <- "strwt" 
+    if (!is.null(unitzonal)) {
+      stratalut <- strat.pivot(unitzonal, unitvars=unitvar, 
+                      strvar, strwtvar=strwtvar)
+    }
+  }
+
+
   ##########################################
   ## Create output list
-  ##########################################
-  #pltdat <- pltdat
-  #pltdat$spxy=pltdat$xypltx=xy.uniqueid <- NULL
-
-#  for (j in 1:length(estvarlst)) {
-#    estvar <- estvarlst[j]
-#    for (k in 1:length(tfilterlst)) {
-#      tfilter <- tfilterlst[k]
-#      message("generating estimates for ", estvar, " - ", tfilter, "...")
-#
-#      estvar.filter <- ifelse(tfilter == "live", "STATUSCD == 1",
-#			ifelse(tfilter == "dead", "STATUSCD == 2 & STANDING_DEAD_CD == 1", NULL))
-#
-#      plt <- datSumTree(tree=tree, cond=cond, plt=plt, TPA=TPA,
-#			getadjplot=getadjplot, adjtree=adjtree,
-#			tsumvarlst=estvar, tfilter="STATUSCD == 1")
-#  }
-
-  # sumvars <- "FOREST_PROP"
-  # if (!bycond) {
-  #   pdat <- datSumCond(cond=cond,
-  #                              adjcond=TRUE,
-  #                              NAto0=TRUE,
-  #                              csumvar="CONDPROP_UNADJ",
-  #                              cfilter="COND_STATUS_CD == 1",
-  #                              csumvarnm="FOREST_PROP",
-  #                              getadjplot=getadjplot,
-  #                              puniqueid=cuniqueid)
-  #   cdat <- pdat$condsum
-  #   sumvars <- pdat$csumvarnm
-  # } else {
-  #   if (getadjplot) {
-  #     if ("COND_STATUS_CD" %in% names(cond)) {
-  #       cond <- cond[cond$COND_STATUS_CD != 5,]
-  #     } else {
-  #       message("assuming no nonsampled condition in dataset")
-  #     }
-  #     adjfacdata <- getadjfactorPLOT(condx=cond, cuniqueid=cuniqueid)
-  #     cdat <- adjfacdata$condx
-  #     setnames(cdat, "CONDPROP_ADJ", "FOREST_PROP")
-  #   } else {
-  #     cdat <- cond
-  #   }
-  #   cdat <- merge(plt, cdat, by.x=puniqueid, by.y=cuniqueid)
-  #   setnames(cdat, "CN", "PLT_CN")
-  # }
+  ########################################## 
 
 
-  ## Get population data
+  #####################################################
+  ## Get population data 
+  #####################################################
   popdat <- modMApop(pltdat = pltdat, 
                      auxdat = auxdat, 
                      adjplot = getadjplot, 
-                     standardize = FALSE)
-  
-  if (strata) {
-    if (is.null(predfac)) {
-      stop("need categorical raster for strata")
-    }
-    GBpopdat <- modGBpop(pltdat = pltdat,
-                         auxdat = auxdat,
-                         adj = "plot",
-                         strata = TRUE,
-                         strvar = strvar,
-                         strata_opts = list(minplotnum.strat=0))
-    stratalut <- GBpopdat$stratalut[, 1:which(names(GBpopdat$stratalut) == "n.strata")]
-    strvar <- GBpopdat$strvar
-  }
-  pltcondx <- popdat$pltcondx
+                     standardize = FALSE) 
   treex <- popdat$treex
-  condx <- popdat$condx
-  
+
  
-  ## Merge condition proportion
-  if ("CONDPROP_ADJ" %in% names(condx)) {
-    forpropnm <- "CONDPROP_ADJ"
-  } else if ("CONDPROP_UNADJ" %in% names(condx)) {
-    forpropnm <- "CONDPROP_UNADJ"
-  }    
-  pltcondx <- merge(pltcondx, condx[, c(cuniqueid, "CONDID", forpropnm), with=FALSE], 
-                    by=c(cuniqueid, "CONDID"))
+  #####################################################
+  ## Summarize condition data 
+  #####################################################
+  csumvarnm <- "FORPROP"
+
+  conddatp <- datSumCond(cond = cond,
+                         plt = plt,
+                         adjcond = TRUE,
+                         NAto0 = TRUE,
+                         csumvar = "CONDPROP_UNADJ",
+                         cfilter = "COND_STATUS_CD == 1",
+                         csumvarnm = csumvarnm,
+                         getadjplot = getadjplot,
+                         puniqueid = puniqueid,
+                         cuniqueid = cuniqueid)
+  cdatp <- conddatp$condsum
+  csumvar <- conddatp$csumvarnm
+
+  conddatc <- datSumCond(cond = cond,
+                         bycond = TRUE,
+                         adjcond = TRUE,
+                         NAto0 = TRUE,
+                         csumvar = "CONDPROP_UNADJ",
+                         cfilter = "COND_STATUS_CD == 1",
+                         csumvarnm = csumvarnm,
+                         getadjplot = getadjplot,
+                         puniqueid = puniqueid,
+                         cuniqueid = cuniqueid)
+  cdatc <- conddatc$condsum
+
+  ## Metadata for forprop
+  DESCRIPTION  <- "Proportion of forest land"
+  if (getadjplot) {
+    DESCRIPTION <- paste(DESCRIPTION, "- adjusted for partial nonresponse at plot-level")
+  }
+  forprop_meta <- cbind(VARIABLE = csumvar, DESCRIPTION = DESCRIPTION, TABLE = "DERIVED")
   
- 
+
+  #####################################################
+  ## Summarize tree data 
+  #####################################################
   adjtree <- ifelse(getadjplot, TRUE, FALSE)
 
   ## Summarize tree data to plot-level
   treedatp <- datSumTree(tree = treex, 
-                        plt = plt,
-                        cond = pltcondx, 
-                        bycond = FALSE,
-                        TPA = TPA, 
-                        adjtree = adjtree, 
-                        NAto0 = TRUE, 
-                        tsumvarlst = estvarlst, 
-                        tfilter = estvar.filter, 
-                        puniqueid = puniqueid,
-				  cuniqueid = cuniqueid)
+                         plt = cdatp,
+                         cond = cond, 
+                         bycond = FALSE,
+                         TPA = TPA, 
+                         adjtree = adjtree, 
+                         NAto0 = TRUE, 
+                         tsumvarlst = estvarlst, 
+                         getadjplot = FALSE,
+                         tfilter = estvar.filter, 
+                         puniqueid = puniqueid,
+				   cuniqueid = cuniqueid)
   tdatp <- treedatp$treedat
-  sumvars <- c(sumvars, treedatp$sumvars)
+  sumvars <- unique(c(csumvar, treedatp$sumvars))
   tdatp_meta <- treedatp$meta  
+  tdatp_meta <- rbind(tdatp_meta, forprop_meta)
 
   ## Summarize tree data to condition-level
   treedatc <- datSumTree(tree = treex, 
-                        cond = cond, 
-                        bycond = TRUE,
-                        TPA = TPA, 
-                        adjtree = adjtree, 
-                        NAto0 = TRUE, 
-                        tsumvarlst = estvarlst, 
-                        tfilter = estvar.filter, 
-                        puniqueid = puniqueid,
-				  cuniqueid = cuniqueid)
+                         cond = cdatc, 
+                         bycond = TRUE,
+                         TPA = TPA, 
+                         adjtree = adjtree, 
+                         NAto0 = TRUE, 
+                         tsumvarlst = estvarlst, 
+                         getadjplot = FALSE,
+                         tfilter = estvar.filter, 
+                         puniqueid = puniqueid,
+				   cuniqueid = cuniqueid)
   tdatc <- treedatc$treedat
-  sumvars <- c(sumvars, treedatc$sumvars)
+  sumvars <- unique(c(csumvar, treedatc$sumvars))
   tdatc_meta <- treedatc$meta  
-
+  tdatc_meta <- rbind(tdatc_meta, forprop_meta)
  
   if (addmean) {
     tpltassgn <- setDT(merge(pltassgn[, c(pltassgnid, unitvar)], tdatp, 
@@ -577,7 +574,6 @@ dim(spxy)
   if (strata) {
     returnlst$stratalut <- stratalut
     returnlst$strvar <- strvar
-    returnlst$GBpopdat <- GBpopdat
   }
   
 #  if (istree && !is.null(treex)) {

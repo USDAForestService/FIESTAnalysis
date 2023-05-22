@@ -11,14 +11,11 @@ module, for one or more FIA Evaluations.}
 anGBgetpop_evallst(
   states = NULL,
   RS = NULL,
-  evalidlst = NULL,
-  evalCur = FALSE,
-  evalEndyrlst = NULL,
-  evalType = "VOL",
   datsource = "datamart",
   data_dsn = NULL,
+  dbTabs = dbTables(),
+  eval_opts = eval_options(eval_type = "VOL"),
   isseed = FALSE,
-  ppsanm = "pop_plot_stratum_assgn",
   byEndyr = FALSE,
   savedata = FALSE,
   outfolder = NULL,
@@ -31,31 +28,19 @@ anGBgetpop_evallst(
 \item{RS}{String vector. Name of research station(s)
 ('RMRS','SRS','NCRS','NERS','PNWRS').  Do not use if states is populated.}
 
-\item{evalidlst}{Integer vector. Vector of one or more evalid (e.g, 491801).}
-
-\item{evalCur}{Logical. If TRUE, gets the most current evaluation for each
-state.}
-
-\item{evalEndyrlst}{Integer vector. Vector of one or more Evaluation end
-years to generate estimates (YYYY).}
-
-\item{evalType}{String vector. The type(s) of evaluation of interest ('ALL',
-'CURR', VOL', 'GRM', 'P2VEG', 'DWM", 'INV', 'REGEN', 'CRWN').  The evalType
-'ALL' includes nonsampled plots; 'CURR' includes plots used for area
-estimates; 'VOL' includes plots used for area and/or tree estimates; The
-evalType 'GRM' includes plots used for growth, removals, mortality, and
-change estimates (eval_typ %in% c(GROW, MORT, REMV, CHNG)).  Multiple types
-are accepted. See details below and FIA database manual for regional
-availability and/or differences.}
-
 \item{datsource}{String. Source of data ('datamart', 'sqlite').}
 
-\item{data_dsn}{If datsource='sqlite', the file name (data source name) of
-the sqlite database (*.sqlite).}
+\item{data_dsn}{String. If datsource='sqlite', the name of SQLite database
+(*.sqlite).}
+
+\item{dbTabs}{List of database tables the user would like returned.
+See help(dbTables) for a list of options.}
+
+\item{eval_opts}{List of evaluation options for 'FIA' or 'custom'
+evaluations to determine the set of data returned. See help(eval_options)
+for a list of options.}
 
 \item{isseed}{Logical. If TRUE, add seedling data from Evaluation(s).}
-
-\item{ppsanm}{String. Name of pop_plot_stratum_assgn table in database.}
 
 \item{byEndyr}{Logical. If TRUE, organizes evalidlst by evalEndyr.  Set TRUE
 if estimates include more than one state (e.g., if area of interest crosses
@@ -67,6 +52,9 @@ more than one state - Manti-LaSal).}
 outfolder is the working directory.}
 
 \item{...}{Parameters to modGBpop().}
+
+\item{eval}{String. Type of evaluation time frame for data extraction 
+('FIA', 'custom'). See eval_opts for more further options.}
 }
 \value{
 Set of population data from modGBpop() for each Evaluation
@@ -81,8 +69,8 @@ module, for one or more FIA Evaluations.
 }
 \examples{
   ## Calculate population data for Utah, area evaluations 2015-2019
-  GBpoplst <- anGBgetpop_evallst(evalEndyrlst=c(2015:2019), states="Utah",
-	evalType="CURR")
+  GBpoplst <- anGBgetpop_evallst(states="Utah", 
+                        eval_opts=list(Endyr=c(2015:2019), evalType="CURR"))
 
   ## Get acres by forest type from each Evaluation in GBpoplst
   lapply(GBpoplst, function(x) modGBarea(GBpopdat=x, rowvar="FORTYPGRPCD",

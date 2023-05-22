@@ -10,6 +10,8 @@ anPBpopICE_report(
   AOInm,
   T1,
   T2,
+  QAQC.self = NULL,
+  QAQC.cross = NULL,
   outfn.pre = NULL,
   photofn = NULL,
   outfolder = NULL
@@ -23,6 +25,12 @@ anPBpopICE_report(
 \item{T1}{String. Time 1 description (e.g., YYYY).}
 
 \item{T2}{String. Time 2 description (e.g., YYYY).}
+
+\item{QAQC.self}{Numeric vector. Vector of percentages corresponding to 
+self checks of: Change, LU, LC, Agent of Change, in that order. Optional.}
+
+\item{QAQC.cross}{Numeric vector. Vector of percentages corresponding to 
+cross checks of: Change, LU, LC, Agent of Change, in that order. Optional.}
 
 \item{outfn.pre}{String. Short name of file name. If NULL, using AOInm.}
 

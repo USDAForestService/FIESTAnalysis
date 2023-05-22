@@ -49,23 +49,24 @@ The main objective of this tutorial is to demonstrate the use of `FIESTA` Analys
 The examples use FIA plot data from all Evaluations in Vermont using the FIA annual plot design, downloaded and stored in a SQLite database on May 13, 2022, as external data in `FIESTA`. The following code was used to create the database.
 
 ## Get data from datamart and add to SQLite database
-SQLitefn <- "F:/FIAdata/FIApublic_VT_evalAll_pop_20220519.db"
+SQLitefn <- "F:/FIAdata/FIApublic_VT_eval1519_pop_20221213.db"
 DBgetPlots(istree=TRUE, isseed=TRUE, 
           states = "Vermont", 
           invtype = "ANNUAL",
-          evalAll = TRUE, 
-          evalType = "VOL",
+          eval = "FIA", 
+          eval_opts = list(Endyr = 2015:2019, evalType = "VOL"),
+          getxy = FALSE,
           returndata = FALSE, 
           savePOP = TRUE, 
+          othertables = c("POP_STRATUM", "POP_ESTN_UNIT"),
           savedata = TRUE, 
-          othertables = c("POP_ESTN_UNIT", "POP_STRATUM"),  
           savedata_opts = list(out_fmt = "sqlite", 
                                out_dsn = SQLitefn, 
                                overwrite_dsn = TRUE)
           )
 
 ```{r}
-sqlitefn <- system.file("extdata", "FIA_data/FIApublic_VT_evalAll_pop_20220519.db", package="FIESTAnalysis")
+sqlitefn <- system.file("extdata", "FIA_data/FIApublic_VT_eval1519_pop_20221213.db", package="FIESTAnalysis")
 
 conn <- DBI::dbConnect(RSQLite::SQLite(), sqlitefn)
 DBI::dbListTables(conn)

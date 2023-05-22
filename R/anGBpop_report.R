@@ -121,8 +121,8 @@ anGBpop_report <- function(GBpopdat,
 #  ref_spcd <- ref_codes[ref_codes$VARIABLE == "SPCD", ]
   spcdlst <- table(GBpopdat$seedx$SPCD)[table(GBpopdat$seedx$SPCD) > 5]
   if (!is.null(spcd) && length(spcd) > 0) {
-    if (!spcd %in% names(spcdlst)) {
-      message("SPCD ", spcd, " not in popdat")
+    if (!all(spcd %in% names(spcdlst))) {
+      message("SPCD not in popdat: ", toString(spcd))
       spcd <- names(spcdlst[spcdlst != 999 & spcdlst == max(spcdlst)])
     } else {
       nplt <- sum(spcdlst[names(spcdlst) %in% spcd])
@@ -130,7 +130,6 @@ anGBpop_report <- function(GBpopdat,
         spcd <- names(spcdlst[spcdlst != 999 & spcdlst == max(spcdlst)])
       }
     }
-    spcd <- names(spcdlst[spcdlst != 999 & spcdlst == max(spcdlst)])
   } else {
     spcd <- names(spcdlst[spcdlst != 999 & spcdlst == max(spcdlst)])
   }

@@ -431,7 +431,7 @@ anPBpopICE_core <- function(PBpopdatICE,
 
   ###############################################################################
   ## 13a. Ratio estimates of use_2 within cover_2
-  ## Percent change of land use at Time 1 within land cover at Time 2.
+  ## Percent change of land use at Time 2 within land cover at Time 2.
   ###############################################################################
   outfn.pre2 <- paste0("13a_", outfn.pre)
   rowvar <- "use_2"
@@ -450,6 +450,30 @@ anPBpopICE_core <- function(PBpopdatICE,
                               title_opts=list(title.ref=title.ref))
   
   #use_2_cover_2_rat$est
+
+
+  ###############################################################################
+  ## 13b. Ratio estimates of cover_2 within use_2
+  ## Percent change of land cover at Time 2 within land use at Time 2.
+  ###############################################################################
+  outfn.pre2 <- paste0("13b_", outfn.pre)
+  rowvar <- "cover_2"
+  colvar <- "use_2"
+
+  cover_2_use_2_rat <- modPB(PBpopdat=PBpopdatICE, 
+                              tabtype=tabtype, ratio=TRUE,
+                              rowvar=rowvar, colvar=colvar, 
+                              domlut=domlut, sumunits=sumunits, 
+                              table_opts=list(row.add0=TRUE, col.add0=TRUE),
+                              returntitle=returntitle, savedata=savedata, 
+                              savedata_opts=list(outfolder=outfolder, 
+                                          outfn.date=outfn.date, 
+                                          overwrite_layer=overwrite, 
+                                          outfn.pre=outfn.pre2),
+                              title_opts=list(title.ref=title.ref))
+  
+  #use_2_cover_2_rat$est
+
 
 
   ###############################################################################

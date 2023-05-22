@@ -83,8 +83,7 @@ anGBest_core_data <- function(state,
 
   ## Get strata information from FIA dataMart
   ############################################
-  datStrata <- DBgetStrata(evalid = evalid, 
-                           datsource = datsource, 
+  datStrata <- DBgetStrata(datsource = datsource, 
                            data_dsn = data_dsn, 
                            eval_opts = list(evalid = evalid),
                            pop_plot_stratum_assgn = pop_plot_stratum_assgn)
@@ -92,12 +91,9 @@ anGBest_core_data <- function(state,
 
   ## Get county and survey unit reference tables
   #############################################################
-  whereqry <- paste("where statecd =", stcd)
-
-  coqry <- paste("select countycd, countynm from COUNTY", whereqry)
-  unitqry <- paste("select value, meaning from REF_UNIT", whereqry)
-  ref_countycd <- DBqryCSV(coqry, states=state, sqltables="COUNTY")
-  ref_unitcd <- DBqryCSV(unitqry, sqltables="REF_UNIT")
+  unitqry <- paste("select VALUE, MEANING from ref_unit where STATECD = ", stcd)
+  ref_countycd <- sf::st_drop_geometry(stunitco[stunitco$STATECD == stcd, c("COUNTYCD", "COUNTYNM")])
+  ref_unitcd <- sqldf::sqldf(unitqry)
 
 ############ End CSV only
 

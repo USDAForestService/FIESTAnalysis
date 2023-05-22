@@ -10,11 +10,11 @@ anMODcompare(
   bnd.att = NULL,
   bnd.filter = NULL,
   largebnd.unique = "SECTION",
+  strvar,
   landarea = "FOREST",
   pcfilter = NULL,
   estvarlst = c("BA", "VOLCFNET", "VOLBFNET", "TPA_UNADJ", "DRYBIO_AG", "CARBON_AG"),
   tfilterlst = "live",
-  strvar,
   byeach = FALSE,
   prednames = NULL,
   modelselect = TRUE,
@@ -42,6 +42,8 @@ estimation unit(s). If NULL, bnd is default as one estimation unit.multestvar}
 as default for the borrowing large extent. The unique id can be
 'SECTION', 'PROVINCE', or NULL.}
 
+\item{strvar}{String. Name of strata variable. Note. Must be in rastlst.cat.}
+
 \item{landarea}{String. The sample area filter for estimates ('ALL',
 'FOREST', 'TIMBERLAND').  If landarea=FOREST, filtered to COND_STATUS_CD =
 1; If landarea=TIMBERLAND, filtered to SITECLCD in(1:6) and RESERVCD = 0.}
@@ -53,8 +55,6 @@ pltassgn).  Must be R logical syntax.}
 (e.g., 'VOLCFNET').}
 
 \item{tfilterlst}{String vector. One or more tree filters ('live', 'dead').}
-
-\item{strvar}{String. Name of strata variable. Note. Must be in rastlst.cat.}
 
 \item{byeach}{Logical. If TRUE, creates an SAdom for each smallbnd polygon.}
 
@@ -80,6 +80,8 @@ of options. Only used when savedata = TRUE.}
 \item{SAdomdat}{List object. Output from spGetSAdoms().}
 
 \item{SAdatalst}{List object. Output from anGetData_list().}
+
+\item{...}{Parameters for input to anGetData_list().}
 
 \item{bnd_layer}{sf R object or String. Area of interest (population
 boundary or estimation unit). Can be a spatial polygon object, full pathname
