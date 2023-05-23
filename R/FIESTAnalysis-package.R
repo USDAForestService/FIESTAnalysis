@@ -40,9 +40,6 @@
 NULL
 
 
-
-
-
 #' Reference table - for Automated Land Program National Forests.
 #' 
 #' National Forest region and names from the USDA S_USA.BasicOwnershipFS
@@ -76,9 +73,6 @@ NULL
 NULL
 
 
-
-
-
 #' Reference tables - Code definitions.
 #' 
 #' Table with variable codes (VALUE) and descriptions (MEANING).
@@ -97,9 +91,6 @@ NULL
 #' @source FIA look-up tables.
 #' @keywords datasets
 NULL
-
-
-
 
 
 #' Reference table - Metadata for cond default variables output from
@@ -122,9 +113,6 @@ NULL
 #' @source FIA look-up table
 #' @keywords datasets
 NULL
-
-
-
 
 
 #' Reference table - for generating tables.
@@ -198,9 +186,6 @@ NULL
 NULL
 
 
-
-
-
 #' Reference table - ICE - land use or land cover change.
 #' 
 #' Table with land use or land cover change codes and descriptions.
@@ -213,9 +198,6 @@ NULL
 #' @source Imported from comma-delimited file.
 #' @keywords datasets
 NULL
-
-
-
 
 
 #' Reference table - ICE - land use or land cover change.
@@ -232,9 +214,6 @@ NULL
 NULL
 
 
-
-
-
 #' Reference table - ICE - land use cover.
 #' 
 #' Table with land cover codes and descriptions.
@@ -247,9 +226,6 @@ NULL
 #' @source Imported from comma-delimited file.
 #' @keywords datasets
 NULL
-
-
-
 
 
 #' Reference table - for generating tables.
@@ -266,9 +242,6 @@ NULL
 NULL
 
 
-
-
-
 #' Reference table - ICE - land use.
 #' 
 #' Table with land use codes and descriptions.
@@ -280,9 +253,6 @@ NULL
 #' @source Imported from comma-delimited file.
 #' @keywords datasets
 NULL
-
-
-
 
 
 #' Reference table - Metadata for icepnt external dataset.
@@ -297,7 +267,6 @@ NULL
 #' @source FIA look-up table
 #' @keywords datasets
 NULL
-
 
 
 #' Reference table - state codes (STATECD).
@@ -318,9 +287,6 @@ NULL
 #' @source Imported from comma-delimited file.
 #' @keywords datasets
 NULL
-
-
-
 
 
 #' Reference table - 20-year stand age classes(STDAGE).
