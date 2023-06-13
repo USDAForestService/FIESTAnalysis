@@ -151,9 +151,9 @@ anPBpopICE_report <- function(rawfolder,
 
   ## Copy report from temporary folder to outfolder
   file.copy(reportfn, outfolder, overwrite=TRUE)
-  file.copy("figs", outfolder, recursive=TRUE, overwrite=TRUE)
   message("saving report to ", file.path(outfolder, reportnm))
-  
+  file.copy("figs", outfolder, recursive=TRUE, overwrite=TRUE)
+  message("saving figures to ", file.path(outfolder, "figs")) 
 
   ## Set working directory back to original working directory
   setwd(wkdir) 
