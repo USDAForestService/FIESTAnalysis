@@ -37,6 +37,7 @@ anGetData_tsum(
   objnm = "tsumdat",
   savedata_opts = NULL,
   pltdat = NULL,
+  auxdat = NULL,
   ncores = 1,
   ...
 )
@@ -139,6 +140,8 @@ includes XY data if returnxy = TRUE.}
 of options. Only used when savedata = TRUE.}
 
 \item{pltdat}{R object. FIA plot data, output from spGetPlots().}
+
+\item{auxdat}{R object. Auxiliary data, output from spGetAuxiliary().}
 
 \item{ncores}{R object. Number of cores to use for data extraction.
 (Note: needs parallel package).}

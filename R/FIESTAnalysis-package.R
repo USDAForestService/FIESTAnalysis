@@ -73,64 +73,6 @@ NULL
 NULL
 
 
-#' Reference tables - Code definitions.
-#' 
-#' Table with variable codes (VALUE) and descriptions (MEANING).
-#' 
-#' 
-#' @name ref_codes
-#' @docType data
-#' @format A dataframe with 7 columns, VARIABLE, VALUE, MEANING, COLORHEX,
-#' GROUP, GROUPNM, GROUPHEX.
-#' @references O'Connell, B.M.; LaPoint, E.B.; Turner, J.A.; Ridley, T.; Boyer,
-#' D.; Wilson, A.M.; Waddell, K.L.; Christensen, G.; Conkling, B.L. 2012. The
-#' Forest Inventory and Analysis Database: Database Description and Users
-#' Manual Version 5.1.2 for Phase 2. U.S. Department of Agriculture.
-#' (http://fia.fs.fed.us/library/database-documentation/current/ver5-2012/FIADB_user
-#' manual_5-1-2_p2_07_2012.pdf)
-#' @source FIA look-up tables.
-#' @keywords datasets
-NULL
-
-
-#' Reference table - Metadata for cond default variables output from
-#' DBgetPlots()
-#' 
-#' Data frame with variable names and descriptions
-#' 
-#' 
-#' @name ref_cond
-#' @docType data
-#' @format A data frame with 61 rows and 3 columns VARIABLE - Variable in cond
-#' data frame DESCRIPTION - Description of variable in cond data frame TABLE -
-#' Table in database where variable originates or if derived
-#' @references O'Connell, B.M.; LaPoint, E.B.; Turner, J.A.; Ridley, T.; Boyer,
-#' D.; Wilson, A.M.; Waddell, K.L.; Christensen, G.; Conkling, B.L. 2012. The
-#' Forest Inventory and Analysis Database: Database Description and Users
-#' Manual Version 5.1.2 for Phase 2. U.S. Department of Agriculture.
-#' (http://fia.fs.fed.us/library/database-documentation/current/ver5-2012/FIADB_user
-#' manual_5-1-2_p2_07_2012.pdf)
-#' @source FIA look-up table
-#' @keywords datasets
-NULL
-
-
-#' Reference table - for generating tables.
-#' 
-#' Table conversion factors from English to metric units.
-#' 
-#' 
-#' @name ref_conversion
-#' @docType data
-#' @format A dataframe with 4 columns: TYPE, ENGLISH, METRIC, CONVERSION.
-#' @source Conversion table.
-#' @keywords datasets
-NULL
-
-
-
-
-
 #' Reference table - diameter 2-inch class codes (DIA).
 #' 
 #' Table with min (MIN), max (MAX), and 2-inch class diameter codes (MEANING).
@@ -146,42 +88,6 @@ NULL
 #' (http://fia.fs.fed.us/library/database-documentation/current/ver5-2012/FIADB_user
 #' manual_5-1-2_p2_07_2012.pdf)
 #' @source Imported from comma-delimited file.
-#' @keywords datasets
-NULL
-
-
-
-
-
-#' Reference table - for generating tables.
-#' 
-#' Table with row/column domain (VARNM) and their pretty names for table output
-#' (TABLENM).
-#' 
-#' 
-#' @name ref_domain
-#' @docType data
-#' @format A dataframe with 2 columns, VARNM and TABLENM.
-#' @source FIA look-up table.
-#' @keywords datasets
-NULL
-
-
-
-
-
-#' Reference table - for generating tables
-#' 
-#' Data frame with variable names and descriptions
-#' 
-#' 
-#' @name ref_estvar
-#' @docType data
-#' @format A data frame with 26 rows and 4 columns CATEGORY - Category of
-#' estimation variable ESVARNM - Estimation variable in database ESTTITLE - A
-#' title for estimation selections ESTFILTER - Filter statement for each
-#' estimation selection
-#' @source FIA look-up table
 #' @keywords datasets
 NULL
 
@@ -265,26 +171,6 @@ NULL
 #' @format A data frame with 8 rows and 2 columns VARIABLE - Variable in plt
 #' data frame DESCRIPTION - Description of variable in data frame
 #' @source FIA look-up table
-#' @keywords datasets
-NULL
-
-
-#' Reference table - state codes (STATECD).
-#' 
-#' Table with state codes (VALUE), name (MEANING), abbreviation (ABBR), and
-#' UNIT.
-#' 
-#' 
-#' @name ref_statecd
-#' @docType data
-#' @format A dataframe with 4 columns, VALUE, MEANING, ABBR, UNIT.
-#' @references O'Connell, B.M.; LaPoint, E.B.; Turner, J.A.; Ridley, T.; Boyer,
-#' D.; Wilson, A.M.; Waddell, K.L.; Christensen, G.; Conkling, B.L. 2012. The
-#' Forest Inventory and Analysis Database: Database Description and Users
-#' Manual Version 5.1.2 for Phase 2. U.S. Department of Agriculture.
-#' (http://fia.fs.fed.us/library/database-documentation/current/ver5-2012/FIADB_user
-#' manual_5-1-2_p2_07_2012.pdf)
-#' @source Imported from comma-delimited file.
 #' @keywords datasets
 NULL
 
