@@ -9,7 +9,7 @@
 #' @param ice.pltfn Comma-delimited file (*.csv). The full path file name of
 #' ICE plot-level data (optional).
 #' @param T1 Integer. Year of Time 1 imagery (YYYY).
-#' @param T2 Interger. Year of Time 2 imagery (YYYY).
+#' @param T2 Integer. Year of Time 2 imagery (YYYY).
 #' @param plotid String. Name of unique identifier for ice45 plots.
 #' @param pntid String. Name of unique identifier for the points.
 #' @param pltassgn DF/DT or comma-delimited file (*.csv). Plot-level table with
@@ -253,10 +253,61 @@ anPBpopICE <- function(ice.pntfn = NULL,
     message("missing columns in ice.pnt: ", toString(miss))
   }
 
+  ## Check T1 and T2
+  if ((T2 - T1) < 0) {
+    stop("T1 is after T2")
+  }
+  if (!is.null(ice.plt)) {
+    if (all(c("Date1", "Date2") %in% names(ice.plt))) {
+      ## Check Date1 and Date2
+      ice.plt$Date2 <- as.Date(ice.plt$Date2, format="%m/%d/%Y")
+      ice.plt$Date1 <- as.Date(ice.plt$Date1, format="%m/%d/%Y")
+
+      Date1miss <- sum((is.na(ice.plt$Date1) | ice.plt$Date1 == ""), na.rm=TRUE)
+      Date2miss <- sum((is.na(ice.plt$Date2) | ice.plt$Date2 == ""), na.rm=TRUE)
+
+      ## if no Date1 values, fill with Aug 1, T1 year
+      if (Date1miss == nrow(ice.plt)) {
+        ice.plt$Date1 <- paste0(T1, "-08-01")
+      }
+      ## if no Date2 values, fill with Aug 1, T2 year
+      if (Date2miss == nrow(ice.plt)) {
+        ice.plt$Date2 <- paste0(T2, "-08-01")
+      }
+
+      Date1avg <- mean(ice.plt$Date1, na.rm=TRUE)
+      Date2avg <- mean(ice.plt$Date2, na.rm=TRUE)
+
+ 
+      ## Get remeasurement period (REMPER) for each plot 
+      ## Using lubridate package
+      #ice.plt$REMPER <- 
+      #   lubridate::time_length(difftime(ice.plt$Date2, ice.plt$Date1), "years")
+
+      ## Using base R (estimate for leap years)
+      ice.plt$REMPER <- as.numeric(difftime(ice.plt$Date2, 
+                          ice.plt$Date1, unit="weeks")) / 52.25
+      REMPERavg <- round(mean(ice.plt$REMPER, na.rm=TRUE),1)
+
+      if ((REMPERavg / (T2 - T1)) > 2) {
+        message("plot dates are different than T1 and T2 dates:\n")
+      }
+    } else {
+      Date1avg <- T1
+      Date2avg <- T2
+
+      REMPERavg <- T2 - T1
+    }
+  } 
+
+  #REMPERavg <- as.numeric(difftime(Date2avg, 
+  #                    Date1avg, unit="weeks")) / 52.25
+
+
   #########################################################################
   ## Get population data
   ##################################################################
-  PBpopdatICE <- modPBpop(pntdat=ice.pnt, plt=ice.pltfn, 
+  PBpopdatICE <- modPBpop(pntdat=ice.pnt, plt=ice.plt, 
                     plotid=plotid, pntid=pntid, 
                     puniqueid=plotid, pltassgn=pltassgn, pltassgnid=pltassgnid, 
                     unitarea=unitarea, unitvar=unitvar, areavar=areavar, 
@@ -267,6 +318,7 @@ anPBpopICE <- function(ice.pntfn = NULL,
                     savedata=savedata, savedata_opts=list(outfolder=outfolder))
   PBpopdatICE$reflst <- PBdataICE$reflst
   PBpopdatICE$domlut <- domlut
+  PBpopdatICE$REMPERavg <- REMPERavg
 
   if (saveobj) {
     objfn <- getoutfn(outfn=objnm, outfolder=outfolder,

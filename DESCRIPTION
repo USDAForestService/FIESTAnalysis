@@ -22,26 +22,16 @@ Depends:
     FIESTA,
     FIESTAutils
 Imports: 
-    data.table,
-    sf,
-    methods,
-    grDevices,
-    graphics,
-    utils,
-    sp,
-    rgdal,
-    DBI,
     RColorBrewer,
-    RSQLite,
-    knitr,
-    mase,
-    raster,
-    rmarkdown,
-    sqldf,
-    units,
-    xml2
 Suggests:
     arcgisbinding,
+    knitr,
+    sp,
+    terra,
+    geodata,
+    rmarkdown,
+    units,
+    xml2,
     xlsx
 VignetteBuilder: knitr
 Encoding: UTF-8

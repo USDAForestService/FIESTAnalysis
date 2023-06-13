@@ -9,7 +9,7 @@
 #' @param AOInm String. The name of the area of interest (i.e., population) for
 #' titles and output names.
 #' @param T1 Integer. Year of Time 1 imagery (YYYY).
-#' @param T2 Interger. Year of Time 2 imagery (YYYY).
+#' @param T2 Integer. Year of Time 2 imagery (YYYY).
 #' @param tabtype String. Type of units for the table ("AREA", "PCT").
 #' @param sumunits Logical. If TRUE, estimation units are summed and returned
 #' in one table.

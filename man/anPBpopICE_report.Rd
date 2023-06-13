@@ -10,10 +10,12 @@ anPBpopICE_report(
   AOInm,
   T1,
   T2,
+  REMPER = NULL,
   QAQC.self = NULL,
   QAQC.cross = NULL,
   outfn.pre = NULL,
   photofn = NULL,
+  icepltfn = NULL,
   outfolder = NULL
 )
 }

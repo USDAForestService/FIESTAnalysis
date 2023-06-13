@@ -41,7 +41,7 @@ ICE plot-level data (optional).}
 
 \item{T1}{Integer. Year of Time 1 imagery (YYYY).}
 
-\item{T2}{Interger. Year of Time 2 imagery (YYYY).}
+\item{T2}{Integer. Year of Time 2 imagery (YYYY).}
 
 \item{plotid}{String. Name of unique identifier for ice45 plots.}
 

@@ -8,6 +8,7 @@ params:
   AOInm: ''
   T1: ''
   T2: ''
+  REMPER: ''
   QAQC.self: ''
   QAQC.cross: ''
   outfn.pre: ''
@@ -122,15 +123,17 @@ rawfolder <- params$rawfolder
 AOInm <- params$AOInm
 yearT1 <- params$T1
 yearT2 <- params$T2
+REMPER <- params$REMPER
 QAQC.self <- params$QAQC.self
 QAQC.cross <- params$QAQC.cross
 outfn.pre <- params$outfn.pre
 
 # ## Set the following parameters to run report
-# rawfolder <- "F:/FIESTA_testing/PBmodule/ME_2015_2018/FIESTA_20230210/estimates/rawdata"
+# rawfolder <- "C:/_tsf/FIESTA_testing/PBmodule/ME_2015_2018/FIESTA_20230210/estimates/rawdata"
 # AOInm <- "Maine"
 # yearT1=T1 <- 2015
 # yearT2=T2 <- 2018
+# REMPER <- 3.0
 # QAQC.self <- NULL
 # QAQC.cross <- NULL
 # outfn.pre <- AOInm
@@ -142,7 +145,7 @@ if (is.null(AOInm) || AOInm == "") stop("AOInm is NULL")
 if (is.null(yearT1) || T1 == "") stop("T1 is NULL")
 if (is.null(yearT2) || T1 == "") stop("T2 is NULL")
 if (is.null(outfn.pre) || outfn.pre == "") outfn.pre <- AOInm
-
+if (is.null(REMPER) || REMPER == "") REMPER <- (yearT2 - yearT1)
 
 ## Check QAQC data
 # if (is.null(QAQC.self)) {
@@ -1330,8 +1333,8 @@ summaryInfo[1,]$forLuAmtChange = Input8[Input8[,1] == 'Forest',]$diff.est
 summaryInfo[1,]$forLuAmtChangeUnc = Input8[Input8[,1] == 'Forest',]$diff.se
 
 ## Average annual change 
-summaryInfo[1,]$forLuAmtChangeAnn = summaryInfo[1,]$forLuAmtChange / (T2 - T1)
-summaryInfo[1,]$forLuAmtChangeAnnUnc = sqrt(summaryInfo[1,]$forLuAmtChangeUnc^2 / (T2 - T1)^2)
+summaryInfo[1,]$forLuAmtChangeAnn = summaryInfo[1,]$forLuAmtChange / (REMPER)
+summaryInfo[1,]$forLuAmtChangeAnnUnc = sqrt(summaryInfo[1,]$forLuAmtChangeUnc^2 / (REMPER)^2)
 
 ## Net change 
 summaryInfo[1,]$forLuAmtChangeNet = (summaryInfo[1,]$forLuEstT1 - summaryInfo[1,]$forLuEstT2) / summaryInfo[1,]$forLuEstT1 * 100

@@ -30,10 +30,12 @@ anPBpopICE_report <- function(rawfolder,
                               AOInm, 
                               T1, 
                               T2, 
+                              REMPER = NULL,
                               QAQC.self = NULL,
                               QAQC.cross = NULL,
                               outfn.pre = NULL, 
                               photofn = NULL, 
+                              icepltfn = NULL,
                               outfolder = NULL) {
   ## DESCRIPTION: Creates a report using Rmarkdown 
   ## 		Adds a folder named report in the outfolder and copies all 
@@ -116,26 +118,27 @@ anPBpopICE_report <- function(rawfolder,
   #file.copy("C:/_tsf/_GitHub/FIESTA/inst/rmd/ICE.PNG", file.path(reportfolder, "ICE.PNG"), overwrite=TRUE)
 
   if (all(is.null(QAQC.self), is.null(QAQC.cross))) {
-    # Lines 2164-2236 contain text for QAQC
+    # Lines 2168-2241 contain text for QAQC
     # Starting before the following:
     ############
     ############## Quality Assessment and Quality Control (QAQC) report
     # And ending before:
     ##############
     ############## Reference Information
-    system(paste("sed -i '2165,2238d'", rmdfn)) 
+    system(paste("sed -i '2168,2241d'", rmdfn)) 
   }
 
   ## Set working directory to reportfolder
   setwd(reportfolder) 
-
+ 
   test <- tryCatch(
     rmarkdown::render(
       input = rmdfn,
       output_format = "html_document",
       output_file = reportfn,
       params = list(rawfolder=rawfolder, AOInm=AOInm, T1=T1, T2=T2,
-		  outfn.pre=outfn.pre, QAQC.self=QAQC.self, QAQC.cross=QAQC.cross),
+		           REMPER=REMPER, outfn.pre=outfn.pre, 
+                      QAQC.self=QAQC.self, QAQC.cross=QAQC.cross),
       envir = parent.frame()
     ),
     error=function(e) {
@@ -148,6 +151,7 @@ anPBpopICE_report <- function(rawfolder,
 
   ## Copy report from temporary folder to outfolder
   file.copy(reportfn, outfolder, overwrite=TRUE)
+  file.copy("figs", outfolder, recursive=TRUE, overwrite=TRUE)
   message("saving report to ", file.path(outfolder, reportnm))
   
 

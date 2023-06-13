@@ -28,7 +28,7 @@ titles and output names.}
 
 \item{T1}{Integer. Year of Time 1 imagery (YYYY).}
 
-\item{T2}{Interger. Year of Time 2 imagery (YYYY).}
+\item{T2}{Integer. Year of Time 2 imagery (YYYY).}
 
 \item{tabtype}{String. Type of units for the table ("AREA", "PCT").}
 

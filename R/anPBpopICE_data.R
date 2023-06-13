@@ -440,7 +440,13 @@ anPBpopICE_data <- function(ice.pntfn,
   }
 
   ## Return data
-  returnlst <- list(ice.pnt=ice.pnt, ice.plt=ice.plt, plotid=plotid, pntid=pntid)
+  returnlst <- list(ice.pnt=ice.pnt)
+  if (!is.null(ice.plt)) {
+    returnlst$ice.plt <- ice.plt
+  }
+  returnlst$plotid <- plotid
+  returnlst$pntid <- pntid
+
   reflst <- list(changelut=changelut, coverlut=coverlut, uselut=uselut,
 				agentlut=agentlut)
   if (!is.null(use_FORlut)) {
