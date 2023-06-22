@@ -63,6 +63,7 @@
 #' @param returnxy Logical. If TRUE, returns XY coordinates.
 #' @param savedata Logical. If TRUE, saves data to outfolder. Note:
 #' includes XY data if returnxy = TRUE.
+#' @param exportsp Logical. If TRUE, exports spatial object.
 #' @param savesteps Logical. If TRUE, save steps spatial intermediate layers.
 #' @param saveobj Logical. If TRUE, save SAest object to outfolder.
 #' @param objnm String. Name of saved object name.
@@ -119,6 +120,7 @@ anGetData_tsum <- function(bnd_layer,
                            showsteps = FALSE, 
                            returnxy = FALSE, 
                            savedata = FALSE, 
+                           exportsp = FALSE,
                            savesteps = FALSE, 
                            saveobj = FALSE, 
                            objnm = "tsumdat", 
@@ -183,6 +185,10 @@ anGetData_tsum <- function(bnd_layer,
   ## Check savedata
   savedata <- pcheck.logical(savedata, varnm="savedata",
 		title="Save data extraction?", first="NO", gui=gui)
+
+  ### check exportsp
+  exportsp <- pcheck.logical(exportsp, varnm="exportsp", 
+		title="Export spatial layer?", first="NO", gui=gui)
 
   ## Check savesteps
   savesteps <- pcheck.logical(savesteps, varnm="savesteps",
@@ -356,9 +362,13 @@ anGetData_tsum <- function(bnd_layer,
     return(NULL)
   } else if (all(test$N <= minplots)) {
     message("ALL AOIs have ", minplots, " plots or less... no estimates generated")
-    print(test)
+    messagedf(test)
     return(NULL)
+  } else {
+    message("all domains have >= ", minplots, " plots")
+    messagedf(test)
   }
+    
 
   ####################################################################
   ## Extract polygon vector data
@@ -686,7 +696,13 @@ anGetData_tsum <- function(bnd_layer,
                             overwrite_layer=overwrite_layer))  
  
 
-    }
+  }
+
+  if (exportsp) {
+    message("exporting point data...")
+    spExportSpatial(spxy, savedata_opts=savedata_opts) 
+  }   
+
 
   return(returnlst)
 }
