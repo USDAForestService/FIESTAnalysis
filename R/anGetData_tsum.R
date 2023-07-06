@@ -136,6 +136,7 @@ anGetData_tsum <- function(bnd_layer,
   istree <- TRUE
   addmean <- FALSE
   sumvars=pltassgn2=strvar2 <- NULL
+  cround=tround=3
 
 ## To add
 ## 1) subset plot data
@@ -144,6 +145,15 @@ anGetData_tsum <- function(bnd_layer,
   ##################################################################
   ## CHECK PARAMETER NAMES
   ##################################################################
+  matchargs <- as.list(match.call()[-1])
+
+  dotargs <- c(list(...))
+  args <- as.list(environment())
+  args <- args[!names(args) %in% names(dotargs)]
+  args <- args[names(args) %in% names(matchargs)]
+  args <- append(args, dotargs)
+
+
   input.params <- names(as.list(match.call()))[-1]
   formallst <- c(names(formals(anGetData_tsum)),
 		names(formals(spGetPlots)), "istree", "isseed")
@@ -255,8 +265,11 @@ anGetData_tsum <- function(bnd_layer,
                          ...)
     if (is.null(pltdat)) return(NULL)
     if (saveobj) {
-      message("saving pltdat object to: ", file.path(outfolder, "pltdat.rda"), "...")
-      save(pltdat, file=file.path(outfolder, "pltdat.rda"))
+      pltobjfn <- getoutfn(outfn="pltdat", ext="rds", outfolder=outfolder, 
+                  overwrite=overwrite_layer, outfn.pre=outfn.pre, 
+                  outfn.date=outfn.date)
+      saveRDS(pltdat, file=pltobjfn)
+      message("saving pltdat object to: ", pltobjfn)
     }
   } else {
     pltdat.names <- c("bnd", "xy.uniqueid", "puniqueid", "pjoinid", "tabs")
@@ -413,8 +426,11 @@ anGetData_tsum <- function(bnd_layer,
                              savedata = FALSE)
     if (is.null(auxdat)) return(NULL)
     if (saveobj) {
-      message("saving auxdat object to: ", file.path(outfolder, "auxdat.rda"), "...")
-      save(auxdat, file=file.path(outfolder, "auxdat.rda"))
+      auxobjfn <- getoutfn(outfn="auxdat", ext="rds", outfolder=outfolder, 
+                  overwrite=overwrite_layer, outfn.pre=outfn.pre, 
+                  outfn.date=outfn.date)
+      saveRDS(auxdat, file=auxobjfn)
+      message("saving auxdat object to: ", auxobjfn)
     }
   } else {
     auxdat.names <- c("pltassgn", "unitarea", "unitzonal")
@@ -432,7 +448,6 @@ anGetData_tsum <- function(bnd_layer,
   npixelvar <- auxdat$npixelvar
   npixels <- unitzonal[, c(unitvar, npixelvar)]
 
-
   if (strata) { 
     if (is.null(strvar)) {    
       if (!is.null(predfac) && length(predfac) == 1) {
@@ -443,11 +458,19 @@ anGetData_tsum <- function(bnd_layer,
     } 
     strwtvar <- "strwt" 
     if (!is.null(unitzonal)) {
-      stratalut <- strat.pivot(unitzonal, unitvars=unitvar, 
+      if (length(strvar) > 1) {
+        for (i in 1:length(strvar)) {
+          assign(paste0("stratalut",i), 
+                    strat.pivot(unitzonal, unitvars=unitvar, 
+                      strvar[i], strwtvar=strwtvar))
+          assign(paste0("strvar",i), strvar)
+        }
+      } else {
+        stratalut <- strat.pivot(unitzonal, unitvars=unitvar, 
                       strvar, strwtvar=strwtvar)
+      }
     }
   }
-
 
   ##########################################
   ## Create output list
@@ -478,7 +501,8 @@ anGetData_tsum <- function(bnd_layer,
                          csumvarnm = csumvarnm,
                          getadjplot = getadjplot,
                          puniqueid = puniqueid,
-                         cuniqueid = cuniqueid)
+                         cuniqueid = cuniqueid,
+                         cround = cround)
   cdatp <- conddatp$condsum
   csumvar <- conddatp$csumvarnm
 
@@ -491,7 +515,8 @@ anGetData_tsum <- function(bnd_layer,
                          csumvarnm = csumvarnm,
                          getadjplot = getadjplot,
                          puniqueid = puniqueid,
-                         cuniqueid = cuniqueid)
+                         cuniqueid = cuniqueid,
+                         cround = cround)
   cdatc <- conddatc$condsum
 
   ## Metadata for forprop
@@ -510,7 +535,7 @@ anGetData_tsum <- function(bnd_layer,
   ## Summarize tree data to plot-level
   treedatp <- datSumTree(tree = treex, 
                          plt = cdatp,
-                         cond = cond, 
+                         cond = cond,
                          bycond = FALSE,
                          TPA = TPA, 
                          adjtree = adjtree, 
@@ -519,7 +544,8 @@ anGetData_tsum <- function(bnd_layer,
                          getadjplot = FALSE,
                          tfilter = estvar.filter, 
                          puniqueid = puniqueid,
-				   cuniqueid = cuniqueid)
+                         cuniqueid = cuniqueid,
+                         tround = tround)
   tdatp <- treedatp$treedat
   sumvars <- unique(c(csumvar, treedatp$sumvars))
   tdatp_meta <- treedatp$meta  
@@ -536,7 +562,8 @@ anGetData_tsum <- function(bnd_layer,
                          getadjplot = FALSE,
                          tfilter = estvar.filter, 
                          puniqueid = puniqueid,
-				   cuniqueid = cuniqueid)
+                         cuniqueid = cuniqueid,
+                         tround = tround)
   tdatc <- treedatc$treedat
   sumvars <- unique(c(csumvar, treedatc$sumvars))
   tdatc_meta <- treedatc$meta  
@@ -582,8 +609,15 @@ anGetData_tsum <- function(bnd_layer,
                     npixelvar=npixelvar, 
                     sumvars=sumvars)
   if (strata) {
-    returnlst$stratalut <- stratalut
-    returnlst$strvar <- strvar
+    if (length(strvar) > 1) {
+      for (i in 1:length(strvar)) {
+        returnlst[[paste0("stratalut",i)]] <- get(paste0("stratalut", i))
+        returnlst[[paste0("strvar",i)]] <- get(paste0("strvar", i))
+      }
+    } else {
+      returnlst$stratalut <- stratalut
+      returnlst$strvar <- strvar
+    }
   }
   
 #  if (istree && !is.null(treex)) {
@@ -602,11 +636,12 @@ anGetData_tsum <- function(bnd_layer,
   }
   returnlst$tsumdatp_meta <- tdatp_meta
   returnlst$tsumdatc_meta <- tdatc_meta
+  returnlst$args <- args
 
   if (saveobj) {
-    objfn <- getoutfn(outfn=objnm, ext="rda", outfolder=outfolder, 
+    objfn <- getoutfn(outfn=objnm, ext="rds", outfolder=outfolder, 
                   overwrite=overwrite_layer, outfn.pre=outfn.pre, 
-                  outfn.date=TRUE)
+                  outfn.date=outfn.date)
     saveRDS(returnlst, file=objfn)
     message("saving object to: ", objfn)
   }
@@ -699,10 +734,33 @@ anGetData_tsum <- function(bnd_layer,
   }
 
   if (exportsp) {
-    message("exporting point data...")
-    spExportSpatial(spxy, savedata_opts=savedata_opts) 
-  }   
+    message("exporting point data...")   
+    spxy_pub <- spMakeSpatialPoints(
+                 plt[, c("CN", "STATECD", "UNITCD", "COUNTYCD", "PLOT",
+                          "PLOT_ID", "LON_PUBLIC", "LAT_PUBLIC", 
+                          "PLOT_STATUS_CD", "INVYR", 
+                          "MEASYEAR", "MEASMON", "INTENSITY", 
+                          "NBRCND", "NBRCNDSAMP", "NBRCNDFOR", 
+                          "FORNONSAMP", "P2PANEL")], 
+                 xy.uniqueid = "CN",
+                 xvar = "LON_PUBLIC", 
+                 yvar = "LAT_PUBLIC",
+                 exportsp = TRUE, 
+                 savedata_opts = list(outfolder=outfolder, 
+                                      out_layer = "spxy_PUBLIC",
+                                      outfn.pre = outfn.pre))
 
+    #if (any(grepl("ACTUAL", xy_opts))) {            
+    #  spxy <- merge(spxy, 
+    #              plt[, c("CN", "PLOT_STATUS_CD", "INVYR", 
+    #                      "MEASYEAR", "MEASMON", "INTENSITY", 
+    #                      "NBRCND", "NBRCNDSAMP", "NBRCNDFOR", 
+    #                      "FORNONSAMP", "P2PANEL")], by.x="PLT_CN", by.y="CN")
+    #  spExportSpatial(spxy, 
+    #                  savedata_opts = list(outfolder=outfolder, 
+    #                                       out_layer = "spxy_ACTUAL")) 
+    #}
+  }   
 
   return(returnlst)
 }
