@@ -152,7 +152,7 @@ anGetPixelData <- function(ref.rastfn,
 
   ## Verify ref raster
   ########################################################
-  ref.rast <- suppressWarnings(getrastlst.rgdal(ref.rastfn))
+  ref.rast <- getrastlst.rgdal(ref.rastfn)
 
   ## Get proj4 of reference raster
   ref.rast.crs <- rasterInfo(ref.rast)$crs
@@ -202,20 +202,20 @@ anGetPixelData <- function(ref.rastfn,
 
   # Create temporary raster of pixel longitudes:
   lontmpfn <- tempfile("pixelLon", fileext=".tif")
-  rasterCalc(calc = "pixelLon * 100000", rasterfiles = rastfn,
+  gdalraster::calc(expr = "pixelLon * 100000", rasterfiles = rastfn,
              dstfile = lontmpfn,
              dtName = "Int32", options = c("COMPRESS=DEFLATE"),
              nodata_value = -9999, usePixelLonLat = TRUE)
 
   # Create temporary raster of pixel latitudes:
   lattmpfn <- tempfile("pixelLat", fileext=".tif")
-  rasterCalc(calc = "pixelLat * 100000", rasterfiles = rastfn,
+  gdalraster::calc(expr = "pixelLat * 100000", rasterfiles = rastfn,
              dstfile = lattmpfn, 
              dtName = "Int32", options = c("COMPRESS=DEFLATE"),
              nodata_value = -9999, usePixelLonLat = TRUE)
 
   ## Note: rasterCombine only allows Int* data types
-  rastcombo <- rasterCombine(c(rastfn, lontmpfn, lattmpfn),
+  rastcombo <- gdalraster::combine(c(rastfn, lontmpfn, lattmpfn),
                              var.names = c(burn_value, "pixelLon", "pixelLat"))
 
   ## Convert Lon/Lat values back to original (numeric) values
