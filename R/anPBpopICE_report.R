@@ -48,8 +48,11 @@ anPBpopICE_report <- function(rawfolder,
   reportfolder <- tempdir()
 
   ## Check QAQC data
-  if (is.null(QAQC.self) || all(is.na(QAQC.self))) {
-    QAQC.self <- NULL
+#  if (is.null(QAQC.self) || all(is.na(QAQC.self)) || 
+#			all(QAQC.self == "NA") || all(QAQC.self == "")) {
+  if (is.null(QAQC.self) || all(QAQC.self == "")) {
+    #QAQC.self <- NULL
+    QAQC.self <- "NA"
   } else {
     if (all(!is.vector(QAQC.self), !is.numeric(QAQC.self), length(QAQC.self) != 4)) {
       warning("QAQC.self must be a vector of 4 numbers")
@@ -64,8 +67,11 @@ anPBpopICE_report <- function(rawfolder,
       QAQC.self <- NULL
     }    
   }
-  if (is.null(QAQC.cross) || all(is.na(QAQC.cross))) {
-    QAQC.cross <- NULL
+#  if (is.null(QAQC.cross) || all(is.na(QAQC.cross)) || 
+#		all(QAQC.cross == "NA") || all(QAQC.cross == "")) {
+  if (is.null(QAQC.cross) || all(QAQC.cross == "")) {
+    #QAQC.cross <- NULL
+    QAQC.cross <- "NA"
   } else {
     if (all(!is.vector(QAQC.cross), !is.numeric(QAQC.cross), length(QAQC.cross) != 4)) {
       warning("QAQC.cross must be a vector of 4 numbers")
@@ -117,7 +123,7 @@ anPBpopICE_report <- function(rawfolder,
   #file.copy("C:/_tsf/_GitHub/FIESTA/inst/rmd/anPBtemplateICE.docx", reportfn, overwrite=TRUE)
   #file.copy("C:/_tsf/_GitHub/FIESTA/inst/rmd/ICE.PNG", file.path(reportfolder, "ICE.PNG"), overwrite=TRUE)
 
-  if (all(is.null(QAQC.self), is.null(QAQC.cross))) {
+#  if (all(is.null(QAQC.self), is.null(QAQC.cross))) {
     # Lines 2168-2241 contain text for QAQC
     # Starting before the following:
     ############
@@ -125,8 +131,8 @@ anPBpopICE_report <- function(rawfolder,
     # And ending before:
     ##############
     ############## Reference Information
-    system(paste("sed -i '2168,2241d'", rmdfn)) 
-  }
+#    system(paste("sed -i '2168,2241d'", rmdfn)) 
+#  }
 
   ## Set working directory to reportfolder
   setwd(reportfolder) 

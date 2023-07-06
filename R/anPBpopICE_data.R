@@ -85,7 +85,7 @@ anPBpopICE_data <- function(ice.pntfn,
   ## ... 		- other parameters to datExportdata
   ##########################################################################
 
- ## Set global variables
+  ## Set global variables
   cover_1=cover_2=use_1=use_2=chg_ag_2=change_1_2=use_1_2=use_1_2_nm=
 	use_1_nm=use_2_nm=cover_1_2=cover_1_2_nm=cover_1_nm=cover_2_nm=
 	use_1_2_FOR=use_1_FOR=use_2_FOR=use_1_2_FOR_nm=use_1_FOR_nm=
@@ -287,22 +287,33 @@ anPBpopICE_data <- function(ice.pntfn,
     col <- "cover_1"
     new_LUT <- data.table::copy(coverlut)
     names(new_LUT) <- sub("cover", col, names(new_LUT))
-    ice.pnt <- merge(ice.pnt, new_LUT, by=col)
-    if ("COLOR" %in% names(ice.pnt))
-      ice.pnt[,COLOR := NULL]
 
-    colorder <- c(colorder, col, names(new_LUT)[which(!names(new_LUT) %in% c(col, "COLOR"))])
-    data.table::setcolorder(ice.pnt, c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
+    ## Get names in new_LUT that are not in ice.pnt
+    newnames1 <- names(new_LUT)[!names(new_LUT) %in% c(col, "COLOR")] 
+    if (any(newnames1 %in% names(ice.pnt))) {
+      newnames1 <- newnames1[!newnames1 %in% names(ice.pnt)]
+    }
+    if (length(newnames1) > 0) {
+      ice.pnt <- merge(ice.pnt, new_LUT[, c(col, newnames1), with=FALSE], by=col)
+    }
+    colorder <- c(colorder, col, newnames1)
+    data.table::setcolorder(ice.pnt, 
+			c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
 
     ## cover_2
     col <- "cover_2"
     new_LUT <- data.table::copy(coverlut)
     names(new_LUT) <- sub("cover", col, names(new_LUT))
-    ice.pnt <- merge(ice.pnt, new_LUT, by=col)
-    if ("COLOR" %in% names(ice.pnt))
-      ice.pnt[,COLOR := NULL]
 
-    colorder <- c(colorder, col, names(new_LUT)[which(!names(new_LUT) %in% c(col, "COLOR"))])
+    ## Get names in new_LUT that are not in ice.pnt
+    newnames2 <- names(new_LUT)[!names(new_LUT) %in% c(col, "COLOR")] 
+    if (any(newnames2 %in% names(ice.pnt))) {
+      newnames2 <- newnames2[!newnames2 %in% names(ice.pnt)]
+    }
+    if (length(newnames2) > 0) {
+      ice.pnt <- merge(ice.pnt, new_LUT[, c(col, newnames2), with=FALSE], by=col)
+    }
+    colorder <- c(colorder, col, newnames2)
     data.table::setcolorder(ice.pnt, c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
   }
 
@@ -320,21 +331,34 @@ anPBpopICE_data <- function(ice.pntfn,
     col <- "use_1"
     new_LUT <- data.table::copy(uselut)
     names(new_LUT) <- sub("use", col, names(new_LUT))
-    ice.pnt <- merge(ice.pnt, new_LUT, by=col)
-    if ("COLOR" %in% names(ice.pnt)) ice.pnt[,COLOR := NULL]
 
-    colorder <- c(colorder, col, names(new_LUT)[which(!names(new_LUT) %in% c(col, "COLOR"))])
+    ## Get names in new_LUT that are not in ice.pnt
+    newnames1 <- names(new_LUT)[!names(new_LUT) %in% c(col, "COLOR")] 
+    if (any(newnames1 %in% names(ice.pnt))) {
+      newnames1 <- newnames1[!newnames1 %in% names(ice.pnt)]
+    }
+    if (length(newnames1) > 0) {
+      ice.pnt <- merge(ice.pnt, new_LUT[, c(col, newnames1), with=FALSE], by=col)
+    }
+    colorder <- c(colorder, col, newnames1)
     data.table::setcolorder(ice.pnt, c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
 
     ## use_2
     col <- "use_2"
     new_LUT <- data.table::copy(uselut)
     names(new_LUT) <- sub("use", col, names(new_LUT))
-    ice.pnt <- merge(ice.pnt, new_LUT, by=col)
-    if ("COLOR" %in% names(ice.pnt)) ice.pnt[,COLOR := NULL]
 
-    colorder <- c(colorder, col, names(new_LUT)[which(!names(new_LUT) %in% c(col, "COLOR"))])
-    data.table::setcolorder(ice.pnt, c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
+    ## Get names in new_LUT that are not in ice.pnt
+    newnames2 <- names(new_LUT)[!names(new_LUT) %in% c(col, "COLOR")] 
+    if (any(newnames2 %in% names(ice.pnt))) {
+      newnames2 <- newnames2[!newnames2 %in% names(ice.pnt)]
+    }
+    if (length(newnames2) > 0) {
+      ice.pnt <- merge(ice.pnt, new_LUT[, c(col, newnames2), with=FALSE], by=col)
+    }
+    colorder <- c(colorder, col, newnames2)
+    data.table::setcolorder(ice.pnt, 
+		c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
   }
 
   ##########################################################################
@@ -348,12 +372,18 @@ anPBpopICE_data <- function(ice.pntfn,
 
   if (appendluts) {
     col <- "chg_ag_2"
-    ice.pnt <- merge(ice.pnt, agentlut, by=col)
-    if ("COLOR" %in% names(ice.pnt)) ice.pnt[,COLOR := NULL]
 
-    colorder <- c(colorder, col, names(agentlut)[which(!names(agentlut) %in%
-		c(col, "COLOR"))])
-    data.table::setcolorder(ice.pnt, c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
+    ## Get names in new_LUT that are not in ice.pnt
+    newnames <- names(agentlut)[!names(agentlut) %in% c(col, "COLOR")] 
+    if (any(newnames %in% names(ice.pnt))) {
+      newnames <- newnames[!newnames %in% names(ice.pnt)]
+    }
+    if (length(newnames) > 0) {
+      ice.pnt <- merge(ice.pnt, agentlut[, c(col, newnames), with=FALSE], by=col)
+    }
+    colorder <- c(colorder, col, newnames)
+    data.table::setcolorder(ice.pnt, 
+		c(colorder, names(ice.pnt)[which(!names(ice.pnt) %in% colorder)]))
   }
 
   ###############################################################################
