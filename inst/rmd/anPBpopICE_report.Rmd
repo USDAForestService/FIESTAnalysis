@@ -2168,7 +2168,7 @@ figCap = paste0("Figure ",figNum,": The percent of ", AOInm,
 
 #### Quality Assessment and Quality Control (QAQC) report
 
-A quality assessment and quality control (QAQC) report was generated for `r AOInm` for `r yearT1` to `r yearT2` that compares agreement between original photo interpretations and blind re-interpretations by the same interpreter on the same plot (self checks), and also to blind interpretations made by another interpreter on the same plots (cross checks). The results are outlined below.
+A quality assessment and quality control (QAQC) report was generated for `r AOInm` for `r yearT1` to `r yearT2` that compares agreement between original photo interpretations and blind re-interpretations by the same interpreter on the same plot (self checks), and also to blind interpretations made by another interpreter on the same plots (cross checks). The results are outlined below. If NA, no self or cross check occurred.
 
 &nbsp;
 
