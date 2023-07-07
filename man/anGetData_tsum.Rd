@@ -32,6 +32,7 @@ anGetData_tsum(
   showsteps = FALSE,
   returnxy = FALSE,
   savedata = FALSE,
+  exportsp = FALSE,
   savesteps = FALSE,
   saveobj = FALSE,
   objnm = "tsumdat",
@@ -129,6 +130,8 @@ savedata=TRUE, the display is saved as *.jpg to outfolder.}
 
 \item{savedata}{Logical. If TRUE, saves data to outfolder. Note:
 includes XY data if returnxy = TRUE.}
+
+\item{exportsp}{Logical. If TRUE, exports spatial object.}
 
 \item{savesteps}{Logical. If TRUE, save steps spatial intermediate layers.}
 

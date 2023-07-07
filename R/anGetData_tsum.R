@@ -665,6 +665,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="xyplt", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))    }
     datExportData(pltassgn, 
@@ -672,6 +673,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="pltassgn", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))
     datExportData(tdatp, 
@@ -679,6 +681,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="tsumdatp", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))
 
@@ -687,6 +690,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="tsumdatc", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))
 
@@ -705,6 +709,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="unitarea", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))
     datExportData(unitzonal, 
@@ -712,6 +717,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="unitzonal", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))  
     datExportData(tdatp_meta, 
@@ -719,6 +725,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="tsumdatp_meta", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer)) 
 
@@ -727,6 +734,7 @@ anGetData_tsum <- function(bnd_layer,
                             out_fmt=out_fmt, 
                             out_dsn=out_dsn, 
                             out_layer="tsumdatc_meta", 
+                            outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))  
  
