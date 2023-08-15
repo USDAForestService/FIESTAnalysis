@@ -15,10 +15,6 @@ anGetPixelData(
   rastfolder = NULL,
   rastlst = NULL,
   rastlst.name = NULL,
-  rastlst.cont.NODATA = NULL,
-  rastlst.cat = NULL,
-  rastlst.cat.name = NULL,
-  rastlst.cat.NODATA = NULL,
   keepNA = TRUE,
   returnxy = FALSE,
   exportsp = FALSE,
@@ -27,6 +23,9 @@ anGetPixelData(
 )
 }
 \arguments{
+\item{ref.rastfn}{String. Path name of raster to use as reference for
+pixel size.}
+
 \item{bnd}{sf R object or String. Boundary layer of estimation domain
 units. Can be a spatial sf object, full pathname to a shapefile, or name of
 a layer within a database.}
@@ -39,6 +38,10 @@ estimation domain units.}
 
 \item{bnd.filter}{String. Optional filter of bnd_layer.}
 
+\item{polyvlst}{String vector or list. The name(s) of variable(s) to
+extract from polygon(s). If extracting multiple variables from more than one
+polygon, specify names in a list format, corresponding to polyvlst.}
+
 \item{polyvarnmlst}{String vector or list. Output name(s) of variable(s)
 extracted from polygon(s). If extracting multiple variables from more than
 one polygon, specify names in a list format, corresponding to polyvlst. The
@@ -46,6 +49,10 @@ number of names must match the number of variables in polyvarlst.}
 
 \item{rastfolder}{String. Name of the folder with raster layers. Optional.
 Useful if all raster layers are in same folder.}
+
+\item{rastlst}{String vector or list. A list of raster(s) with
+continuous data and/or categorical values (e.g., DEM). The list may include 
+file name of raster(s) or raster objects that are not InMemory.}
 
 \item{rastlst.name}{String vector. Output names for rastlst.
 Optional. If NULL, name of raster is used as default or name+'_'+layer
@@ -62,14 +69,6 @@ of options. Only used when savedata = TRUE.}
 
 \item{ncores}{R object. Number of cores to use for data extraction.
 (Note: needs parallel package).}
-
-\item{polyvarlst}{String vector or list. The name(s) of variable(s) to
-extract from polygon(s). If extracting multiple variables from more than one
-polygon, specify names in a list format, corresponding to polyvlst.}
-
-\item{rastlst.cont}{String vector or list. A list of raster(s) with
-continuous data and/or categorical values (e.g., DEM). The list may include 
-file name of raster(s) or raster objects that are not InMemory.}
 }
 \value{
 Data.

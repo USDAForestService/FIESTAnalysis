@@ -36,6 +36,8 @@ anGetData_list(
 \item{listoutfolder}{NULL. Folder to save list object. If NULL, saves 
 to working directory.}
 
+\item{listobjnm}{String. Name of saved object.}
+
 \item{...}{Other parameters for anGetData().}
 
 \item{savedata_opts}{List. See help(savedata_options()) for a list

@@ -28,6 +28,8 @@ anPBpopICE_report(
 
 \item{T2}{String. Time 2 description (e.g., YYYY).}
 
+\item{REMPER}{Number. Remeasurement period.}
+
 \item{QAQC.self}{Numeric vector. Vector of percentages corresponding to 
 self checks of: Change, LU, LC, Agent of Change, in that order. Optional.}
 
@@ -38,11 +40,9 @@ cross checks of: Change, LU, LC, Agent of Change, in that order. Optional.}
 
 \item{photofn}{String. Path name to photo to add to report.}
 
-\item{outfolder}{String. The path of folder to output tables.}
+\item{icepltfn}{String. Path name to ICE plot data.}
 
-\item{ice.QAQCfn}{String. Name of file with summarize QAQC data (See details
-for file structure). If no file is given, the QAQC section is removed from
-report.}
+\item{outfolder}{String. The path of folder to output tables.}
 }
 \description{
 Generates a report from a set of ICE core tables based on area of interest.

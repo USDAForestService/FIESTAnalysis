@@ -14,6 +14,7 @@ anGBgetpop_evallst(
   datsource = "datamart",
   data_dsn = NULL,
   dbTabs = dbTables(),
+  eval = "FIA",
   eval_opts = eval_options(eval_type = "VOL"),
   isseed = FALSE,
   byEndyr = FALSE,
@@ -36,6 +37,9 @@ anGBgetpop_evallst(
 \item{dbTabs}{List of database tables the user would like returned.
 See help(dbTables) for a list of options.}
 
+\item{eval}{String. Type of evaluation time frame for data extraction 
+('FIA', 'custom'). See eval_opts for more further options.}
+
 \item{eval_opts}{List of evaluation options for 'FIA' or 'custom'
 evaluations to determine the set of data returned. See help(eval_options)
 for a list of options.}
@@ -52,9 +56,6 @@ more than one state - Manti-LaSal).}
 outfolder is the working directory.}
 
 \item{...}{Parameters to modGBpop().}
-
-\item{eval}{String. Type of evaluation time frame for data extraction 
-('FIA', 'custom'). See eval_opts for more further options.}
 }
 \value{
 Set of population data from modGBpop() for each Evaluation
