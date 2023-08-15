@@ -288,7 +288,7 @@ anPBpopICE <- function(ice.pntfn = NULL,
 
       ## Using base R (estimate for leap years)
       ice.plt$REMPER <- as.numeric(difftime(ice.plt$Date2, 
-                          ice.plt$Date1, unit="weeks")) / 52.25
+                          ice.plt$Date1, units="weeks")) / 52.25
       REMPERavg <- round(mean(ice.plt$REMPER, na.rm=TRUE),1)
 
       if ((REMPERavg / (T2 - T1)) > 2) {

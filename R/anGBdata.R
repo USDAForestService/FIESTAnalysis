@@ -164,11 +164,16 @@ anGBdata <- function(bnd_layer,
 
   ## Check output
   if (savedata) {
-    outlst <- pcheck.output(out_dsn=out_dsn, out_fmt=out_fmt, 
-                            outfolder=outfolder, outfn.pre=outfn.pre, 
-                            outfn.date=outfn.date, overwrite_dsn=overwrite_dsn, 
-                            overwrite_layer=overwrite_layer, append_layer=append_layer, 
-                            createSQLite=FALSE, gui=gui)
+    outlst <- pcheck.output(out_dsn = out_dsn, 
+                            out_fmt = out_fmt, 
+                            outfolder = outfolder, 
+                            outfn.pre = outfn.pre,
+                            outfn.date = outfn.date, 
+                            overwrite_dsn = overwrite_dsn,
+                            overwrite_layer = overwrite_layer, 
+                            append_layer = append_layer,
+                            createSQLite = FALSE, 
+                            gui = gui)
     out_dsn <- outlst$out_dsn
     outfolder <- outlst$outfolder
     out_fmt <- outlst$out_fmt
