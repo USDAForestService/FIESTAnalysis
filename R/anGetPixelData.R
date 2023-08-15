@@ -3,6 +3,8 @@
 #' Wrapper to get pixel data, including auxiliary information.
 #'
 #'
+#' @param ref.rastfn String. Path name of raster to use as reference for
+#' pixel size.
 #' @param bnd sf R object or String. Boundary layer of estimation domain
 #' units. Can be a spatial sf object, full pathname to a shapefile, or name of
 #' a layer within a database.
@@ -11,7 +13,7 @@
 #' @param bnd.att String. Name of attribute in boundary file to define
 #' estimation domain units.
 #' @param bnd.filter String. Optional filter of bnd_layer.
-#' @param polyvarlst String vector or list. The name(s) of variable(s) to
+#' @param polyvlst String vector or list. The name(s) of variable(s) to
 #' extract from polygon(s). If extracting multiple variables from more than one
 #' polygon, specify names in a list format, corresponding to polyvlst.
 #' @param polyvarnmlst String vector or list. Output name(s) of variable(s)
@@ -20,7 +22,7 @@
 #' number of names must match the number of variables in polyvarlst.
 #' @param rastfolder String. Name of the folder with raster layers. Optional.
 #' Useful if all raster layers are in same folder.
-#' @param rastlst.cont String vector or list. A list of raster(s) with
+#' @param rastlst String vector or list. A list of raster(s) with
 #' continuous data and/or categorical values (e.g., DEM). The list may include 
 #' file name of raster(s) or raster objects that are not InMemory.
 #' @param rastlst.name String vector. Output names for rastlst.
@@ -63,10 +65,6 @@ anGetPixelData <- function(ref.rastfn,
                            rastfolder = NULL, 
                            rastlst = NULL, 
                            rastlst.name = NULL, 
-                           rastlst.cont.NODATA = NULL, 
-                           rastlst.cat = NULL, 
-                           rastlst.cat.name = NULL, 
-                           rastlst.cat.NODATA = NULL, 
                            keepNA = TRUE,
                            returnxy = FALSE, 
                            exportsp = FALSE,

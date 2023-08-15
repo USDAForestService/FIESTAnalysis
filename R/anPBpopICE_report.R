@@ -13,15 +13,14 @@
 #' @param AOInm String. Name of area of interest.
 #' @param T1 String. Time 1 description (e.g., YYYY).
 #' @param T2 String. Time 2 description (e.g., YYYY).
+#' @param REMPER Number. Remeasurement period.
 #' @param QAQC.self Numeric vector. Vector of percentages corresponding to 
 #' self checks of: Change, LU, LC, Agent of Change, in that order. Optional.
 #' @param QAQC.cross Numeric vector. Vector of percentages corresponding to 
 #' cross checks of: Change, LU, LC, Agent of Change, in that order. Optional.
 #' @param outfn.pre String. Short name of file name. If NULL, using AOInm.
-#' @param ice.QAQCfn String. Name of file with summarize QAQC data (See details
-#' for file structure). If no file is given, the QAQC section is removed from
-#' report.
 #' @param photofn String. Path name to photo to add to report.
+#' @param icepltfn String. Path name to ICE plot data.
 #' @param outfolder String. The path of folder to output tables.
 #' @author Tracey S. Frescino
 #' @keywords data

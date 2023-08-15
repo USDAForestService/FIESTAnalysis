@@ -9,8 +9,7 @@
 #' @param savelistobj Logical. If TRUE, saves listobjects to listoutfolder. 
 #' @param listoutfolder NULL. Folder to save list object. If NULL, saves 
 #' to working directory.
-#' @param savedata_opts List. See help(savedata_options()) for a list
-#' of options. Only used when savedata = TRUE or saveobj = TRUE. 
+#' @param listobjnm String. Name of saved object. 
 #' @param ...  Other parameters for anGetData().
 #' @return Data.
 #' 

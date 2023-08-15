@@ -25,7 +25,11 @@ Imports:
     RColorBrewer,
     data.table,
     DBI,
-    sf
+    sf,
+    sqldf,
+    methods,
+    gdalraster,
+    RSQLite
 Suggests:
     arcgisbinding,
     knitr,
