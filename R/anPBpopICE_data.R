@@ -219,7 +219,7 @@ anPBpopICE_data <- function(ice.pntfn,
   ## changelut - table defining change
   ##########################################################################
   if (is.null(changelut)) {
-    changelut <- FIESTAnalysis::ref_ICE_change
+    changelut <- data.table(FIESTAnalysis::ref_ICE_change)
   } else {
     changelut <- pcheck.table(changelut, tabnm="changelut", nullcheck=TRUE, gui=gui)
   }
@@ -227,15 +227,15 @@ anPBpopICE_data <- function(ice.pntfn,
   ## coverlut - table defining land cover codes
   ##########################################################################
   if (is.null(coverlut)) {
-    coverlut <- FIESTAnalysis::ref_ICE_cover
+    coverlut <- data.table(FIESTAnalysis::ref_ICE_cover)
   } else {
     coverlut <- pcheck.table(coverlut, tabnm="coverlut", nullcheck=TRUE, gui=gui)
   }
-
+ 
   ## uselut - table defining land use codes
   ##########################################################################
   if (is.null(uselut)) {
-    uselut <- FIESTAnalysis::ref_ICE_use
+    uselut <- data.table(FIESTAnalysis::ref_ICE_use)
   } else {
     uselut <- pcheck.table(uselut, tabnm="uselut", nullcheck=TRUE, gui=gui)
   }
@@ -243,7 +243,7 @@ anPBpopICE_data <- function(ice.pntfn,
   ## agentlut - table defining causal agent codes
   ##########################################################################
   if (is.null(agentlut)) {
-    agentlut <- FIESTAnalysis::ref_ICE_agent
+    agentlut <- data.table(FIESTAnalysis::ref_ICE_agent)
   } else {
     agentlut <- pcheck.table(agentlut, tabnm="agentlut", nullcheck=TRUE, gui=gui)
   }

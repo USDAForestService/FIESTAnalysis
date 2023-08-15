@@ -34,14 +34,14 @@ anGetData_list <- function(bndlst,
   formallst <- unique(c(names(formals(anGetData_list)),
 		names(formals(anGetData)),
 		names(formals(spGetPlots)),
-		names(formals(DBgetPlots)),
+		names(formals(DBgetPlots)), 
            names(formals(spGetAuxiliary))))
 
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]
     stop("invalid parameter: ", toString(miss))
   }
-
+ 
   ## Check split
   splitbnd <- pcheck.logical(splitbnd, varnm="splitbnd",
 		title="Split bnd list?", first="NO", gui=gui)

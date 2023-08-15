@@ -1,8 +1,8 @@
 Package: FIESTAnalysis
 Type: Package
 Title: Analysis Functions for the FIESTA Package
-Version: 0.2.1
-Date: 2022-12-13
+Version: 0.2.2
+Date: 2023-08-15
 Authors@R:
     c(person(given = "Tracey",
              family = "Frescino",
@@ -18,11 +18,14 @@ Description: The objective of this package is to provide
 License: file LICENSE
 Additional_repositories: https://github.com/USDAForestService/FIESTA
 Depends: 
-    R (>= 4.0),
+    R (>= 4.2.0),
     FIESTA,
     FIESTAutils
 Imports: 
     RColorBrewer,
+    data.table,
+    DBI,
+    sf
 Suggests:
     arcgisbinding,
     knitr,
