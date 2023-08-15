@@ -66,12 +66,12 @@ stcd <- pcheck.states(states, statereturn="VALUE")
 if (is.null(spcd)) {
   spcd <- 746
 } else {
-  if (!all(spcd %in% ref_codes[ref_codes$VARIABLE == "SPCD", "VALUE"])) {
+  if (!all(spcd %in% ref_species$SPCD)) {
     stop("spcd is invalid")
   }
 }
-title.spcd <- paste(ref_codes[ref_codes$VARIABLE == "SPCD" & ref_codes$VALUE %in% spcd, 
-                              "MEANING"], collapse = " and ")
+title.spcd <- paste(ref_species[ref_species$SPCD %in% spcd, 
+                              "SCIENTIFIC_NAME"], collapse = " and ")
 spcd.filter <- paste0("SPCD %in% c(", toString(spcd), ")")
 
 

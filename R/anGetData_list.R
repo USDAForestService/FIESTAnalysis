@@ -31,12 +31,11 @@ anGetData_list <- function(bndlst,
 
   ## Check input parameters
   input.params <- names(as.list(match.call()))[-1]
-  formallst <- c(names(formals(anGetData_list)),
+  formallst <- unique(c(names(formals(anGetData_list)),
 		names(formals(anGetData)),
 		names(formals(spGetPlots)),
-           names(formals(spGetAuxiliary)))
-print("TEST")
-print(formallst)
+		names(formals(DBgetPlots)),
+           names(formals(spGetAuxiliary))))
 
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]

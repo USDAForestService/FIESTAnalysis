@@ -590,6 +590,11 @@ anGetData_tsum <- function(bnd_layer,
   pltvars <- names(pltassgn)[!names(pltassgn) %in% names(tdatp)]
   pltassgn <- pltassgn[pltassgn$PLT_CN %in% tdatp$CN, unique(c(pltassgnid, pltvars, outnames))]
 
+  if (nrow(tdatp) == length(unique(tdapc$PLT_CN))) {
+    message("number of plots are different")
+  }
+    
+
   returnlst <- list(bnd=bnd, 
                     popdat=popdat,
                     pltassgn=data.frame(pltassgn), 

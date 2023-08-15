@@ -91,12 +91,19 @@ anMApop_report <- function(MApopdat,
   #  ref_spcd <- ref_codes[ref_codes$VARIABLE == "SPCD", ]
   spcdlst <- table(MApopdat$seedx$SPCD)[table(MApopdat$seedx$SPCD) > 5]
   if (!is.null(spcd) && length(spcd) > 0) {
-    if (!spcd %in% names(spcdlst)) {
-      stop("SPCD ", spcd, " not in popdat")
+    if (!all(spcd %in% names(spcdlst))) {
+      message("SPCD not in popdat: ", toString(spcd))
+      spcd <- names(spcdlst[spcdlst != 999 & spcdlst == max(spcdlst)])
+    } else {
+      nplt <- sum(spcdlst[names(spcdlst) %in% spcd])
+      if (nplt < 10) {
+        spcd <- names(spcdlst[spcdlst != 999 & spcdlst == max(spcdlst)])
+      }
     }
   } else {
     spcd <- names(spcdlst[spcdlst != 999 & spcdlst == max(spcdlst)])
   }
+ 
   #  spnm <- ref_spcd[!is.na(ref_spcd$VALUE) &
   #				ref_spcd$VALUE == spcd, "MEANING"]
 

@@ -114,8 +114,8 @@ anGetData <- function(bnd_layer,
   
   ## Check input parameters
   input.params <- names(as.list(match.call()))[-1]
-  formallst <- c(names(formals(anGetData)),
-		names(formals(spGetPlots)))
+  formallst <- unique(c(names(formals(anGetData)),
+		names(formals(spGetPlots)), names(formals(DBgetPlots))))
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]
     stop("invalid parameter: ", toString(miss))

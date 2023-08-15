@@ -101,7 +101,7 @@ outfolder <- tempdir()
 
 Now, generate the population data for the state of Vermont using the example database described above. 
 ```{r, GBpopdat}
-
+ 
 GBpopdat <- modGBpop(popTabs = list(plt="plot", cond="cond", tree="tree", seed="seed"),
                      dsn = sqlitefn,
                      pltassgn = "pop_plot_stratum_assgn",

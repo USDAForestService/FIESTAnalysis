@@ -115,7 +115,8 @@ wbnm <- paste(outfolder, "WYestimates.xlsx", sep="/")
 Next, generate the population data for the state of Wyoming using the example data described above. 
 ```{r, eval=runchunk}
 
-popdat <- modGBpop(popTabs = list(cond=WYcond),
+popdat <- modGBpop(popType = "CURR",
+                   popTabs = list(cond=WYcond),
                    pltassgn = WYpltassgn,
                    pltassgnid = "CN", 
                    unitarea = WYunitarea,
