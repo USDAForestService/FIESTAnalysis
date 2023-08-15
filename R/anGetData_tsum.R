@@ -168,18 +168,20 @@ anGetData_tsum <- function(bnd_layer,
 
   ## Set savedata defaults
   savedata_defaults_list <- formals(savedata_options)[-length(formals(savedata_options))]
-  
   for (i in 1:length(savedata_defaults_list)) {
     assign(names(savedata_defaults_list)[[i]], savedata_defaults_list[[i]])
-  }
-  
+  } 
   ## Set user-supplied savedata values
   if (length(savedata_opts) > 0) {
     if (!savedata) {
       message("savedata=FALSE with savedata parameters... no data are saved")
     }
     for (i in 1:length(savedata_opts)) {
-      assign(names(savedata_opts)[[i]], savedata_opts[[i]])
+      if (names(savedata_opts)[[i]] %in% names(savedata_defaults_list)) {
+        assign(names(savedata_opts)[[i]], savedata_opts[[i]])
+      } else {
+        stop(paste("Invalid parameter: ", names(savedata_opts)[[i]]))
+      }
     }
   }
 
@@ -590,7 +592,7 @@ anGetData_tsum <- function(bnd_layer,
   pltvars <- names(pltassgn)[!names(pltassgn) %in% names(tdatp)]
   pltassgn <- pltassgn[pltassgn$PLT_CN %in% tdatp$CN, unique(c(pltassgnid, pltvars, outnames))]
 
-  if (nrow(tdatp) == length(unique(tdapc$PLT_CN))) {
+  if (nrow(tdatp) == length(unique(tdatc$PLT_CN))) {
     message("number of plots are different")
   }
     

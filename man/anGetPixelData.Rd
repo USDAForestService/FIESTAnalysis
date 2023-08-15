@@ -15,7 +15,6 @@ anGetPixelData(
   rastfolder = NULL,
   rastlst = NULL,
   rastlst.name = NULL,
-  keepNA = TRUE,
   returnxy = FALSE,
   exportsp = FALSE,
   savedata_opts = NULL,

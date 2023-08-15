@@ -3,7 +3,7 @@
 #' Wrapper to compare estimates from FIESTA's SAmodule, MAmodule, 
 #' and GBmodule.
 #'
-#' @param bnd_layer sf R object or String. Area of interest (population
+#' @param bnd sf R object or String. Area of interest (population
 #' boundary or estimation unit). Can be a spatial polygon object, full pathname
 #' to a shapefile, or name of a layer within a database.
 #' @param bnd_dsn String. Data source name (dsn; e.g., sqlite or shapefile

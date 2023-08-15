@@ -29,6 +29,10 @@ anMODcompare(
 )
 }
 \arguments{
+\item{bnd}{sf R object or String. Area of interest (population
+boundary or estimation unit). Can be a spatial polygon object, full pathname
+to a shapefile, or name of a layer within a database.}
+
 \item{bnd_dsn}{String. Data source name (dsn; e.g., sqlite or shapefile
 pathname) of boundary. The dsn varies by driver. See gdal OGR vector formats
 (https://www.gdal.org/ogr_formats.html). Optional if bnd is sf object.}
@@ -82,10 +86,6 @@ of options. Only used when savedata = TRUE.}
 \item{SAdatalst}{List object. Output from anGetData_list().}
 
 \item{...}{Parameters for input to anGetData_list().}
-
-\item{bnd_layer}{sf R object or String. Area of interest (population
-boundary or estimation unit). Can be a spatial polygon object, full pathname
-to a shapefile, or name of a layer within a database.}
 }
 \value{
 Estimates
