@@ -1,7 +1,8 @@
+#' @title
 #' Data - Get list of plot data and auxiliary data for estimation.
 #'
+#' @description 
 #' Wrapper to get plot data and auxiliary data for estimation.
-#'
 #'
 #' @param bndlst sf R object. List object of boundary extent(s).
 #' @param splitbnd Logical. If TRUE, splits list into multiple lists.
@@ -13,7 +14,6 @@
 #' @param ...  Other parameters for DBgetPlots().
 #' @return Data.
 #' 
-#'
 #' @author Tracey S. Frescino
 #' @keywords data
 #' @export
@@ -28,6 +28,11 @@ anGetData_list <- function(bndlst,
   ## Set global variables
   gui <- FALSE
 
+  
+  ##################################################################
+  ## CHECK PARAMETER NAMES
+  ##################################################################
+  
   ## Check input parameters
   input.params <- names(as.list(match.call()))[-1]
   formallst <- unique(c(names(formals(anGetData_list)),
@@ -53,7 +58,6 @@ anGetData_list <- function(bndlst,
       message("must be numeric vector of length 1")
     } 
   }
-
 
   ##################################################################
   ## CHECK PARAMETER INPUTS
