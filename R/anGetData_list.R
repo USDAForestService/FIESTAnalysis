@@ -10,7 +10,7 @@
 #' @param listoutfolder NULL. Folder to save list object. If NULL, saves 
 #' to working directory.
 #' @param listobjnm String. Name of saved object. 
-#' @param ...  Other parameters for anGetData().
+#' @param ...  Other parameters for DBgetPlots().
 #' @return Data.
 #' 
 #'
@@ -34,7 +34,7 @@ anGetData_list <- function(bndlst,
 		names(formals(anGetData)),
 		names(formals(spGetPlots)),
 		names(formals(DBgetPlots)), 
-           names(formals(spGetAuxiliary))))
+		names(formals(spGetAuxiliary))))
 
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]

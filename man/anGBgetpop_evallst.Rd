@@ -2,11 +2,7 @@
 % Please edit documentation in R/anGBgetpop_evallst.R
 \name{anGBgetpop_evallst}
 \alias{anGBgetpop_evallst}
-\title{Analysis - Generate Green-Book estimates for one or more FIA Evaluations.
-
-#' @description 
-Wrapper to generate state-level estimates using FIESTA's Green-Book
-module, for one or more FIA Evaluations.}
+\title{Analysis - Generate Green-Book estimates for one or more FIA Evaluations.}
 \usage{
 anGBgetpop_evallst(
   states = NULL,
@@ -62,9 +58,6 @@ Set of population data from modGBpop() for each Evaluation
 specified.
 }
 \description{
-Analysis - Generate Green-Book estimates for one or more FIA Evaluations.
-
-#' @description 
 Wrapper to generate state-level estimates using FIESTA's Green-Book
 module, for one or more FIA Evaluations.
 }

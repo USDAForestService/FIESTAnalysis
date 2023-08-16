@@ -33,7 +33,6 @@
 #' extension from outfn or rastfn.
 #' @param overwrite Logical. If TRUE, overwrites raster derivatives.
 #' @return \item{rasterlst}{ String list. Full path name of raster files. }
-#' @note
 #' 
 #' @author Tracey S. Frescino, Chris Toney
 #' @keywords spatial

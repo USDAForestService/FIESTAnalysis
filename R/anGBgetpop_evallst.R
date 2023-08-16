@@ -1,7 +1,7 @@
 #' @title
 #' Analysis - Generate Green-Book estimates for one or more FIA Evaluations.
 #'
-#'#' @description 
+#' @description 
 #' Wrapper to generate state-level estimates using FIESTA's Green-Book
 #' module, for one or more FIA Evaluations. 
 #'

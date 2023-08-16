@@ -2,11 +2,7 @@
 % Please edit documentation in R/anGBgetpop_evallstbnd.R
 \name{anGBgetpop_evallstbnd}
 \alias{anGBgetpop_evallstbnd}
-\title{Analysis - Get estimates for Green-Book module by FIA Evaluation End year.
-
-Wrapper to generate estimates for each evaluation ending in the year in
-list.  If boundary crosses more than one Evaluation state, Evaluations for
-each state ending in the same year are used. Data are subset to boundary.}
+\title{Analysis - Get estimates for Green-Book module by FIA Evaluation End year.}
 \usage{
 anGBgetpop_evallstbnd(
   evalidlst = NULL,
@@ -95,8 +91,6 @@ outfolder is the working directory.}
 Set of population data (from modGBpop()) for bnd.
 }
 \description{
-Analysis - Get estimates for Green-Book module by FIA Evaluation End year.
-
 Wrapper to generate estimates for each evaluation ending in the year in
 list.  If boundary crosses more than one Evaluation state, Evaluations for
 each state ending in the same year are used. Data are subset to boundary.

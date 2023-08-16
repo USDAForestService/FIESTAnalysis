@@ -1,6 +1,7 @@
 #' @title
 #' Analysis - Get estimates for Green-Book module by FIA Evaluation End year.
 #'
+#' @description 
 #' Wrapper to generate estimates for each evaluation ending in the year in
 #' list.  If boundary crosses more than one Evaluation state, Evaluations for
 #' each state ending in the same year are used. Data are subset to boundary.
