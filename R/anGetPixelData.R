@@ -199,14 +199,14 @@ anGetPixelData <- function(ref.rastfn,
 
   # Create temporary raster of pixel longitudes:
   lontmpfn <- tempfile("pixelLon", fileext=".tif")
-  gdalraster::calc(expr = "pixelLon * 100000", rasterfiles = rastfn,
+  gdalraster::calc(expr = "pixelLon * 1000000000", rasterfiles = rastfn,
              dstfile = lontmpfn,
              dtName = "Int32", options = c("COMPRESS=DEFLATE"),
              nodata_value = -9999, usePixelLonLat = TRUE)
 
   # Create temporary raster of pixel latitudes:
   lattmpfn <- tempfile("pixelLat", fileext=".tif")
-  gdalraster::calc(expr = "pixelLat * 100000", rasterfiles = rastfn,
+  gdalraster::calc(expr = "pixelLat * 10000000", rasterfiles = rastfn,
              dstfile = lattmpfn, 
              dtName = "Int32", options = c("COMPRESS=DEFLATE"),
              nodata_value = -9999, usePixelLonLat = TRUE)
@@ -221,7 +221,7 @@ anGetPixelData <- function(ref.rastfn,
   rastcombo <- setDT(rastcombo)
   rastcombo <- rastcombo[!is.na(get(burn_value)), 
  				c(xy.uniqueid, burn_value, xycols), with=FALSE]
-  rastcombo[, (xycols) := lapply(.SD, function(x) x / 100000), .SDcols=xycols]
+  rastcombo[, (xycols) := lapply(.SD, function(x) x / 10000000), .SDcols=xycols]
 
 
   ## Merge lut values if exists
@@ -230,7 +230,7 @@ anGetPixelData <- function(ref.rastfn,
     rastcombo[, (burn_value) := NULL]
     setnames(rastcombo, "BYVAR", bnd.att)
     byvalues <- sort(unique(rastcombo[[bnd.att]]))
-    message("looping through ", length(byvalues), " ", tolower(bnd.att), "s")
+    message("looping through ", length(byvalues), " ", tolower(bnd.att), " values")
   } else {
     byvalues <- sort(unique(rastcombo$VALUE))
     message("looping through ", length(byvalues), " values")
