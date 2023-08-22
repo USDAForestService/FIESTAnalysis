@@ -49,7 +49,7 @@ anGBgetpop_evallst <- function(states = NULL,
                          data_dsn = NULL, 
                          dbTabs = dbTables(),
                          eval = "FIA",
-                         eval_opts = eval_options(eval_type = "VOL"),
+                         eval_opts = eval_options(Type = "VOL"),
                          isseed = FALSE, 
                          byEndyr = FALSE, 
                          savedata = FALSE, 
@@ -154,7 +154,7 @@ anGBgetpop_evallst <- function(states = NULL,
       stop("must include ", dbTabs$popestnunit_layer, " in data_dsn to use for estimation")
     }
     ppsanm <- chkdbtab(tablst, dbTabs$ppsa_layer, stopifnull=TRUE)
-    if (is.null(pltassgn)) {
+    if (is.null(ppsanm)) {
       stop("must include ", dbTabs$ppsa_layer, " in data_dsn to use for estimation")
     }
   } else {
@@ -169,7 +169,7 @@ anGBgetpop_evallst <- function(states = NULL,
 
   ## Get plot data 
   ####################################################################
-  pltdat <- DBgetPlots(states = "Vermont", 
+  pltdat <- DBgetPlots(states = states, 
                      istree = istree, 
                      isseed = TRUE, 
                      invtype = "ANNUAL",
@@ -221,7 +221,7 @@ anGBgetpop_evallst <- function(states = NULL,
     message("getting population data for ", toString(evalnm))
     message("evalid: ", toString(evalid))
 
-    GBpopdat <- modGBpop(popType = evalType, 
+    GBpopdat <- modGBpop(popType = Type, 
                          popTabs = list(cond = pltdat$tabs$cond, 
                                         plt = pltdat$tabs$plt, 
                                         tree = pltdat$tabs$tree, 
