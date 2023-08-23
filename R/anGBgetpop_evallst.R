@@ -50,7 +50,6 @@ anGBgetpop_evallst <- function(states = NULL,
                          dbTabs = dbTables(),
                          eval = "FIA",
                          eval_opts = eval_options(Type = "VOL"),
-                         isseed = FALSE, 
                          byEndyr = FALSE, 
                          savedata = FALSE, 
                          outfolder = NULL, 
@@ -59,7 +58,6 @@ anGBgetpop_evallst <- function(states = NULL,
 
   ## Set global variables
   gui <- FALSE
-  istree <- FALSE
   GBpop_evallst <- list()
   
 
@@ -163,15 +161,10 @@ anGBgetpop_evallst <- function(states = NULL,
     ppsanm <- "POP_PLOT_STRATUM_ASSGN"
   }  
  
-  if (any(evalType %in% c("VOL", "CHNG"))) {
-    istree <- TRUE
-  }
 
   ## Get plot data 
   ####################################################################
   pltdat <- DBgetPlots(states = states, 
-                     istree = istree, 
-                     isseed = TRUE, 
                      invtype = "ANNUAL",
                      datsource = datsource, 
                      data_dsn = data_dsn,
@@ -181,7 +174,8 @@ anGBgetpop_evallst <- function(states = NULL,
                      getxy = FALSE,
                      returndata = TRUE, 
                      savePOP = TRUE, 
-                     othertables = c(pop_stratumnm, pop_estn_unitnm)
+                     othertables = c(pop_stratumnm, pop_estn_unitnm),
+                     ...
                      )
   evalidlst <- pltdat$evalid
 
