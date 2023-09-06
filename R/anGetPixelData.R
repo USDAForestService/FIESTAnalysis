@@ -60,8 +60,9 @@ anGetPixelData <- function(ref.rastfn,
                            bnd_dsn = NULL, 
                            bnd.att = NULL, 
                            bnd.filter = NULL, 
+						   bnd.byvar = NULL,
                            polyvlst = NULL,
-                           polyvarnmlst = NULL,
+                           polyvarnmlst = NULL,						   
                            rastfolder = NULL, 
                            rastlst = NULL, 
                            rastlst.name = NULL, 
@@ -72,9 +73,11 @@ anGetPixelData <- function(ref.rastfn,
 
   ## Set global variables
   gui <- FALSE
-  fnlst <- {}
+  fnlst <- list()
   lut <- NULL
   savedata <- TRUE
+  lonlat <- FALSE
+  savetmp <- TRUE
 
   ##################################################################
   ## CHECK PARAMETER NAMES
@@ -151,8 +154,10 @@ anGetPixelData <- function(ref.rastfn,
   ########################################################
   ref.rast <- getrastlst.rgdal(ref.rastfn)
 
-  ## Get proj4 of reference raster
+  ## Get crs of reference raster
   ref.rast.crs <- rasterInfo(ref.rast)$crs
+  ref.rast.nodata <- rasterInfo(ref.rast)$nodata_value
+  ref.rast.datatype <- rasterInfo(ref.rast)$datatype
 
  
   ####################################################################
@@ -165,99 +170,211 @@ anGetPixelData <- function(ref.rastfn,
     bndx <- datFilter(bndx, xfilter=bnd.filter, stopifnull=TRUE)$xf
 
     ## Check bnd.att
-    bnd.att <- pcheck.varchar(var2check = bnd.att, 
-                              varnm = "bnd.att",
-                              checklst = names(bndx), gui=gui, 
-                              caption = "Boundary attribute", 
-                              stopifnull = TRUE)
+	if (!all(bnd.att %in% names(bndx))) {
+	  bnd.att.miss <- bnd.att[!bnd.att %in% names(bndx)] 
+	  message("bnd.att not in bnd: ", toString(bnd.att.miss))
+	}
 
     ## Compare crs of reference raster and reproject if different
     bndx <- crsCompare(bndx, ref.rast.crs)$x
+	
+	
+	## Check byvar
+    byvar <- pcheck.varchar(var2check = bnd.byvar, 
+                            varnm = "bnd.byvar",
+                            checklst = names(bndx), gui=gui, 
+                            caption = "By Variable", 
+                            stopifnull = FALSE)
 
-    if (!class(bndx[[bnd.att]]) %in% c("numeric", "integer")) { 
-      ## Create lookup table for Subsection values
-      lut <- data.frame(BYVAR = sort(unique(bndx[[bnd.att]])), 
-                  VALUE = seq(1:length(unique(bndx[[bnd.att]]))))
-      bndx <- merge(bndx, lut, by.x=bnd.att, by.y="BYVAR")
-      burn_value <- "VALUE"
-      #bnd
-    } else {
-      burn_value <- bnd.att
+    if (is.null(byvar)) {
+	  bndx$BYVAR <- 1
+	  byvar <- "BYVAR"
+	}
+	byvalues <- sort(unique(bndx[[byvar]]))
+
+    # if (!class(bndx[[bnd.att]]) %in% c("numeric", "integer")) { 
+      # ## Create lookup table for Subsection values
+      # lut <- data.frame(BYVAR = sort(unique(bndx[[bnd.att]])), 
+                  # VALUE = seq(1:length(unique(bndx[[bnd.att]]))))
+      # bndx <- merge(bndx, lut, by.x=bnd.att, by.y="BYVAR")
+      # burn_value <- "VALUE"
+      # #bnd
+    # } else {
+      # burn_value <- bnd.att
+    # }
+
+    # ## Rasterize polygon to temporary file
+    # rastfn <- rasterFromVectorExtent(src = bndx, 
+                  # dstfile = tempfile("bndrast", fileext=".tif"),
+                  # init = 0, dtName = "Int16", res = 90)
+
+    # ## Reference raster
+    # rasterizePolygons(src = bndx, 
+                      # rasterfile = rastfn, 
+                      # burn_value = burn_value)
+					  
+					  
+	## Clip reference raster to polygon boundary 
+    ###########################################################################
+	if (savetmp) {
+	  rastfn <- file.path(outfolder, "tmp_bndrast.tif")
+	} else {
+	  rastfn <- tempfile("bndrast", fileext="tif")
     }
+	
+	if (is.na(ref.rast.nodata)) {
+	  nodata <- getDefaultNodata(ref.rast.datatype)
+	} else {
+	  nodata <- ref.rast.nodata
+	}
+	  
+    clipRaster(src = bndx, 
+             srcfile = ref.rast, 
+			 src_band = 1, 
+			 dstfile = rastfn, 
+             fmt = "GTiff", 
+			 init = nodata,
+			 dstnodata = nodata,
+			 maskByPolygons = TRUE, 
+             options = "COMPRESS=LZW")
+ 
+   ## Create expressions to calculate rasters of X and Y values within bnd
+   exprX <- 'ifelse(A > 0, pixelX, -9999)' 
+   exprY <- 'ifelse(A > 0, pixelY, -9999)' 
 
-    ## Rasterize polygon to temporary file
-    rastfn <- rasterFromVectorExtent(src = bndx, 
-                  dstfile = tempfile("bndrast", fileext=".tif"),
-                  init = 0, dtName = "Int16", res = 90)
-
-    ## Reference raster
-    rasterizePolygons(src = bndx, 
-                      rasterfile = rastfn, 
-                      burn_value = burn_value)
-  }
-
-
-  # Create temporary raster of pixel longitudes:
-  lontmpfn <- tempfile("pixelLon", fileext=".tif")
-  gdalraster::calc(expr = "pixelLon * 1000000000", rasterfiles = rastfn,
-             dstfile = lontmpfn,
-             dtName = "Int32", options = c("COMPRESS=DEFLATE"),
-             nodata_value = -9999, usePixelLonLat = TRUE)
-
-  # Create temporary raster of pixel latitudes:
-  lattmpfn <- tempfile("pixelLat", fileext=".tif")
-  gdalraster::calc(expr = "pixelLat * 10000000", rasterfiles = rastfn,
-             dstfile = lattmpfn, 
-             dtName = "Int32", options = c("COMPRESS=DEFLATE"),
-             nodata_value = -9999, usePixelLonLat = TRUE)
-
-  ## Note: rasterCombine only allows Int* data types
-  rastcombo <- gdalraster::combine(c(rastfn, lontmpfn, lattmpfn),
-                             var.names = c(burn_value, "pixelLon", "pixelLat"))
-
-  ## Convert Lon/Lat values back to original (numeric) values
-  xy.uniqueid <- "cmbid"
-  xycols <- c("pixelLon", "pixelLat")
-  rastcombo <- setDT(rastcombo)
-  rastcombo <- rastcombo[!is.na(get(burn_value)), 
- 				c(xy.uniqueid, burn_value, xycols), with=FALSE]
-  rastcombo[, (xycols) := lapply(.SD, function(x) x / 10000000), .SDcols=xycols]
-
-
-  ## Merge lut values if exists
-  if (!is.null(lut)) {
-    rastcombo <- merge(rastcombo, lut, by.x=burn_value, by.y="VALUE")
-    rastcombo[, (burn_value) := NULL]
-    setnames(rastcombo, "BYVAR", bnd.att)
-    byvalues <- sort(unique(rastcombo[[bnd.att]]))
-    message("looping through ", length(byvalues), " ", tolower(bnd.att), " values")
   } else {
-    byvalues <- sort(unique(rastcombo$VALUE))
-    message("looping through ", length(byvalues), " values")
+    ## Create expressions to calculate rasters of X and Y across raster
+    exprX <- 'pixelX' 
+    exprY <- 'pixelY' 
   }
+  
+  if (savetmp) {
+    pixelXfn = file.path(outfolder, "tmp_pixelX.tif")
+    pixelYfn = file.path(outfolder, "tmp_pixelY.tif")
+  } else {
+    pixelXfn <- tempfile("pixelX", fileext=".tif")
+    pixelYfn <- tempfile("pixelY", fileext=".tif")
+  }
+  
+  if (lonlat) {
+    out.crs = 4269
+    # Create temporary raster of pixel longitudes:
+    gdalraster::calc(expr = "pixelLon * 1000000000", 
+	                 rasterfiles = rastfn,
+					 dstfile = pixelXfn,
+					 dtName = "Int32", 
+					 options = c("COMPRESS=DEFLATE"),
+                     nodata_value = -9999, 
+					 usePixelLonLat = TRUE)
+
+    # Create temporary raster of pixel latitudes:
+    gdalraster::calc(expr = "pixelLat * 1000000000", 
+	                 rasterfiles = rastfn,
+					 dstfile = pixelYfn,
+					 dtName = "Int32", 
+					 options = c("COMPRESS=DEFLATE"),
+					 nodata_value = -9999, 
+					 usePixelLonLat = TRUE)
+  } else {
+    
+    ## Create a pixel X raster in the coordinate system the raster is in
+    ###########################################################################
+    gdalraster::calc(expr = exprX, 
+                   rasterfiles = rastfn,
+                   dstfile = pixelXfn,
+				   dtName = "Int32", 
+                   options = c("COMPRESS=DEFLATE"),
+                   nodata_value = -9999, 
+                   write_mode = "overwrite")
+
+
+    ## Create a pixel Y raster in the coordinate system the raster is in
+    ###########################################################################
+    gdalraster::calc(expr = exprY, 
+                   rasterfiles = rastfn,
+                   dstfile = pixelYfn,
+				   dtName = "Int32", 
+                   options = c("COMPRESS=DEFLATE"),
+                   nodata_value = -9999, 
+                   write_mode = "overwrite")
+  }
+  
+  ## Note: rasterCombine only allows Int* data types
+  combofn <- file.path(outfolder, "combo.tif")
+  rastcombo <- gdalraster::combine(c(pixelXfn, pixelYfn),
+                             var.names = c("pixelX", "pixelY"),
+							 fmt = "GTiff",
+							 dstfile = combofn,
+							 options = c("COMPRESS = LZW"))
+
+
+  #########################################################################
+  ## Make spatial point of pixelX/pixelY coordinates
+  #########################################################################
+  message("creating spatial points...")
+
+  xy.uniqueid <- "cmbid" 
+  outsp_layer <- paste0("rastcombo")
+  exportsp <- FALSE
+  xyplt <- spMakeSpatialPoints(rastcombo, 
+                      xy.uniqueid = xy.uniqueid,
+                      xvar = "pixelX",
+                      yvar = "pixelY",
+                      xy.crs = ref.rast.crs,
+                      exportsp = exportsp,
+                      addxy = returnxy,
+                      savedata_opts = list(outfolder = outfolder,
+                                           out_layer = outsp_layer))
+
+  ## Extract XY pixel values from bndx
+  xyext <- spExtractPoly(xyplt = xyplt, 
+                         polyvlst = bndx, 
+                         polyvarlst = c(bnd.att, byvar),
+                         xy.uniqueid = xy.uniqueid, 
+                         keepNA = FALSE)$spxyext
+						 
+						 
+						 
+  # ## Note: rasterCombine only allows Int* data types
+  # rastcombo <- gdalraster::combine(c(rastfn, pixelXfn, pixelYfn),
+                             # var.names = c(burn_value, "pixelX", "pixelY"))
+
+  # ## Convert Lon/Lat values back to original (numeric) values
+  # xy.uniqueid <- "cmbid"
+  # xycols <- c("pixelLon", "pixelLat")
+  # rastcombo <- setDT(rastcombo)
+  # rastcombo <- rastcombo[!is.na(get(burn_value)), 
+ 				# c(xy.uniqueid, burn_value, xycols), with=FALSE]
+  # rastcombo[, (xycols) := lapply(.SD, function(x) x / 10000000), .SDcols=xycols]
+
+
+  # ## Merge lut values if exists
+  # if (!is.null(lut)) {
+    # rastcombo <- merge(rastcombo, lut, by.x=burn_value, by.y="VALUE")
+    # rastcombo[, (burn_value) := NULL]
+    # setnames(rastcombo, "BYVAR", bnd.att)
+    # byvalues <- sort(unique(rastcombo[[bnd.att]]))
+    # message("looping through ", length(byvalues), " ", tolower(bnd.att), " values")
+  # } else {
+    # byvalues <- sort(unique(rastcombo$VALUE))
+    # message("looping through ", length(byvalues), " values")
+  # }
 
 
   ## For efficiency, lets subset and loop thru unique values
   for (i in 1:length(byvalues)) {
 
     byval <- byvalues[i]
-    message("getting data for: ", byval)
-
+    if (length(byvalues) > 1) {
+      message("getting data for: ", byval)
+    }
+	
     #########################################################################
     ## Make spatial point of pixelLon/pixelLat coordinates
     #########################################################################
     message("creating spatial points...")
 
-    outsp_layer <- paste0("rastcombo_", byval)
-    xyplt <- spMakeSpatialPoints(rastcombo[rastcombo[[bnd.att]] == byval, ], 
-                      xy.uniqueid = xy.uniqueid,
-                      xvar = "pixelLon",
-                      yvar = "pixelLat",
-                      xy.crs = 4269,
-                      exportsp = exportsp,
-                      addxy = returnxy,
-                      savedata_opts = list(outfolder = outfolder,
-                                           out_layer = outsp_layer))
+    xyplt <- xyext[xyext[[byvar]] == byval, ]
     #dim(xyplt)
     nbrplots <- nrow(xyplt)
 
@@ -279,17 +396,15 @@ anGetPixelData <- function(ref.rastfn,
       if (is.null(xyext)) {
         message("no points returned")
       } else {
-        spxy <- xyext$spxyext
+        xyplt <- xyext$spxyext
 
-        if (nrow(spxy) < nbrplots) {
-          lessplots <- nrow(spxy) - nbrplots
+        if (nrow(xyplt) < nbrplots) {
+          lessplots <- nrow(xyplt) - nbrplots
           message( "poly extraction resulted in ", lessplots, " less plots ")
         }
       }      
-      #head(spxy)
-      #dim(spxy)
-    } else {
-      spxy <- xyplt
+      #head(xyplt)
+      #dim(xyplt)
     }
 
   
@@ -300,7 +415,7 @@ anGetPixelData <- function(ref.rastfn,
 
     if (!is.null(rastlst)) {
       auxext <- tryCatch(
-                  spExtractRast(xyplt = spxy, 
+                  spExtractRast(xyplt = xyplt, 
                                 xy.uniqueid = xy.uniqueid,
                                 rastfolder = rastfolder,
                                 rastlst = rastlst,
@@ -311,10 +426,10 @@ anGetPixelData <- function(ref.rastfn,
      	          error=function(e) {
 			    message(e, "\n")
 			return(NULL) })
-      spxy <- auxext$sppltext
+      xyplt <- auxext$sppltext
 
-      if (nrow(spxy) < nbrplots) {
-        lessplots <- nrow(spxy) - nbrplots
+      if (nrow(xyplt) < nbrplots) {
+        lessplots <- nrow(xyplt) - nbrplots
         message( "raster extraction resulted in ", lessplots, " less plots ")
       }      
     }
@@ -322,22 +437,33 @@ anGetPixelData <- function(ref.rastfn,
     #########################################################################
     ## Export data 
     #########################################################################
-    out_layer <- paste0("pixeldat_", byval)
+	if (length(byvalues) == 1) {
+	  out_layer <- "pixeldat"
+	} else {
+      out_layer <- paste0("pixeldat_", byval)
+	}
+	xyplt$BYVAR <- NULL
+	
     if (savedata) {
-      datExportData(sf::st_drop_geometry(spxy), 
+      datExportData(sf::st_drop_geometry(xyplt), 
             savedata_opts = list(outfolder = outfolder,
                                  out_fmt = out_fmt,
                                  out_dsn = out_dsn,
                                  out_layer = out_layer,
                                  outfn.date = outfn.date,
                                  overwrite_layer = overwrite_layer))
+	  saveRDS(ref.rast.crs, file.path(outfolder, "refrast_crs.rds"))
     }
 
     ## Append filename to fnlst
-    fnlst[byval] <- file.path(outfolder, paste0(out_layer, ".csv"))
+    fnlst[[byval]] <- file.path(outfolder, paste0(out_layer, ".csv"))
 
   }
 
-  return(fnlst)
+  if (length(byvalues) > 1) {
+    return(fnlst)
+  } else {
+    return(fnlst[[1]])
+  }
 }
 
