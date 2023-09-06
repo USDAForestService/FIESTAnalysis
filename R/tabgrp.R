@@ -771,7 +771,7 @@ tabgrp <- function(GBpopdat = NULL,
                             tolower(paste(title.rowgrp, "and", title.rowvar)), title.pse)
       }
     }
-  } else {
+   } else {
     if (colgrp) {
       esttab.title <- sub(tolower(title.rowvar),
                           tolower(paste0(title.rowvar, ", ", title.colgrp, ",")), title.est)

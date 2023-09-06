@@ -64,6 +64,7 @@ anGBest_core_data <- function(state,
 
   ## Get plot data from FIA dataMart
   ############################################
+ source("C:\\_tsf\\_GitHub\\FIESTA\\R\\DBgetPlots.R")
   datPlots <- DBgetPlots(states = state, 
                          datsource = datsource, 
                          data_dsn = data_dsn, 
@@ -72,7 +73,7 @@ anGBest_core_data <- function(state,
                          istree = TRUE, 
                          getxy = FALSE,
                          savePOP = TRUE)
-  plt <- datPlots$plt
+  plt <- datPlots$tabs$plt
   pop_plot_stratum_assgn <- datPlots$pop_plot_stratum_assgn
   evalid <- datPlots$evalid
 

@@ -126,6 +126,10 @@ anGBest_core <- function(state = NULL,
   unitarea <- datStrata$unitarea
   stratalut <- datStrata$stratalut
   pltassgnid <- datStrata$pltassgnid
+  
+  pltassgn <- setDT(pltassgn)
+  setkeyv(pltassgn, pltassgnid)
+  
 
   if (lapply(evalid, length) > 1) {
     pltassgn00 <- pltassgn[endsWith(as.character(pltassgn[["EVALID"]]), "0"),]
@@ -305,22 +309,25 @@ anGBest_core <- function(state = NULL,
 
   ## Get population data
   #############################################################
-  popdat03 <- modGBpop(popTabs=list(cond=cond03, plt=plt03, tree=tree03),
-                      pltassgn=pltassgn03, pltassgnid=pltassgnid,
-                      unitvar="ESTN_UNIT", unitarea=unitarea03, 
-                      strata=TRUE, stratalut=stratalut03, 
-                      strata_opts=list(getwt=TRUE, getwtvar="P1POINTCNT"))
-  popdat <- modGBpop(popTabs=list(cond=cond, plt=plt, tree=tree),
-                      pltassgn=pltassgn, pltassgnid=pltassgnid,
-                      unitvar="ESTN_UNIT", unitarea=unitarea, 
-                      strata=TRUE, stratalut=stratalut, 
-                      strata_opts=list(getwt=TRUE, getwtvar="P1POINTCNT"))
-  popdat00 <- modGBpop(popTabs=list(cond=cond00, plt=plt00),
-                      pltassgn=pltassgn00, pltassgnid=pltassgnid,
-                      adj="none",
-                      unitvar="ESTN_UNIT", unitarea=unitarea00, 
-                      strata=TRUE, stratalut=stratalut00, 
-                      strata_opts=list(getwt=TRUE, getwtvar="P1POINTCNT"))
+  popdat03 <- modGBpop(popType = "VOL",
+                      popTabs = list(cond=cond03, plt=plt03, tree=tree03),
+                      pltassgn = pltassgn03, pltassgnid = pltassgnid,
+                      unitvar = "ESTN_UNIT", unitarea = unitarea03, 
+                      strata = TRUE, stratalut = stratalut03, 
+                      strata_opts = list(getwt=TRUE, getwtvar = "P1POINTCNT"))
+  popdat <- modGBpop(popType = "VOL",
+                      popTabs = list(cond=cond, plt=plt, tree=tree),
+                      pltassgn = pltassgn, pltassgnid = pltassgnid,
+                      unitvar = "ESTN_UNIT", unitarea = unitarea, 
+                      strata = TRUE, stratalut = stratalut, 
+                      strata_opts = list(getwt=TRUE, getwtvar = "P1POINTCNT"))
+  popdat00 <- modGBpop(popType = "ALL",
+                      popTabs = list(cond=cond00, plt=plt00),
+                      pltassgn = pltassgn00, pltassgnid = pltassgnid,
+                      adj = "none",
+                      unitvar = "ESTN_UNIT", unitarea = unitarea00, 
+                      strata = TRUE, stratalut = stratalut00, 
+                      strata_opts = list(getwt=TRUE, getwtvar="P1POINTCNT"))
   
   ## Set up Excel Workbook
   wb <- xlsx::loadWorkbook(file=wbnm)
