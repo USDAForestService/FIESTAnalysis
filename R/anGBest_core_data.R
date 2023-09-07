@@ -64,7 +64,6 @@ anGBest_core_data <- function(state,
 
   ## Get plot data from FIA dataMart
   ############################################
- source("C:\\_tsf\\_GitHub\\FIESTA\\R\\DBgetPlots.R")
   datPlots <- DBgetPlots(states = state, 
                          datsource = datsource, 
                          data_dsn = data_dsn, 
