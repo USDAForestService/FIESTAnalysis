@@ -11,8 +11,7 @@ anGBgetpop_evallst(
   data_dsn = NULL,
   dbTabs = dbTables(),
   eval = "FIA",
-  eval_opts = eval_options(eval_type = "VOL"),
-  isseed = FALSE,
+  eval_opts = eval_options(Type = "VOL"),
   byEndyr = FALSE,
   savedata = FALSE,
   outfolder = NULL,
@@ -40,8 +39,6 @@ See help(dbTables) for a list of options.}
 evaluations to determine the set of data returned. See help(eval_options)
 for a list of options.}
 
-\item{isseed}{Logical. If TRUE, add seedling data from Evaluation(s).}
-
 \item{byEndyr}{Logical. If TRUE, organizes evalidlst by evalEndyr.  Set TRUE
 if estimates include more than one state (e.g., if area of interest crosses
 more than one state - Manti-LaSal).}
@@ -52,6 +49,8 @@ more than one state - Manti-LaSal).}
 outfolder is the working directory.}
 
 \item{...}{Parameters to modGBpop().}
+
+\item{isseed}{Logical. If TRUE, add seedling data from Evaluation(s).}
 }
 \value{
 Set of population data from modGBpop() for each Evaluation
