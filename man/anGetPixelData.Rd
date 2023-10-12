@@ -10,6 +10,7 @@ anGetPixelData(
   bnd_dsn = NULL,
   bnd.att = NULL,
   bnd.filter = NULL,
+  bnd.byvar = NULL,
   polyvlst = NULL,
   polyvarnmlst = NULL,
   rastfolder = NULL,
