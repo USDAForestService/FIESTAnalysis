@@ -48,7 +48,7 @@ anMApop_core <- function(MApopdat,
   fill <- TRUE
   addSEcol <- FALSE
   returntitle <- TRUE
-
+ 
   ## Notes:
   ## 1. If want to add row groups with no subtotals, use GBest*() with rowgrp=TRUE.
   ## 2. If want to add row groups with subtotals, use rowgrptab().

@@ -47,9 +47,9 @@ anPBpopICE_report <- function(rawfolder,
   reportfolder <- tempdir()
 
   ## Check QAQC data
-#  if (is.null(QAQC.self) || all(is.na(QAQC.self)) || 
-#			all(QAQC.self == "NA") || all(QAQC.self == "")) {
-  if (is.null(QAQC.self) || all(QAQC.self == "")) {
+  if (is.null(QAQC.self) || all(is.na(QAQC.self)) || 
+			all(QAQC.self == "NA") || all(QAQC.self == "")) {
+#  if (is.null(QAQC.self) || all(QAQC.self == "")) {
     #QAQC.self <- NULL
     QAQC.self <- "NA"
   } else {
@@ -66,9 +66,9 @@ anPBpopICE_report <- function(rawfolder,
       QAQC.self <- NULL
     }    
   }
-#  if (is.null(QAQC.cross) || all(is.na(QAQC.cross)) || 
-#		all(QAQC.cross == "NA") || all(QAQC.cross == "")) {
-  if (is.null(QAQC.cross) || all(QAQC.cross == "")) {
+  if (is.null(QAQC.cross) || all(is.na(QAQC.cross)) || 
+		all(QAQC.cross == "NA") || all(QAQC.cross == "")) {
+#  if (is.null(QAQC.cross) || all(QAQC.cross == "")) {
     #QAQC.cross <- NULL
     QAQC.cross <- "NA"
   } else {

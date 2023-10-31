@@ -216,7 +216,6 @@ Table 1. Area of forest land by `r tolower(smallbnd.domain)`, `r title.ref``r ti
 
 
 ```{r est1, echo=FALSE, warning=FALSE, message=FALSE}
-
 SAareadat1 <- modSAarea(SApopdatlst = SApopdatlst, 
                         SApackage = SApackage, 
                         SAmethod = SAmethod, 
@@ -257,11 +256,12 @@ if (totals) {
   ylab <- "Per Acre"
 }
 
+if (length(est1tot$est) > 1) {
 #horiz <- ifelse(nrow(est1tot) > 10, TRUE, FALSE)
-horiz <- FALSE
-datBarplot(x=est1tot, xvar=smallbnd.domain, yvar="est", horiz=horiz,
+  horiz <- FALSE
+  datBarplot(x=est1tot, xvar=smallbnd.domain, yvar="est", horiz=horiz,
            errbars=TRUE, sevar="est.se", toplabelvar="NBRPLT.gt0", ylab=ylab)
-
+}
 ```
 <!-- Figure 1. Area of forest land by, `r tolower(smallbnd.domain)`, `r AOInm`, `r title.states`, `r invyrs2`. -->
 
@@ -374,11 +374,13 @@ if (totals) {
   ylab <- "Per Acre"
 }
 
-horiz <- FALSE
-datBarplot(x=est2tot, xvar=smallbnd.domain, yvar="est", horiz=horiz,
+if (length(est2tot$est) > 1) {
+
+  horiz <- FALSE
+  datBarplot(x=est2tot, xvar=smallbnd.domain, yvar="est", horiz=horiz,
            errbars=TRUE, sevar="est.se", toplabelvar="NBRPLT.gt0", 
            ylab=ylab, divideby=divideby)
-
+}
 ```
 
 
@@ -467,6 +469,7 @@ knitr::kable(est3, "simple", align=c("lrrrr"), digits=digits,
 
 ```{r EST3_Barplot, echo=FALSE, warning=FALSE, message=FALSE, out.width=figwidth}
 
+
 est3tot <- est3
 if (totals) {
   divideby <- "million"
@@ -476,10 +479,12 @@ if (totals) {
   ylab <- "Per acre"
 }
 
-datBarplot(x=est3tot, xvar=smallbnd.domain, yvar="est", 
+if (length(est3tot$est) > 1) {
+
+  datBarplot(x=est3tot, xvar=smallbnd.domain, yvar="est", 
            errbars=TRUE, sevar="est.se", toplabelvar="NBRPLT.gt0", 
            ylab=ylab, divideby=divideby)
-
+}
 ```
 
 
@@ -580,10 +585,12 @@ if (totals) {
   ylab <- "Per acre"
 }
 
-datBarplot(x=est4tot, xvar=smallbnd.domain, yvar="est", 
+if (length(est4tot$est) > 1) {
+
+  datBarplot(x=est4tot, xvar=smallbnd.domain, yvar="est", 
            errbars=TRUE, sevar="est.se", toplabelvar="NBRPLT.gt0", 
            ylab=ylab, divideby=divideby)
-
+}
 ```
 
 

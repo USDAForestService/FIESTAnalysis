@@ -254,7 +254,7 @@ anGetData_tsum <- function(bnd_layer,
     step_dsn <- NULL
     step_fmt <- "shp"
   }
- 
+
   ####################################################################
   ## Get FIA plot data from SQLite within boundary
   ####################################################################
@@ -404,7 +404,7 @@ anGetData_tsum <- function(bnd_layer,
       outnames <- extpoly2$outnames
     }
   }
- 
+
   ####################################################################
   ## Get auxiliary data
   ####################################################################
@@ -478,7 +478,6 @@ anGetData_tsum <- function(bnd_layer,
   ## Create output list
   ########################################## 
 
-
   #####################################################
   ## Get population data 
   #####################################################
@@ -488,7 +487,6 @@ anGetData_tsum <- function(bnd_layer,
                      standardize = FALSE) 
   treex <- popdat$treex
 
- 
   #####################################################
   ## Summarize condition data 
   #####################################################
@@ -528,7 +526,6 @@ anGetData_tsum <- function(bnd_layer,
   }
   forprop_meta <- cbind(VARIABLE = csumvar, DESCRIPTION = DESCRIPTION, TABLE = "DERIVED")
   
-
   #####################################################
   ## Summarize tree data 
   #####################################################

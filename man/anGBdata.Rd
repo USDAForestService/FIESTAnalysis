@@ -20,6 +20,7 @@ anGBdata(
   showsteps = FALSE,
   cex.plots = 0.5,
   returnxy = FALSE,
+  savexy = FALSE,
   savedata = FALSE,
   savesteps = FALSE,
   saveobj = FALSE,
@@ -72,8 +73,9 @@ if strattype="RASTER".}
 
 \item{returnxy}{Logical. If TRUE, returns XY coordinates.}
 
-\item{savedata}{Logical. If TRUE, saves data to outfolder. Note:
-includes XY data if returnxy = TRUE.}
+\item{savexy}{Logical. If TRUE, saves XY data to outfolder.}
+
+\item{savedata}{Logical. If TRUE, saves data to outfolder.}
 
 \item{savesteps}{Logical. If TRUE, saves plotting steps as jpg images to
 outfolder.}

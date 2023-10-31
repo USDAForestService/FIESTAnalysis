@@ -32,8 +32,8 @@
 #' @param showsteps Logical. If TRUE, show intermediate steps.
 #' @param cex.plots Number. Size of dots representing plots in display.
 #' @param returnxy Logical. If TRUE, returns XY coordinates.
-#' @param savedata Logical. If TRUE, saves data to outfolder. Note:
-#' includes XY data if returnxy = TRUE.
+#' @param savexy Logical. If TRUE, saves XY data to outfolder.
+#' @param savedata Logical. If TRUE, saves data to outfolder. 
 #' @param savesteps Logical. If TRUE, saves plotting steps as jpg images to
 #' outfolder.
 #' @param saveobj Logical. If TRUE, save SAest object to outfolder.
@@ -90,6 +90,7 @@ anGBdata <- function(bnd_layer,
                      showsteps = FALSE, 
                      cex.plots = 0.5, 
                      returnxy = FALSE, 
+					 savexy = FALSE,
                      savedata = FALSE, 
                      savesteps = FALSE, 
                      saveobj = FALSE, 
@@ -144,6 +145,10 @@ anGBdata <- function(bnd_layer,
   returnxy <- pcheck.logical(returnxy, varnm="returnxy", 
                              title="Return XY?", first="NO", gui=gui)
   
+  ## Check savexy
+  savexy <- pcheck.logical(savexy, varnm="savexy", 
+                           title="Save XY data?", first="NO", gui=gui)
+
   ## Check savedata
   savedata <- pcheck.logical(savedata, varnm="savedata", 
                              title="Save data extraction?", first="NO", gui=gui)
@@ -348,57 +353,57 @@ anGBdata <- function(bnd_layer,
   #################################################################
   ## Write data to file
   #################################################################
-  if (savedata) {
+   if (savexy) {
+     datExportData(sf::st_drop_geometry(spxy), 
+            savedata_opts=list(outfolder = outfolder, 
+                               out_fmt = out_fmt, 
+                               out_dsn = out_dsn, 
+                               out_layer = "xyplt", 
+                               outfn.date = outfn.date, 
+                               overwrite_layer = overwrite_layer))
+   }
+   if (savedata) {
     if (!is.null(RS)) {
       datExportData(sf::st_drop_geometry(bnd), 
-            savedata_opts=list(outfolder=outfolder, 
-                               out_fmt=out_fmt, 
-                               out_dsn=out_dsn, 
-                               out_layer="bnd", 
-                               outfn.date=outfn.date, 
-                               overwrite_layer=overwrite_layer))
-    }
-    if (returnxy) {
-      datExportData(sf::st_drop_geometry(spxy), 
-            savedata_opts=list(outfolder=outfolder, 
-                               out_fmt=out_fmt, 
-                               out_dsn=out_dsn, 
-                               out_layer="xyplt", 
-                               outfn.date=outfn.date, 
-                               overwrite_layer=overwrite_layer))
+            savedata_opts=list(outfolder = outfolder, 
+                               out_fmt = out_fmt, 
+                               out_dsn = out_dsn, 
+                               out_layer = "bnd", 
+                               outfn.date = outfn.date, 
+                               overwrite_layer = overwrite_layer))
     }
     datExportData(pltassgn, 
-            savedata_opts=list(outfolder=outfolder, 
-                               out_fmt=out_fmt, 
-                               out_dsn=out_dsn, 
-                               out_layer="pltassgn", 
-                               outfn.date=outfn.date, 
-                               overwrite_layer=overwrite_layer))
+            savedata_opts=list(outfolder = outfolder, 
+                               out_fmt = out_fmt, 
+                               out_dsn = out_dsn, 
+                               out_layer = "pltassgn", 
+                               outfn.date = outfn.date, 
+                               overwrite_layer = overwrite_layer))
 
     for (tabnm in names(tabs)) {
       datExportData(tabs[[tabnm]], 
-            savedata_opts=list(outfolder=outfolder, 
-                               out_fmt=out_fmt, 
-                               out_dsn=out_dsn, 
-                               out_layer=tabnm, 
-                               outfn.date=outfn.date, 
-                               overwrite_layer=overwrite_layer))
+            savedata_opts=list(outfolder = outfolder, 
+                               out_fmt = out_fmt, 
+                               out_dsn = out_dsn, 
+                               out_layer = tabnm, 
+                               outfn.date = outfn.date, 
+                               overwrite_layer = overwrite_layer))
     }
     datExportData(unitarea, 
-            savedata_opts=list(outfolder=outfolder, 
-                               out_fmt=out_fmt, 
-                               out_dsn=out_dsn, 
-                               out_layer="unitarea", 
-                               outfn.date=outfn.date, 
-                               overwrite_layer=overwrite_layer))
+            savedata_opts=list(outfolder = outfolder, 
+                               out_fmt = out_fmt, 
+                               out_dsn = out_dsn, 
+                               out_layer = "unitarea", 
+                               outfn.date = outfn.date, 
+                               overwrite_layer = overwrite_layer))
     if (strata) {
       datExportData(stratalut, 
-            savedata_opts=list(outfolder=outfolder, 
-                               out_fmt=out_fmt, 
-                               out_dsn=out_dsn, 
-                               out_layer="stratalut", 
-                               outfn.date=outfn.date, 
-                               overwrite_layer=overwrite_layer))
+            savedata_opts=list(outfolder = outfolder, 
+                               out_fmt = out_fmt, 
+                               out_dsn = out_dsn, 
+                               out_layer = "stratalut", 
+                               outfn.date = outfn.date, 
+                               overwrite_layer = overwrite_layer))
     }
   }
 

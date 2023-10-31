@@ -267,7 +267,7 @@ anGetData <- function(bnd_layer,
     graphics::par(mar=c(1,1,1,1))
 
     jpg_layer <- paste0(out_layer, "_plots")
-    jpgfn <- paste0(stepfolder, "/", out_layer, ".jpg")
+    jpgfn <- paste0(stepfolder, "/", jpg_layer, ".jpg")
     grDevices::jpeg(jpgfn, res=400, units="in", width=8, height=10)
 
     plot(sf::st_geometry(bnd), border="grey")
