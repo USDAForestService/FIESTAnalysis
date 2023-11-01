@@ -1,6 +1,6 @@
-#' Data - Get list of plot data and auxiliary data for estimation.
+#' Data - Get list of population data for estimation.
 #'
-#' Wrapper to get plot data and auxiliary data for estimation.
+#' Wrapper to get population data for estimation.
 #'
 #'
 #' @param SAdatalst sf R object. List object output from FIESTAnalysis::anGetData_list().
@@ -8,7 +8,7 @@
 #' @param smallbnd.domain String. Name of unique identifier for smallbnd.
 #' @param prednames String vector. One or more predictors to use for estimation. 
 #' @param saveobj Logical. If TRUE, saves SApopdat object to outfolder.
-#' @param objnm String. If savedata=TRUE, ame of object to save. 
+#' @param objnm String. If savedata=TRUE, name of object to save. 
 #' @param outfolder String. Name of outfolder. If NULL, saves to working directory.
 #' @param overwrite Logical. If TRUE, overwrite object in outfolder.
 #' @param outfn.pre String. If saveobj=TRUE, prefix for object name. 
