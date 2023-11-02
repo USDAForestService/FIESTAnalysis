@@ -2,7 +2,7 @@
 % Please edit documentation in R/anSApop_list.R
 \name{anSApop_list}
 \alias{anSApop_list}
-\title{Data - Get list of plot data and auxiliary data for estimation.}
+\title{Data - Get list of population data for estimation.}
 \usage{
 anSApop_list(
   SAdatalst,
@@ -28,7 +28,7 @@ anSApop_list(
 
 \item{saveobj}{Logical. If TRUE, saves SApopdat object to outfolder.}
 
-\item{objnm}{String. If savedata=TRUE, ame of object to save.}
+\item{objnm}{String. If savedata=TRUE, name of object to save.}
 
 \item{outfolder}{String. Name of outfolder. If NULL, saves to working directory.}
 
@@ -42,7 +42,7 @@ anSApop_list(
 Data.
 }
 \description{
-Wrapper to get plot data and auxiliary data for estimation.
+Wrapper to get population data for estimation.
 }
 \note{
 If exportsp=TRUE:\cr If out_fmt="shp", the writeOGR (rgdal) function is

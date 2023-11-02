@@ -29,7 +29,6 @@ anGetXY_list <- function(bndlst,
   ## Set global variables
   gui <- FALSE
 
-
   ## Check input parameters
   input.params <- names(as.list(match.call()))[-1]
   formallst <- c(names(formals(anGetXY_list)), names(formals(spGetXY)))
@@ -38,7 +37,6 @@ anGetXY_list <- function(bndlst,
     stop("invalid parameter: ", toString(miss))
   }
 
-  
   ## Check parameter inputs
   ##########################################################################
   
@@ -67,7 +65,7 @@ anGetXY_list <- function(bndlst,
   if (class(bndlst) != "list") {
     bndlst <- list(bndlst)
   }
-  nbrlst <- length(xydatlst) 
+  nbrlst <- length(bndlst) 
   xydatlst <- vector(mode='list', length=nbrlst)
   names(xydatlst) <- names(bndlst)
 
