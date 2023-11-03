@@ -38,6 +38,8 @@ estimation domain units.}
 
 \item{bnd.filter}{String. Optional filter of bnd_layer.}
 
+\item{bnd.byvar}{String. Optional name in bnd to get pixel data by.}
+
 \item{polyvlst}{String vector or list. The name(s) of variable(s) to
 extract from polygon(s). If extracting multiple variables from more than one
 polygon, specify names in a list format, corresponding to polyvlst.}

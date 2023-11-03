@@ -81,8 +81,6 @@ anSApop_list <- function(SAdatalst,
   
   ## Extract FIA data and model data
   ###########################################################################
-  SApoplst <- list()
-
   if (class(SAdatalst) != "list") {
     SAdatalst <- list(SAdatalst)
   }
@@ -90,27 +88,29 @@ anSApop_list <- function(SAdatalst,
     smallbndlst <- list(smallbndlst)
   }
 
-  nbrpop <- length(SAdatalst)
+  nbrlst <- length(SAdatalst)
+  SApoplst <- vector(mode='list', length=nbrlst)
+  names(SApoplst) <- names(SAdatalst)
+  if (is.null(names(SApoplst))) {
+    paste0("SAdom", seq(1:nbrlst))
+  }
 
-  for (i in 1:length(SAdatalst)) {
-    message("getting population data for ", i, " out of ", nbrpop, " modeling domains...\n")
+  for (i in 1:nbrlst) {
+    message("getting population data for ", i, " out of ", nbrlst, " modeling domains...\n")
 
     SAdata <- SAdatalst[[i]]
     smallbnd <- smallbndlst[[i]]
-    SAdatanm <- names(SAdatalst)[[i]]
-    if (is.null(SAdatanm)) {
-      SAdatanm <- paste0("bnd", i)
-    }
-
-    pop <- modSApop(SAdata=SAdata, 
-                    smallbnd=smallbnd, 
-                    smallbnd.domain=smallbnd.domain,
+    nm <- names(SApoplst)[[i]]
+	
+    pop <- modSApop(SAdata = SAdata, 
+                    smallbnd = smallbnd, 
+                    smallbnd.domain = smallbnd.domain,
                     prednames = prednames)
     if (is.null(pop)) {
       message("no data extracted for: ", SAdatanm)
-      SApoplst[[SAdatanm]] <- NA
+      SApoplst[[nm]] <- NA
     } else {
-      SApoplst[[SAdatanm]] <- pop
+      SApoplst[[nm]] <- pop
     }
   }
   

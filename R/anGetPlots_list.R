@@ -12,7 +12,6 @@
 #' @param outfn.date Logical. If TRUE, add current date to object name.
 #' @param ... Parameter for FIESTA::spGetPlots function. 
 #' @return Data.
-#' @note
 #'
 #' @author Tracey S. Frescino
 #' @keywords data
@@ -72,8 +71,6 @@ anGetPlots_list <- function(auxdatlst,
   nbrlst <- length(auxdatlst)
   pltdatlst <- vector(mode='list', length=nbrlst)
   names(pltdatlst) <- names(auxdatlst)
-
-
 
   for (i in 1:nbrlst) {
     message("getting plot data for ", i, " out of ", nbrlst, " boundaries...\n")

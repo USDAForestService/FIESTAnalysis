@@ -19,7 +19,6 @@
 #' @param eval_opts List of evaluation options for 'FIA' or 'custom'
 #' evaluations to determine the set of data returned. See help(eval_options)
 #' for a list of options.
-#' @param isseed Logical. If TRUE, add seedling data from Evaluation(s).
 #' @param byEndyr Logical. If TRUE, organizes evalidlst by evalEndyr.  Set TRUE
 #' if estimates include more than one state (e.g., if area of interest crosses
 #' more than one state - Manti-LaSal).

@@ -4,6 +4,7 @@
 #'
 #'
 #' @param xydatlst sf R object. List output from FIESTAnalysis::anGetXY_list function.
+#' @param keepxy Logical. If TRUE, returns XY data.
 #' @param saveobj Logical. If TRUE, saves xydatlst object to outfolder.
 #' @param objnm String. If savedata=TRUE, name of object to save. 
 #' @param outfolder String. Name of outfolder. If NULL, saves to working directory.
@@ -12,7 +13,6 @@
 #' @param outfn.date Logical. If TRUE, add current date to object name.
 #' @param ... Parameter for FIESTA::spGetAuxiliary function. 
 #' @return Data.
-#' @note
 #'
 #' @author Tracey S. Frescino
 #' @keywords data
@@ -95,7 +95,8 @@ anGetAuxiliary_list <- function(xydatlst,
 	if (keepxy) {
       auxdatlst[[nm]]$spxy <- spxy
 	}
-    auxdat <- spGetAuxiliary(xyplt = spxy, unit_layer = bndx, ...)
+    auxdat <- spGetAuxiliary(xyplt = spxy, unit_layer = bndx, 
+	                         returnxy = keepxy, ...)
 
     if (is.null(auxdat)) {
       message("no data extracted for: ", xydatnm)

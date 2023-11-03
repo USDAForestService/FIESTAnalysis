@@ -49,8 +49,6 @@ more than one state - Manti-LaSal).}
 outfolder is the working directory.}
 
 \item{...}{Parameters to modGBpop().}
-
-\item{isseed}{Logical. If TRUE, add seedling data from Evaluation(s).}
 }
 \value{
 Set of population data from modGBpop() for each Evaluation

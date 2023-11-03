@@ -13,6 +13,7 @@
 #' @param bnd.att String. Name of attribute in boundary file to define
 #' estimation domain units.
 #' @param bnd.filter String. Optional filter of bnd_layer.
+#' @param bnd.byvar String. Optional name in bnd to get pixel data by.
 #' @param polyvlst String vector or list. The name(s) of variable(s) to
 #' extract from polygon(s). If extracting multiple variables from more than one
 #' polygon, specify names in a list format, corresponding to polyvlst.
