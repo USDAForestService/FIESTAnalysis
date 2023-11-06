@@ -79,7 +79,7 @@ anGetXY_list <- function(bndlst,
  
     xydat <- spGetXY(bnd = bnd, ...)
     if (is.null(xydat)) {
-      message("no data extracted for: ", bndnm)
+      message("no data extracted for: ", nm)
       xydatlst[[nm]] <- NA
     } else {
       xydatlst[[nm]] <- xydat

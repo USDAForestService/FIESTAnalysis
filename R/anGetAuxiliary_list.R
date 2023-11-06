@@ -4,7 +4,6 @@
 #'
 #'
 #' @param xydatlst sf R object. List output from FIESTAnalysis::anGetXY_list function.
-#' @param keepxy Logical. If TRUE, returns XY data.
 #' @param saveobj Logical. If TRUE, saves xydatlst object to outfolder.
 #' @param objnm String. If savedata=TRUE, name of object to save. 
 #' @param outfolder String. Name of outfolder. If NULL, saves to working directory.
@@ -18,7 +17,6 @@
 #' @keywords data
 #' @export
 anGetAuxiliary_list <- function(xydatlst, 
-                           keepxy = FALSE,
                            saveobj = FALSE,
                            objnm = "auxdatlst",
 						   outfolder = NULL, 
@@ -33,7 +31,7 @@ anGetAuxiliary_list <- function(xydatlst,
 
   ## Check input parameters
   input.params <- names(as.list(match.call()))[-1]
-  formallst <- c(names(formals(anGetAuxiliary_list)), names(formals(spGetAuxiliary)))
+  formallst <- unique(c(names(formals(anGetAuxiliary_list)), names(formals(spGetAuxiliary))))
   if (!all(input.params %in% formallst)) {
     miss <- input.params[!input.params %in% formallst]
     stop("invalid parameter: ", toString(miss))
@@ -43,11 +41,6 @@ anGetAuxiliary_list <- function(xydatlst,
   ## Check parameter inputs
   ##########################################################################
  
-  ## Check keepxy
-  keepxy <- pcheck.logical(keepxy, varnm="keepxy",
-                            title="Keep xy data?", 
-                            first="YES", gui=gui, stopifnull=TRUE)
-
   ## Check saveobj
   saveobj <- pcheck.logical(saveobj, varnm="saveobj",
                             title="Save auxdatlst object?", 
@@ -91,12 +84,8 @@ anGetAuxiliary_list <- function(xydatlst,
 	spxy <- xydat$spxy
 	bndx <- xydat$bndx
 
-	auxdatlst[[nm]]$bnd <- bndx
-	if (keepxy) {
-      auxdatlst[[nm]]$spxy <- spxy
-	}
-    auxdat <- spGetAuxiliary(xyplt = spxy, unit_layer = bndx, 
-	                         returnxy = keepxy, ...)
+    ## Run FIESTA::spGetAuxiliary function
+    auxdat <- spGetAuxiliary(xyplt = spxy, unit_layer = bndx, ...)
 
     if (is.null(auxdat)) {
       message("no data extracted for: ", xydatnm)
