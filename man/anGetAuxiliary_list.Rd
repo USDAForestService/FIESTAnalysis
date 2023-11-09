@@ -6,7 +6,6 @@
 \usage{
 anGetAuxiliary_list(
   xydatlst,
-  keepxy = FALSE,
   saveobj = FALSE,
   objnm = "auxdatlst",
   outfolder = NULL,
@@ -18,8 +17,6 @@ anGetAuxiliary_list(
 }
 \arguments{
 \item{xydatlst}{sf R object. List output from FIESTAnalysis::anGetXY_list function.}
-
-\item{keepxy}{Logical. If TRUE, returns XY data.}
 
 \item{saveobj}{Logical. If TRUE, saves xydatlst object to outfolder.}
 

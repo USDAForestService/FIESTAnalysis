@@ -5,7 +5,7 @@
 \title{Analysis - Compare estimates for custom-defined boundary.}
 \usage{
 anMODcompare(
-  bnd,
+  bnd = NULL,
   bnd_dsn = NULL,
   bnd.att = NULL,
   bnd.filter = NULL,
