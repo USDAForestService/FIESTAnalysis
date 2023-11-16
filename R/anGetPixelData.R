@@ -337,7 +337,7 @@ anGetPixelData <- function(ref.rastfn,
 
   xy.uniqueid <- "cmbid" 
   outsp_layer <- paste0("rastcombo")
-  exportsp <- FALSE
+  # exportsp <- FALSE
   xyplt <- spMakeSpatialPoints(rastcombo, 
                       xy.uniqueid = xy.uniqueid,
                       xvar = "pixelX",
