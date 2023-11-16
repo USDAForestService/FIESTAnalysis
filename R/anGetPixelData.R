@@ -248,8 +248,8 @@ anGetPixelData <- function(ref.rastfn,
    #exprY <- 'ifelse(A > 0, pixelY, -9999)' 
    
    ## If raster value != the nodata value, keep the center pixel X or Y value, else -9999
-   exprX <- 'ifelse(A != nodata, pixelX, -9999)' 
-   exprY <- 'ifelse(A != nodata, pixelY, -9999)' 
+   exprX <- 'ifelse(A != nodata, pixelX, nodata)' 
+   exprY <- 'ifelse(A != nodata, pixelY, nodata)' 
 
   } else {
     ## Create expressions to calculate rasters of X and Y across raster
