@@ -232,7 +232,7 @@ anGetPixelData <- function(ref.rastfn,
 	} else {
 	  nodata <- ref.rast.nodata
 	}
-	  
+	 
     clipRaster(src = bndx, 
              srcfile = ref.rast, 
 			 src_band = 1, 
