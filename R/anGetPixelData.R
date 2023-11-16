@@ -72,6 +72,7 @@ anGetPixelData <- function(ref.rastfn,
                            savedata_opts = NULL, 
                            ncores = 1) {
 
+
   ## Set global variables
   gui <- FALSE
   fnlst <- list()
@@ -163,6 +164,7 @@ anGetPixelData <- function(ref.rastfn,
  
   ####################################################################
   ## Get boundary info
+  ## If a boundary is input, clip the ref raster to the boundary mask
   ####################################################################
 
   ## Import boundary
@@ -170,17 +172,10 @@ anGetPixelData <- function(ref.rastfn,
   if (!is.null(bndx)) {
     bndx <- datFilter(bndx, xfilter=bnd.filter, stopifnull=TRUE)$xf
 
-    ## Check bnd.att
-	if (!all(bnd.att %in% names(bndx))) {
-	  bnd.att.miss <- bnd.att[!bnd.att %in% names(bndx)] 
-	  message("bnd.att not in bnd: ", toString(bnd.att.miss))
-	}
-
     ## Compare crs of reference raster and reproject if different
     bndx <- crsCompare(bndx, ref.rast.crs)$x
 	
-	
-	## Check byvar
+	## Check byvar - for looping through and saving by...
     byvar <- pcheck.varchar(var2check = bnd.byvar, 
                             varnm = "bnd.byvar",
                             checklst = names(bndx), gui=gui, 
@@ -193,16 +188,23 @@ anGetPixelData <- function(ref.rastfn,
 	}
 	byvalues <- sort(unique(bndx[[byvar]]))
 
-    # if (!class(bndx[[bnd.att]]) %in% c("numeric", "integer")) { 
-      # ## Create lookup table for Subsection values
-      # lut <- data.frame(BYVAR = sort(unique(bndx[[bnd.att]])), 
-                  # VALUE = seq(1:length(unique(bndx[[bnd.att]]))))
-      # bndx <- merge(bndx, lut, by.x=bnd.att, by.y="BYVAR")
-      # burn_value <- "VALUE"
-      # #bnd
-    # } else {
-      # burn_value <- bnd.att
-    # }
+
+    ## Check bnd.att -  for getting pixels within each...
+	if (!all(bnd.att %in% names(bndx))) {
+	  bnd.att.miss <- bnd.att[!bnd.att %in% names(bndx)] 
+	  message("bnd.att not in bnd: ", toString(bnd.att.miss))
+	}
+
+#    if (!class(bndx[[bnd.att]]) %in% c("numeric", "integer")) { 
+#      ## Create lookup table for character values
+#      lut <- data.frame(BYVAR = sort(unique(bndx[[bnd.att]])), 
+#                  VALUE = seq(1:length(unique(bndx[[bnd.att]]))))
+#      bndx <- merge(bndx, lut, by.x=bnd.att, by.y="BYVAR")
+#      burn_value <- "VALUE"
+#      #bnd
+#    } else {
+#      burn_value <- bnd.att
+#    }
 
     # ## Rasterize polygon to temporary file
     # rastfn <- rasterFromVectorExtent(src = bndx, 
@@ -223,6 +225,8 @@ anGetPixelData <- function(ref.rastfn,
 	  rastfn <- tempfile("bndrast", fileext="tif")
     }
 	
+	## Get nodata value of ref raster.
+	## If the nodata values was not assigned (NA), then use a default value.
 	if (is.na(ref.rast.nodata)) {
 	  nodata <- getDefaultNodata(ref.rast.datatype)
 	} else {
@@ -240,8 +244,12 @@ anGetPixelData <- function(ref.rastfn,
              options = "COMPRESS=LZW")
  
    ## Create expressions to calculate rasters of X and Y values within bnd
-   exprX <- 'ifelse(A > 0, pixelX, -9999)' 
-   exprY <- 'ifelse(A > 0, pixelY, -9999)' 
+   #exprX <- 'ifelse(A > 0, pixelX, -9999)' 
+   #exprY <- 'ifelse(A > 0, pixelY, -9999)' 
+   
+   ## If raster value != the nodata value, keep the center pixel X or Y value, else -9999
+   exprX <- 'ifelse(A != nodata, pixelX, -9999)' 
+   exprY <- 'ifelse(A != nodata, pixelY, -9999)' 
 
   } else {
     ## Create expressions to calculate rasters of X and Y across raster
@@ -256,6 +264,13 @@ anGetPixelData <- function(ref.rastfn,
     pixelXfn <- tempfile("pixelX", fileext=".tif")
     pixelYfn <- tempfile("pixelY", fileext=".tif")
   }
+  
+  
+  ####################################################################
+  ## Get pixel XY data using exprX/exprY above.
+  ## If lonlat values are desired, use pixelLon/pixelLat and multiply
+  ## by a large number to integerize, retaining significant digits.
+  ####################################################################
   
   if (lonlat) {
     out.crs = 4269
@@ -300,13 +315,19 @@ anGetPixelData <- function(ref.rastfn,
                    write_mode = "overwrite")
   }
   
+  
+  ####################################################################
+  ## Get combination raster of pixel X/Y values
   ## Note: rasterCombine only allows Int* data types
+  ####################################################################
+
   combofn <- file.path(outfolder, "combo.tif")
   rastcombo <- gdalraster::combine(c(pixelXfn, pixelYfn),
                              var.names = c("pixelX", "pixelY"),
 							 fmt = "GTiff",
 							 dstfile = combofn,
 							 options = c("COMPRESS = LZW"))
+
 
 
   #########################################################################
@@ -330,7 +351,7 @@ anGetPixelData <- function(ref.rastfn,
   ## Extract XY pixel values from bndx
   xyext <- spExtractPoly(xyplt = xyplt, 
                          polyvlst = bndx, 
-                         polyvarlst = c(bnd.att, byvar),
+                         polyvarlst = unique(c(bnd.att, byvar)),
                          xy.uniqueid = xy.uniqueid, 
                          keepNA = FALSE)$spxyext
 						 
@@ -349,17 +370,17 @@ anGetPixelData <- function(ref.rastfn,
   # rastcombo[, (xycols) := lapply(.SD, function(x) x / 10000000), .SDcols=xycols]
 
 
-  # ## Merge lut values if exists
-  # if (!is.null(lut)) {
-    # rastcombo <- merge(rastcombo, lut, by.x=burn_value, by.y="VALUE")
-    # rastcombo[, (burn_value) := NULL]
-    # setnames(rastcombo, "BYVAR", bnd.att)
-    # byvalues <- sort(unique(rastcombo[[bnd.att]]))
-    # message("looping through ", length(byvalues), " ", tolower(bnd.att), " values")
-  # } else {
-    # byvalues <- sort(unique(rastcombo$VALUE))
-    # message("looping through ", length(byvalues), " values")
-  # }
+#  ## Merge lut values if exists
+#  if (!is.null(lut)) {
+#    rastcombo <- merge(rastcombo, lut, by.x=burn_value, by.y="VALUE")
+#    rastcombo[, (burn_value) := NULL]
+#    setnames(rastcombo, "BYVAR", bnd.att)
+#    byvalues <- sort(unique(rastcombo[[bnd.att]]))
+#    message("looping through ", length(byvalues), " ", tolower(bnd.att), " values")
+#  } else {
+#    byvalues <- sort(unique(rastcombo$VALUE))
+#    message("looping through ", length(byvalues), " values")
+#  }
 
 
   ## For efficiency, lets subset and loop thru unique values
