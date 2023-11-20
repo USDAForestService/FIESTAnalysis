@@ -111,7 +111,7 @@ anGBpop_report <- function(GBpopdat,
 	file.path(reportfolder, "anGBtemplate.docx"), overwrite=TRUE)
   if (!is.null(photofn)) {
     if (!file.exists(photofn)) {
-      stop(photofn, "does not exist")
+      stop(photofn, " does not exist")
     }
     file.copy(photofn, file.path(reportfolder, "report_image.PNG"), overwrite=TRUE) 
     report_imagefn <- file.path(reportfolder, "report_image.PNG")
