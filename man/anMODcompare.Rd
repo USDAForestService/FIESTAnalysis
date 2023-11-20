@@ -15,6 +15,7 @@ anMODcompare(
   pcfilter = NULL,
   estvarlst = c("BA", "VOLCFNET", "VOLBFNET", "TPA_UNADJ", "DRYBIO_AG", "CARBON_AG"),
   tfilterlst = "live",
+  forprop = TRUE,
   byeach = FALSE,
   prednames = NULL,
   modelselect = TRUE,
