@@ -153,7 +153,6 @@ anGetData_tsum <- function(bnd_layer,
   args <- args[names(args) %in% names(matchargs)]
   args <- append(args, dotargs)
 
-
   input.params <- names(as.list(match.call()))[-1]
   formallst <- c(names(formals(anGetData_tsum)),
 		names(formals(spGetPlots)), "istree", "isseed")
@@ -259,12 +258,22 @@ anGetData_tsum <- function(bnd_layer,
   ## Get FIA plot data from SQLite within boundary
   ####################################################################
   if (is.null(pltdat)) {
-    pltdat <- spGetPlots(bnd = bnd_layer, 
+    if ("istree" %in% names(args)) {
+      pltdat <- spGetPlots(bnd = bnd_layer, 
                          bnd_dsn = bnd_dsn,
                          bnd.filter = bnd.filter, 
                          RS = RS, 
                          returnxy = TRUE, 
                          ...)
+	} else {
+      pltdat <- spGetPlots(bnd = bnd_layer, 
+                         bnd_dsn = bnd_dsn,
+                         bnd.filter = bnd.filter, 
+                         RS = RS, 
+                         returnxy = TRUE, 
+						 istree = TRUE,
+                         ...)
+    }	
     if (is.null(pltdat)) return(NULL)
     if (saveobj) {
       pltobjfn <- getoutfn(outfn="pltdat", ext="rds", outfolder=outfolder, 
@@ -290,7 +299,6 @@ anGetData_tsum <- function(bnd_layer,
   puniqueid <- pltdat$tabIDs$plt
   cuniqueid <- pltdat$tabIDs$cond
   tuniqueid <- pltdat$tabIDs$tree
-  
   bnd <- pltdat$bnd
   
   if (is.null(tree)) {
