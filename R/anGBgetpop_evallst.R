@@ -63,14 +63,9 @@ anGBgetpop_evallst <- function(states = NULL,
   ##################################################################
   ## CHECK PARAMETER NAMES
   ##################################################################
-  input.params <- names(as.list(match.call()))[-1]
-  if (!all(input.params %in% names(formals(DBgetPlots)))) {
-    miss <- input.params[!input.params %in% formals(DBgetPlots)]
-    stop("invalid parameter: ", toString(miss))
-  }
-  
+ 
   ## Check parameter lists
-  pcheck.params(input.params, eval_opts=eval_opts)
+  #pcheck.params(input.params, eval_opts=eval_opts)
   
   ## Set eval_options defaults
   eval_defaults_list <- formals(eval_options)[-length(formals(eval_options))] 
@@ -123,7 +118,7 @@ anGBgetpop_evallst <- function(states = NULL,
                             title="By Endyr?", 
                             first="NO", gui=gui)
   if (byEndyr) {
-    if (is.null(evalEndyrlst)) {
+    if (is.null(Endyr)) {
       stop("must include evalEndyrlst if byEndyr=TRUE")
     }
   }
@@ -167,16 +162,20 @@ anGBgetpop_evallst <- function(states = NULL,
                      invtype = "ANNUAL",
                      datsource = datsource, 
                      data_dsn = data_dsn,
-                     dbTabs = dbTables(ppsa_layer = ppsanm),
+                     dbTabs = dbTables(ppsa_layer = ppsanm, 
+                                       popstratum_layer = pop_stratumnm,
+                                       popestnunit_layer = pop_estn_unitnm),
                      eval = eval, 
                      eval_opts = eval_opts,
                      getxy = FALSE,
                      returndata = TRUE, 
                      savePOP = TRUE, 
-                     othertables = c(pop_stratumnm, pop_estn_unitnm),
                      ...
                      )
+  #load("pltdat.rds")
   evalidlst <- pltdat$evalid
+  evalEndyrlst <- eval_opts$Endyr
+
 
   if (byEndyr) {
     if (unique(unlist(lapply(evalidlst, length))) != length(evalEndyrlst)) {
@@ -194,7 +193,6 @@ anGBgetpop_evallst <- function(states = NULL,
     #names(evalidlst) <- paste0(evalidstabbr, evalidlst)
     names(evalidlst) <- paste0("eval", evalidlst)
   }
-
 
   ## Get population from the sqlite database with pop tables
   #########################################################################
@@ -221,20 +219,20 @@ anGBgetpop_evallst <- function(states = NULL,
                                         seed = pltdat$tabs$seed), 
                          pltassgn = pltdat$pop_plot_stratum_assgn, 
                          pltassgnid = "PLT_CN", 
-                         popFilter = list(evalid=evalid),
+                         popFilter = list(evalid = evalid),
                          strata = TRUE, 
                          unitvar = "ESTN_UNIT", 
-                         unitarea = pltdat$tabs$pop_estn_unit, 
+                         unitarea = pltdat$pop_estn_unit, 
                          areavar = "AREA_USED", 
                          unit_opts = list(unitvar2="STATECD"), 
-                         stratalut = pltdat$tabs$pop_stratum, 
+                         stratalut = pltdat$pop_stratum, 
                          strvar = "STRATUMCD", 
                          strata_opts = list(getwt = TRUE, 
                                             getwtvar = "P1POINTCNT", 
                                             stratcombine = TRUE), 
                          savedata = savedata, 
                          savedata_opts = list(outfolder=outfolder, 
-                           				outfn.pre=evalnm))
+                           				            outfn.pre=evalnm))
     GBpop_evallst[[evalnm]] <- GBpopdat
   }
 
