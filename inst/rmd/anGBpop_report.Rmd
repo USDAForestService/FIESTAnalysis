@@ -264,7 +264,6 @@ Table 2. Number of growing-stock trees (>= 5.0 in dia) per acre by forest type g
 &nbsp;  
 
 ```{r EST2_Table, echo=FALSE, warning=FALSE, message=FALSE}
-
 estdat_EST2 <- modGBratio(GBpopdat=GBpopdat, 
                       landarea="FOREST", pcfilter=pcfilter, 
                       estvarn="TPA_UNADJ", estvarn.filter="TREECLCD == 2 & DIA >= 5.0", 
@@ -448,7 +447,6 @@ Table 5. Number of live `r title.spcd` seedlings (< 1.0 in dia) per acre by fore
 &nbsp;   
 
 ```{r EST4_v2_Table, echo=FALSE, warning=FALSE, message=FALSE}
-
 estdat_EST4_v2 <- modGBratio(GBpopdat=GBpopdat, 
                       landarea="FOREST", pcfilter=pcfilter, 
                       estvarn="TPA_UNADJ", estvarn.filter=spcd.filter, estseed="only", 
@@ -833,7 +831,7 @@ GBpopdat$pltcondx <- datlut_EST9_v1$xLUT
 
 estdat_EST9_v1 <- modGBarea(GBpopdat=GBpopdat, 
                       landarea="FOREST", pcfilter=pcfilter,	
-                      rowvar="STDAGENM", 
+                      rowvar="STDAGENM",
                       sumunits=TRUE, returntitle=TRUE,
                       table_opts = list(estround=2, pseround=0, divideby="thousand"), 
                       title_opts = list(title.filter=title.filter, 
@@ -1035,7 +1033,6 @@ treedia.brks_EST11_v1 <- c(1,5,8,18,999)
 
 datlut_EST11_v1 <- datLUTclass(x=GBpopdat$treex, xvar="DIA", cutbreaks=treedia.brks_EST11_v1)
 GBpopdat$treex <- datlut_EST11_v1$xLUT
-
 estdat_EST11_v1 <- modGBtree(GBpopdat=GBpopdat, 
                       landarea="FOREST", pcfilter=pcfilter, estseed="add",
 		                  estvar="TPA_UNADJ", 

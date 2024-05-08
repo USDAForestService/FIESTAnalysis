@@ -24,6 +24,13 @@
 #' @param estvarlst String vector. One or more tree-level estimate variable
 #' (e.g., 'VOLCFNET').
 #' @param tfilterlst String vector. One or more tree filters ('live', 'dead').
+#' @param intensity1 Logical. If TRUE, uses only INTENSITY=1 (i.e., P2 plots)
+#' for GB and MA estimates, to assure an equal probability sample.
+#' @param forprop Logical. If TRUE, adds forest estimates of forest proportion.
+#' @param totals Logical. If TRUE, sums per acre values to total values by 
+#' by multiplying by total acres.
+#' @param pse Logical. Add pse columns to table.
+#' @param estround Integer. Number of digits to round estimates and estimates.se.
 #' @param byeach Logical. If TRUE, creates an SAdom for each smallbnd polygon.
 #' @param prednames String vector. One or more predictors to use for estimation. 
 #' Names must match names in SAdatalst$prednames
@@ -54,7 +61,11 @@ anMODcompare <- function(bnd = NULL,
                          pcfilter = NULL, 
                          estvarlst = c("BA", "VOLCFNET", "VOLBFNET", "TPA_UNADJ", "DRYBIO_AG", "CARBON_AG"),
                          tfilterlst = "live",
+						 intensity1 = TRUE,
 						 forprop = TRUE,
+						 totals = FALSE,
+						 pse = FALSE,
+						 estround = 2,
                          byeach = FALSE, 
                          prednames = NULL,
                          modelselect = TRUE,
@@ -167,11 +178,17 @@ anMODcompare <- function(bnd = NULL,
   ## Get population data for GB and MA
   ####################################################################
   message("generating population data for GB and MA...\n")
+  
+  if (intensity1) {
+    popFilter <- list(AOIonly = TRUE, intensity = 1)
+  } else {
+    popFilter <- list(AOIonly = TRUE)
+  }  
  
   ## Get population data for Model-Assisted estimates
   MApopdatlst <- lapply(names(SAdatalst), function(x)
                   modMApop(MAdata = SAdatalst[[x]], 
-                           popFilter = list(AOIonly = TRUE, intensity = 1),
+                           popFilter = popFilter,
 						   unit_opts = list(minplotnum.unit = 2)))
   names(MApopdatlst) <- names(SAdatalst)
 #head(MApopdatlst[[1]]$unitlut)
@@ -179,7 +196,7 @@ anMODcompare <- function(bnd = NULL,
   ## Get population data for Green-Book estimates - no strata
   GBpopdatlst1 <- lapply(names(SAdatalst), function(x)
                   modGBpop(GBdata = SAdatalst[[x]], 
-                           popFilter = list(AOIonly = TRUE, intensity = 1),
+                           popFilter = popFilter,
 						   strata = FALSE,
 						   adj = "plot",
 						   unit_opts = list(minplotnum.unit = 2)))
@@ -188,7 +205,7 @@ anMODcompare <- function(bnd = NULL,
   ## Get population data for Green-Book estimates - with strata
   GBpopdatlst2 <- lapply(names(SAdatalst), function(x)
                   modGBpop(GBdata = SAdatalst[[x]], 
-                           popFilter = list(AOIonly = TRUE, intensity = 1),
+                           popFilter = popFilter,
 						   strata = TRUE,
 						   strvar = strvar,
 						   adj = "plot",
@@ -201,14 +218,53 @@ anMODcompare <- function(bnd = NULL,
   ####################################################################
   multest <- list()
   predselect <- list()
-  raw <- list() 
   output <- list()
+  multestvarlst <- {}
 
   MAmethod = "greg"
-  estcols1 <- c(unitvar, "nhat", "nhat.var", "NBRPLT.gt0")
-  estcols2 <- c(unitvar, "nhat", "nhat.se", "NBRPLT.gt0")
+  estcols1 <- c(unitvar, "nhat", "nhat.var", "NBRPLT.gt0", "AREAUSED")
+  estcols2 <- c(unitvar, "nhat", "nhat.se", "NBRPLT.gt0", "AREAUSED")
    
+  SAestvar <- sort(c("DIR", "JU.GREG",  
+	             "JU.EBLUP", "hbsaeU",
+				 "JFH", "JA.synth", "saeA", "hbsaeA"))
+  SAsevar <- sort(c("DIR.se", "JU.GREG.se", 
+				 "JU.EBLUP.se.1", "hbsaeU.se",
+				 "JFH.se", "JA.synth.se",
+				 "saeA.se", "hbsaeA.se"))
+  SAestvars <- c("JU.Synth")
+  for (i in 1:length(SAestvar)) {
+    SAestvars <- c(SAestvars, SAestvar[i], SAsevar[i])
+	if (pse) {
+	  SAestvars <- c(SAestvars, paste0(SAestvar[i], ".pse"))
+	}
+  }	
+  MAestvar <- c("maseGREG")
+  MAsevar <- c("maseGREG.se")
+  MAestvars <- c(MAestvar, MAsevar)
+  if (pse) {
+    MAestvars <- c(MAestvars, paste0(MAestvar, ".pse"))
+  }
+  GBestHTvar <- c("HT")
+  GBseHTvar <- c("HT.se") 
+  GBestHTvars <- c(GBestHTvar, GBseHTvar)
+  if (pse) {
+    GBestHTvars <- c(GBestHTvars, paste0(GBestHTvar, ".pse"))
+  } 
+  GBestPSvar <- c("PS")
+  GBsePSvar <- c("PS.se")
+  GBestPSvars <- c(GBestPSvar, GBsePSvar)
+  if (pse) {
+    GBestPSvars <- c(GBestPSvars, paste0(GBestPSvar, ".pse"))
+  }
+  #GBestvars <- c(GBestHTvars, GBestPSvars)
+ 
+  #estvar <- c("JU.Synth", SAestvar, SAsevar, MAestvar, MAsevar, GBestHTvar, GBsetHTvar, GBestPSvar, GBsetPSvar)
+  estvars <- c(SAestvars, MAestvars, GBestHTvars, GBestPSvars)
+
   if (forprop) {
+    message("generating estimates of forest proportion...\n")
+
     ## Area estimates
     ##############################################
     multestvarlst <- "FORPROP"
@@ -218,66 +274,112 @@ anMODcompare <- function(bnd = NULL,
                          landarea = landarea, 
                          multest = TRUE, 
                          modelselect = modelselect, 
-                         table_opts = list(rawonly=TRUE),
+                         table_opts = list(rawonly = TRUE, totals = totals),
                          largebnd.unique = SAdomdat$largebnd.unique)
-    SAarea.multest <- SAareaALL$multest
+    SAarea.multest <- SAareaALL$multest	
+	names(SAarea.multest)[names(SAarea.multest) %in% c("NBRPLT.gt0", "AREAUSED")] <- 
+	                c("NBRPLT.gt0.SA", "AREAUSED.SA")
+					
     SAarea.predselect.area <- SAareaALL$raw$predselect.area
     SAarea.predselect.unit <- SAareaALL$raw$predselect.unit
-    output[["FORPROP"]][["raw"]] <- SAareaALL$raw[c("SAobjlst", "estunits")]
+    output[["FORPROP"]][["raw"]] <- SAareaALL$raw[c("SAobjlst", "areaunits")]
 
     rm(SAareaALL)
     gc()
 
     if ("AOI" %in% names(SAarea.multest)) {
       SAarea.multest <- SAarea.multest[SAarea.multest$AOI == 1, ]
-	  names(SAarea.multest)[names(SAarea.multest) == "NBRPLT.gt0"] <- "NBRPLT_gt0_SA"
+	  SAarea.multest$AOI <- NULL
+	  SAarea.multest$LARGEBND <- NULL
     }
-
-    ## Green-book - Post-strat
-    GBareaHT <- lapply(names(GBpopdatlst1), function(x)
-                  modGBarea(GBpopdat = GBpopdatlst1[[x]], 
-                            landarea = landarea, 
-                            table_opts = list(rawonly=TRUE)))
-    names(GBareaHT) <- names(pltdatlst)
-    GBareaHT.est <- do.call(rbind, lapply(GBareaHT, function(x) 
-									x$raw$unit_totest[,estcols1]))
-    GBareaHT.est$nhat.se <- sqrt(GBareaHT.est$nhat.var)
-    GBareaHT.est <- GBareaHT.est[, estcols2]
-    data.table::setnames(GBareaHT.est, c("DOMAIN", "HT", "HT.se", "NBRPLT_gt0_GB"))
-
-    ## Green-book - Post-strat
-    GBareaPS <- lapply(names(GBpopdatlst2), function(x)
-                  modGBarea(GBpopdat = GBpopdatlst2[[x]], 
-                            landarea = landarea, 
-                            table_opts = list(rawonly=TRUE)))
-    names(GBareaPS) <- names(pltdatlst)
-    GBareaPS.est <- do.call(rbind, lapply(GBareaPS, function(x) 
-									x$raw$unit_totest[,estcols1[1:3]]))
-    GBareaPS.est$nhat.se <- sqrt(GBareaPS.est$nhat.var)
-    GBareaPS.est <- GBareaPS.est[, estcols2[1:3]]
-    data.table::setnames(GBareaPS.est, c("DOMAIN", "PS", "PS.se"))
-
-    ## Model-assisted - Greg
+    if (pse) {
+      SAarea.multest[, paste0(SAestvar, ".pse")] <- 
+	                round(SAarea.multest[, SAsevar] / SAarea.multest[, SAestvar] * 100, 2)
+	}
+	SAarea.multest <- SAarea.multest[, c("DOMAIN",  "NBRPLT", SAestvars, "NBRPLT.gt0.SA", "AREAUSED.SA")]
+	
+	## Model-assisted - Greg
     MAareaGREG <- lapply(names(MApopdatlst), function(x)
                   modMAarea(MApopdat = MApopdatlst[[x]], 
 				            MAmethod = MAmethod,
                             landarea = landarea, 
 							modelselect = modelselect, 
-                            table_opts = list(rawonly=TRUE)))
+                            table_opts = list(rawonly = TRUE, totals = totals)))
     MAarea.est <- do.call(rbind, lapply(MAareaGREG, function(x) 
 									x$raw$unit_totest[,estcols1]))
     MAarea.est$nhat.se <- sqrt(MAarea.est$nhat.var)
     MAarea.est <- MAarea.est[, estcols2]
-    data.table::setnames(MAarea.est, c("DOMAIN", "maseGREG", "maseGREG.se", "NBRPLT_gt0_MA"))  
+	data.table::setnames(MAarea.est, 
+	           c("DOMAIN", "maseGREG", "maseGREG.se", "NBRPLT_gt0.MA", "AREAUSED.MA")) 			   
+    if (pse) {
+      MAarea.est[, paste0(MAestvar, ".pse")] <- 
+	             round(MAarea.est[, MAsevar] / MAarea.est[, MAestvar] * 100, 2)
+	}
+	MAarea.est <- MAarea.est[, c("DOMAIN",  MAestvars, "NBRPLT_gt0.MA", "AREAUSED.MA")]
+
+
     MAarea.predselect.greg <- do.call(rbind, lapply(MAareaGREG, function(x) 
 									x$raw$predselectlst$totest))
     MAarea.predselect.greg[is.na(MAarea.predselect.greg)] <- 0
 
+    ## Create final table of estimates
+    area.est <- merge(SAarea.multest, MAarea.est, by="DOMAIN", all.x=TRUE)
 
-    area.est <- merge(SAarea.multest, GBareaHT.est, by="DOMAIN", all.x=TRUE)
+
+    ## Green-book - Post-strat
+    GBareaHT <- lapply(names(GBpopdatlst1), function(x)
+                  modGBarea(GBpopdat = GBpopdatlst1[[x]], 
+                            landarea = landarea, 
+                            table_opts = list(rawonly = TRUE, totals = totals)))
+    names(GBareaHT) <- names(pltdatlst)
+    GBareaHT.est <- do.call(rbind, lapply(GBareaHT, function(x) 
+									x$raw$unit_totest[,estcols1[1:3]]))
+    GBareaHT.est$nhat.se <- sqrt(GBareaHT.est$nhat.var)
+    GBareaHT.est <- GBareaHT.est[, estcols2[1:3]]
+    data.table::setnames(GBareaHT.est, c("DOMAIN", "HT", "HT.se"))
+
+    if (pse) {
+      GBareaHT.est[, paste0(GBestHTvar, ".pse")] <- 
+	             round(GBareaHT.est[, GBseHTvar] / GBareaHT.est[, GBestHTvar] * 100, 2)
+	}
+	GBareaHT.est <- GBareaHT.est[, c("DOMAIN",  GBestHTvars)]
+
+    ## Green-book - Post-strat
+    GBareaPS <- lapply(names(GBpopdatlst2), function(x)
+                  modGBarea(GBpopdat = GBpopdatlst2[[x]], 
+                            landarea = landarea, 
+							returntitle = TRUE,
+                            table_opts = list(rawonly = TRUE, totals = totals)))
+    names(GBareaPS) <- names(pltdatlst)
+    GBareaPS.est <- do.call(rbind, lapply(GBareaPS, function(x) 
+									x$raw$unit_totest[,estcols1]))
+    GBareaPS.est$nhat.se <- sqrt(GBareaPS.est$nhat.var)
+    GBareaPS.est <- GBareaPS.est[, estcols2]
+    data.table::setnames(GBareaPS.est, 
+	             c("DOMAIN", "PS", "PS.se", "NBRPLT_gt0.GB", "AREAUSED.GB"))
+    if (pse) {
+      GBareaPS.est[, paste0(GBestPSvar, ".pse")] <- 
+	          round(GBareaPS.est[, GBsePSvar] / GBareaPS.est[, GBestPSvar] * 100, 2)
+	}
+	GBareaPS.est <- GBareaPS.est[, c("DOMAIN",  GBestPSvars, "NBRPLT_gt0.GB", "AREAUSED.GB")]
+
+    ## Merge estimates to final table
+    area.est <- merge(area.est, GBareaHT.est, by="DOMAIN", all.x=TRUE)
     area.est <- merge(area.est, GBareaPS.est, by="DOMAIN", all.x=TRUE)
-    area.est <- merge(area.est, MAarea.est, by="DOMAIN", all.x=TRUE)
-  
+
+    ## Get totals
+	if (totals) {
+	  area.est[, c("JU.Synth", SAestvar, SAsevar)] <- 
+	               round(area.est[, c("JU.Synth", SAestvar, SAsevar)] * area.est$AREAUSED.SA, estround)           
+	  area.est[, c(MAestvar, MAsevar)] <- round(area.est[,c(MAestvar, MAsevar)] * area.est$AREAUSED.MA, estround)            
+	  area.est[, c(GBestHTvar, GBseHTvar, GBestPSvar, GBsePSvar)] <- 
+	               round(area.est[, c(GBestHTvar, GBseHTvar, GBestPSvar, GBsePSvar)] * area.est$AREAUSED.GB, estround)           
+    }
+    ## Round area variables
+    area.est$AREAUSED.SA <- round(area.est$AREAUSED.SA)
+    area.est$AREAUSED.MA <- round(area.est$AREAUSED.MA)
+    area.est$AREAUSED.GB <- round(area.est$AREAUSED.GB)
+ 
     multest[["FORPROP"]] <- area.est
   #  predselect[["FORPROP"]] <- list(SAest.area=SAarea.predselect.area,
   #						SAest.unit=SAarea.predselect.unit,
@@ -286,17 +388,20 @@ anMODcompare <- function(bnd = NULL,
   #  raw[["FORPROP"]][["MAmethod"]] <- MAareaGREG$raw$MAmethod
   
     output[["FORPROP"]][["multest"]] <- area.est
+	output[["FORPROP"]][["estvars"]] <- c(SAestvars, MAestvars, GBestHTvars, GBestPSvars)
     output[["FORPROP"]][["raw"]][["MAmethod"]] <- MAareaGREG$raw$MAmethod
     output[["FORPROP"]][["raw"]][["predselect"]] <- list(SAest.area=SAarea.predselect.area,
                                               SAest.unit=SAarea.predselect.unit,
                                               MAest.greg=MAarea.predselect.greg)
+	output[["FORPROP"]][["titles"]][["title.main"]] <- strsplit(GBtreePS[[1]]$titlelst$title.tot, ";")[[1]][1]
+	output[["FORPROP"]][["titles"]][["title.yvar"]] <- GBareaPS[[1]]$titlelst$title.yvar
     rm(GBareaHT)
     rm(GBareaPS)
     rm(MAareaGREG)
     rm(MAarea.est)
     gc()
   }
-  
+
   ## Tree estimates
   ##############################################
   for (j in 1:length(estvarlst)) {
@@ -305,7 +410,7 @@ anMODcompare <- function(bnd = NULL,
 
     for (k in 1:length(tfilterlst)) {
       tfilter <- tfilterlst[k]
-      message("generating estimates for ", estvar, " - ", tfilter, "...")
+      message("generating estimates for ", estvar, " - ", tfilter, "...\n")
 	  
 	  estvar.filter <- ifelse(tfilter == "live", "STATUSCD == 1",
 	  ifelse(tfilter == "dead", "STATUSCD == 2 & STANDING_DEAD_CD == 1", NULL))
@@ -321,54 +426,31 @@ anMODcompare <- function(bnd = NULL,
                            estvar.filter = estvar.filter, 
                            multest = TRUE, 
                            modelselect = modelselect, 
-                           table_opts = list(rawonly=TRUE), 
+                           table_opts = list(rawonly = TRUE, totals = totals), 
                            largebnd.unique = SAdomdat$largebnd.unique)
+						   
       SAtree.multest <- SAtreeALL$multest
-	  names(SAtree.multest)[names(SAtree.multest) == "NBRPLT.gt0"] <- "NBRPLT_gt0_SA"
+	  names(SAtree.multest)[names(SAtree.multest) %in% c("NBRPLT.gt0", "AREAUSED")] <- 
+	                c("NBRPLT.gt0.SA", "AREAUSED.SA")
 
       SAtree.predselect.area <- SAtreeALL$raw$predselect.area
       SAtree.predselect.unit <- SAtreeALL$raw$predselect.unit
       SAobjlst <- SAtreeALL$raw$SAobjlst$"1"
-      output[[multestvar]][["raw"]] <- SAtreeALL$raw[c("SAobjlst", "estunits")]
+      output[[multestvar]][["raw"]] <- SAtreeALL$raw[c("SAobjlst", "areaunits")]
 
       rm(SAtreeALL)
       gc()
 
-
       if ("AOI" %in% names(SAtree.multest)) {
         SAtree.multest <- SAtree.multest[SAtree.multest$AOI == 1, ]
+		SAtree.multest$AOI <- NULL
+	    SAtree.multest$LARGEBND <- NULL
       }
-	
-	  ## Green-book - HT
-      GBtreeHT <- lapply(names(GBpopdatlst1), function(x)
-                  modGBtree(GBpopdat = GBpopdatlst1[[x]], 
-                            landarea = landarea, 
-							estvar = estvar, 
-                            estvar.filter = estvar.filter, 
- 							strata = FALSE,
-                            table_opts = list(rawonly=TRUE)))
-      names(GBtreeHT) <- names(pltdatlst)
-      GBtreeHT.est <- do.call(rbind, lapply(GBtreeHT, function(x) 
-									x$raw$unit_totest[,estcols1]))
-      GBtreeHT.est$nhat.se <- sqrt(GBtreeHT.est$nhat.var)
-	  GBtreeHT.est <- GBtreeHT.est[, estcols2]
-      data.table::setnames(GBtreeHT.est, c("DOMAIN", "HT", "HT.se", "NBRPLT_gt0_GB"))
-
-	  ## Green-book - Post-strat
-      GBtreePS <- lapply(names(GBpopdatlst2), function(x)
-                  modGBtree(GBpopdat = GBpopdatlst2[[x]], 
-                            landarea = landarea, 
-							estvar = estvar, 
-                            estvar.filter = estvar.filter, 
-							strata = TRUE,
-							strvar = strvar,
-                            table_opts = list(rawonly=TRUE)))
-      names(GBtreePS) <- names(pltdatlst)
-      GBtreePS.est <- do.call(rbind, lapply(GBtreePS, function(x) 
-									x$raw$unit_totest[,estcols1[1:3]]))
-      GBtreePS.est$nhat.se <- sqrt(GBtreePS.est$nhat.var)
-	  GBtreePS.est <- GBtreePS.est[, estcols2[1:3]]
-      data.table::setnames(GBtreePS.est, c("DOMAIN", "PS", "PS.se"))
+      if (pse) {
+        SAtree.multest[, paste0(SAestvar, ".pse")] <- 
+		            round(SAtree.multest[, SAsevar] / SAtree.multest[, SAestvar] * 100, 2)
+	  }
+	  SAtree.multest <- SAtree.multest[, c("DOMAIN",  "NBRPLT", SAestvars, "NBRPLT.gt0.SA", "AREAUSED.SA")]
 
       ## Model-assisted - Greg
       MAtreeGREG <- lapply(names(MApopdatlst), function(x)
@@ -378,21 +460,92 @@ anMODcompare <- function(bnd = NULL,
 							estvar=estvar, 
                             estvar.filter = estvar.filter, 
 							modelselect = modelselect, 
-                            table_opts = list(rawonly=TRUE)))
+                            table_opts = list(rawonly = TRUE, totals = totals)))
       MAtree.est <- do.call(rbind, lapply(MAtreeGREG, function(x) 
 									x$raw$unit_totest[,estcols1]))
       MAtree.est$nhat.se <- sqrt(MAtree.est$nhat.var)
       MAtree.est <- MAtree.est[, estcols2]
-      data.table::setnames(MAtree.est, c("DOMAIN", "maseGREG", "maseGREG.se", "NBRPLT_gt0_MA"))  
+      data.table::setnames(MAtree.est, 
+	           c("DOMAIN", "maseGREG", "maseGREG.se", "NBRPLT_gt0.MA", "AREAUSED.MA")) 	
+			   
+      if (pse) {
+        MAtree.est[, paste0(MAestvar, ".pse")] <- 
+		            round(MAtree.est[, MAsevar] / MAtree.est[, MAestvar] * 100, 2)
+	  }
+	  MAtree.est <- MAtree.est[, c("DOMAIN",  MAestvars, "NBRPLT_gt0.MA", "AREAUSED.MA")]
+
       MAtree.predselect.greg <- do.call(rbind, lapply(MAtreeGREG, function(x) 
 									x$raw$predselectlst$totest))
       MAtree.predselect.greg[is.na(MAtree.predselect.greg)] <- 0
-   
-      tree.est <- merge(SAtree.multest, GBtreeHT.est, by="DOMAIN", all.x=TRUE)
-      tree.est <- merge(tree.est, GBtreePS.est, by="DOMAIN", all.x=TRUE)
-      tree.est <- merge(tree.est, MAtree.est, by="DOMAIN", all.x=TRUE)
+
+      ## Create final table
+      tree.est <- merge(SAtree.multest, MAtree.est, by="DOMAIN", all.x=TRUE)
+	
+	
+	  ## Green-book - HT
+      GBtreeHT <- lapply(names(GBpopdatlst1), function(x)
+                  modGBtree(GBpopdat = GBpopdatlst1[[x]], 
+                            landarea = landarea, 
+							estvar = estvar, 
+                            estvar.filter = estvar.filter, 
+ 							strata = FALSE,
+                            table_opts = list(rawonly = TRUE, totals = totals)))
+      names(GBtreeHT) <- names(pltdatlst)
+      GBtreeHT.est <- do.call(rbind, lapply(GBtreeHT, function(x) 
+									x$raw$unit_totest[,estcols1[1:3]]))
+      GBtreeHT.est$nhat.se <- sqrt(GBtreeHT.est$nhat.var)
+	  GBtreeHT.est <- GBtreeHT.est[, estcols2[1:3]]
+      data.table::setnames(GBtreeHT.est, 
+	                  c("DOMAIN", "HT", "HT.se"))
+
+      if (pse) {
+        GBtreeHT.est[, paste0(GBestHTvar, ".pse")] <- 
+		               round(GBtreeHT.est[, GBseHTvar] / GBtreeHT.est[, GBestHTvar] * 100, 2)
+	  }
+	  GBtreeHT.est <- GBtreeHT.est[, c("DOMAIN",  GBestHTvars)]
+
+	  ## Green-book - Post-strat
+      GBtreePS <- lapply(names(GBpopdatlst2), function(x)
+                  modGBtree(GBpopdat = GBpopdatlst2[[x]], 
+                            landarea = landarea, 
+							estvar = estvar, 
+                            estvar.filter = estvar.filter, 
+							strata = TRUE,
+							strvar = strvar,
+							returntitle = TRUE,
+                            table_opts = list(rawonly = TRUE, totals = totals)))
+      names(GBtreePS) <- names(pltdatlst)
+      GBtreePS.est <- do.call(rbind, lapply(GBtreePS, function(x) 
+									x$raw$unit_totest[,estcols1]))
+      GBtreePS.est$nhat.se <- sqrt(GBtreePS.est$nhat.var)
+	  GBtreePS.est <- GBtreePS.est[, estcols2]
+      data.table::setnames(GBtreePS.est, 
+	             c("DOMAIN", "PS", "PS.se", "NBRPLT_gt0.GB", "AREAUSED.GB"))
+				 
+      if (pse) {
+        GBtreePS.est[, paste0(GBestPSvar, ".pse")] <- 
+		         round(GBtreePS.est[, GBsePSvar] / GBtreePS.est[, GBestPSvar] * 100, 2)
+	  }
+	  GBtreePS.est <- GBtreePS.est[, c("DOMAIN",  GBestPSvars, "NBRPLT_gt0.GB", "AREAUSED.GB")]
+
+      ## Merge to final table
+      tree.est <- merge(tree.est, GBtreeHT.est, by="DOMAIN")
+      tree.est <- merge(tree.est, GBtreePS.est, by="DOMAIN")
+
+      ## Get totals
+	  if (totals) {
+	  	tree.est[, c("JU.Synth", SAestvar, SAsevar)] <- 
+	               round(tree.est[, c("JU.Synth", SAestvar, SAsevar)] * tree.est$AREAUSED.SA, estround)           
+	    tree.est[, c(MAestvar, MAsevar)] <- round(tree.est[,c(MAestvar, MAsevar)] * tree.est$AREAUSED.MA, estround)            
+	    tree.est[, c(GBestHTvar, GBseHTvar, GBestPSvar, GBsePSvar)] <- 
+	               round(tree.est[, c(GBestHTvar, GBseHTvar, GBestPSvar, GBsePSvar)] * tree.est$AREAUSED.GB, estround)           
+      }
+      ## Round tree variables
+      tree.est$AREAUSED.SA <- round(tree.est$AREAUSED.SA)
+      tree.est$AREAUSED.MA <- round(tree.est$AREAUSED.MA)
+      tree.est$AREAUSED.GB <- round(tree.est$AREAUSED.GB)
     
-      multest[[multestvar]] <- tree.est
+      #multest[[multestvar]] <- tree.est
       #    predselect[[multestvar]] <- list(SAest.area=SAtree.predselect.area,
       #						SAest.unit=SAtree.predselect.unit,
       #						MAest.greg=MAarea.predselect.greg)
@@ -400,10 +553,14 @@ anMODcompare <- function(bnd = NULL,
       #    raw[[multestvar]][["MAmethod"]] <- MAtreeGREG$raw$MAmethod
     
       output[[multestvar]][["multest"]] <- tree.est
+	  output[[multestvar]][["estvars"]] <- estvars
       output[[multestvar]][["raw"]][["MAmethod"]] <- MAmethod
       output[[multestvar]][["raw"]][["predselect"]] <- list(SAest.area=SAtree.predselect.area,
                                                 SAest.unit=SAtree.predselect.unit,
                                                 MAest.greg=MAtree.predselect.greg)
+	  output[[multestvar]][["titles"]][["title.main"]] <- strsplit(GBtreePS[[1]]$titlelst$title.tot, ";")[[1]][1]
+	  output[[multestvar]][["titles"]][["title.yvar"]] <- GBtreePS[[1]]$titlelst$title.yvar
+
       rm(GBtreeHT)
 	  rm(GBtreePS)
       rm(MAtreeGREG)

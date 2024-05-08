@@ -424,7 +424,9 @@ anPBpopICE_data <- function(ice.pntfn,
     }
   }
 
-
+  ## Remove NA values
+  ice.pnt <- ice.pnt[!is.na(ice.pnt$plot_id), ]
+  
   #################################################################################
   ## Variables change_pnt and change_pnt_nm were added to the chg_ag_2_LUT file
   ## These variables indicate whether a point has change. The change_1_2 variable

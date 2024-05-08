@@ -120,6 +120,7 @@ anPBpopICE <- function(ice.pntfn = NULL,
   ## CHECK GUI - IF NO ARGUMENTS SPECIFIED, ASSUME GUI=TRUE
   gui <- FALSE
   returnlst <- list()
+  REMPERavg <- NULL
   
   
   
@@ -208,7 +209,7 @@ anPBpopICE <- function(ice.pntfn = NULL,
     returnlst$PBdataICE <- PBdataICE
   } else {
     PBdataICE <- pcheck.object(PBdataICE, objnm="PBdataICE",
-		list.items=c("ice.pnt", "ice.plt", "plotid", "pntid"))
+		list.items=c("ice.pnt", "plotid", "pntid"))
   }
   names(PBdataICE)
   ice.pnt <- PBdataICE$ice.pnt

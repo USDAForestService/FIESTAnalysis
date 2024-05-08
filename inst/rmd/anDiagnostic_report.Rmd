@@ -30,6 +30,7 @@ multest <- params$estimates[[attribute]]$multest
 
 ```{r}
 # sets up tidy estimation dataframe
+
 estimates <- multest %>% #  params$data[[attribute]]$multest %>%
   magrittr::extract(.$AOI == 1,) %>%
   tibble() %>%
@@ -108,7 +109,7 @@ dir_ests <- estimates %>%
   rename(dir.estimate = estimate,
          dir.se = se) %>%
   full_join(estimates, by = c("attribute", "NBRPLT",
-                              "PROVINCE", "DOMAIN"))
+                              large_area, small_area))
 
 dir_ests %>%
   filter(estimate_type.y != "Direct_est") %>%
@@ -249,7 +250,7 @@ tab <- gt(df,
     label = "Estimator (Numerator)", 
     columns = everything()
   ) %>%
-  tab_header(title = params$small_area) %>%
+  tab_header(title = small_area) %>%
   tab_stubhead(label = "Estimator (Denominator)")
 
 temp <- tempdir()
@@ -296,7 +297,7 @@ se_smooth_max <- quantile(se_smooth_dat$NBRPLT, .95, na.rm = T)
 
 
 se_smooth_dat %>%
-  mutate(facet = paste0("Small Area: ", params$small_area)) %>%
+  mutate(facet = paste0("Small Area: ", small_area)) %>%
   ggplot(aes(x = NBRPLT,
              y = value,
              color = estimator)) +
@@ -318,7 +319,7 @@ se_smooth_dat %>%
 ## Compare model coefficients for area level models
 
 ```{r}
-model_data <- params$estimates[[attribute]]$raw$SAobjlst[["1"]]
+model_data <- estimates[[attribute]]$raw$SAobjlst[["1"]]
 
 reg_coef_df_area <- list()
 for (i in 1:length(model_data)) {

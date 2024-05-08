@@ -30,6 +30,14 @@ title.ref <- params$title.ref
 #domain <- params$domain
 totals <- params$totals
 
+SApopdatlst = SApopdatlst 
+SApackage = SApackage
+SAmethod = SAmethod 
+AOInm = AOInm
+title.ref = title.ref
+totals = FALSE
+outfolder = outfolder
+
 ```
 
 
@@ -215,7 +223,7 @@ Table 1. Area of forest land by `r tolower(smallbnd.domain)`, `r title.ref``r ti
 &nbsp;  
 
 
-```{r est1, echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 SAareadat1 <- modSAarea(SApopdatlst = SApopdatlst, 
                         SApackage = SApackage, 
                         SAmethod = SAmethod, 
@@ -235,11 +243,12 @@ SAmethod_used1 <- SAareadat1$raw$SAmethod
 est1 <- est1[, c("DOMAIN", "NBRPLT.gt0", "est", "est.se", "pse", "AREAUSED")]
 names(est1)[names(est1) == "DOMAIN"] <- smallbnd.domain
 
-knitr::kable(est1, "simple", align=c("lrrrrr"), digits=digits,
-             format.args=list(big.mark = ","))
-
 ```  
 
+```{r est1}
+knitr::kable(est1, "simple", align=c("lrrrrr"), digits=digits,
+             format.args=list(big.mark = ","))
+```
 
 &nbsp;  
 
@@ -328,7 +337,7 @@ Table 2. Net cubic-foot volume of live trees on forest land by `r tolower(smallb
 
 &nbsp;    
 
-```{r est2, echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
  
 SAareadat2 <- modSAtree(SApopdatlst = SApopdatlst, 
                         SApackage = SApackage, 
@@ -350,11 +359,12 @@ SAmethod_used2 <- SAareadat2$raw$SAmethod
 est2 <- est2[, c("DOMAIN", "NBRPLT.gt0", "est", "est.se", "pse", "AREAUSED")]
 names(est2)[names(est2) == "DOMAIN"] <- smallbnd.domain
 
+```  
 
+```{r est2}
 knitr::kable(est2, "simple", align=c("lrrrrr"), digits=digits,
              format.args=list(big.mark = ","))
-
-```  
+```
 
 
 &nbsp;    
@@ -392,25 +402,21 @@ if (length(est2tot$est) > 1) {
 ## Merge estimate to smallbnd
 smallbnd2 <- merge(smallbnd, est2, by=smallbnd.domain)
 
-pal <- palette(brewer.pal(n=5, name = "Reds"))
-
 ptest <- tryCatch(
 plot(smallbnd2["est"], key.pos=1, axes=TRUE, key.width=lcm(1.3), 
  	graticule=TRUE, key.length=1.0, breaks="equal", nbreaks=5, 
- 	pal=palette(brewer.pal(n=5, name="Reds")),
+ 	pal=brewer.pal(n=4, name="Reds"),
  	border="black", lwd=.5, main=""),
      	 	error=function(e) {
 			return(NULL) })
 
 if (is.null(ptest)) {
   n <- nrow(smallbnd2["est"])
-  
-  pal <- palette(brewer.pal(n=n, name = "Greens"))
 
   ptest <- tryCatch(
     plot(smallbnd2["est"], key.pos=1, axes=TRUE, key.width=lcm(1.3), 
  	    graticule=TRUE, key.length=1.0, breaks="equal", nbreaks=4, 
- 	    pal=palette(brewer.pal(n=n, name="Greens")),
+ 	    pal=brewer.pal(n=n, name="Reds"),
  	    border="black", lwd=.5, main=""),
      	 	error=function(e) {
 			return(NULL) })
@@ -434,7 +440,7 @@ Table 3. Square-feet basal area of live trees on forest land by `r tolower(small
 
 &nbsp;    
 
-```{r est3, echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
 
 SAareadat3 <- modSAtree(SApopdatlst = SApopdatlst, 
                        SApackage = SApackage, 
@@ -454,11 +460,14 @@ SAmethod_used3 <- SAareadat3$raw$SAmethod
 #multest3$pse <- multest3[[senm]] / multest3[[estnm]] * 100
 est3 <- est3[, c("DOMAIN", "NBRPLT.gt0", "est", "est.se", "pse", "AREAUSED")]
 names(est3)[names(est3) == "DOMAIN"] <- smallbnd.domain
+```  
 
+
+```{r est3}
 knitr::kable(est3, "simple", align=c("lrrrr"), digits=digits,
              format.args=list(big.mark = ","))
 
-```  
+```
 
 
 &nbsp;  
@@ -495,25 +504,21 @@ if (length(est3tot$est) > 1) {
 
 smallbnd3 <- merge(smallbnd, est3, by=smallbnd.domain)
 
-pal <- palette(brewer.pal(n=5, name = "Blues"))
-
 ptest <- tryCatch(
 plot(smallbnd3["est"], key.pos=1, axes=TRUE, key.width=lcm(1.3), 
  	graticule=TRUE, key.length=1.0, breaks="equal", nbreaks=5, 
- 	pal=palette(brewer.pal(n=5, name="Blues")),
+ 	pal=brewer.pal(n=4, name="Blues"),
  	border="black", lwd=.5, main=""),
      	 	error=function(e) {
 			return(NULL) })
 
 if (is.null(ptest)) {
   n <- nrow(smallbnd3["est"])
-  
-  pal <- palette(brewer.pal(n=n, name = "Greens"))
 
   ptest <- tryCatch(
     plot(smallbnd3["est"], key.pos=1, axes=TRUE, key.width=lcm(1.3), 
  	    graticule=TRUE, key.length=1.0, breaks="equal", nbreaks=4, 
- 	    pal=palette(brewer.pal(n=n, name="Greens")),
+ 	    pal=brewer.pal(n=n, name="Blues"),
  	    border="black", lwd=.5, main=""),
      	 	error=function(e) {
 			return(NULL) })
@@ -540,7 +545,7 @@ Table 4. Net board-foot volume of live trees on forest land by `r tolower(smallb
 
 &nbsp;    
 
-```{r est4, echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
 
 SAareadat4 <- modSAtree(SApopdatlst = SApopdatlst, 
                        SApackage = SApackage, 
@@ -561,11 +566,13 @@ SAmethod_used4 <- SAareadat4$raw$SAmethod
 est4 <- est4[, c("DOMAIN", "NBRPLT.gt0", "est", "est.se", "pse", "AREAUSED")]
 names(est4)[names(est4) == "DOMAIN"] <- smallbnd.domain
 
+```  
 
+
+```{r est4}
 knitr::kable(est4, "simple", align=c("lrrrrr"), digits=digits,
              format.args=list(big.mark = ","))
-
-```  
+```
 
 
 &nbsp;    
@@ -602,25 +609,21 @@ if (length(est4tot$est) > 1) {
 ## Merge estimate to smallbnd
 smallbnd4 <- merge(smallbnd, est4, by=smallbnd.domain)
 
-pal <- palette(brewer.pal(n=5, name = "Oranges"))
-
 ptest <- tryCatch(
 plot(smallbnd4["est"], key.pos=1, axes=TRUE, key.width=lcm(1.3),
 	graticule=TRUE, key.length=1.0, breaks="equal", nbreaks=5,
-	pal=palette(brewer.pal(n=6, name="Oranges")),
+	pal = brewer.pal(n=6, name="Oranges"),
 	border="black", lwd=.5, main=""),
      	 	error=function(e) {
 			return(NULL) })
 
 if (is.null(ptest)) {
   n <- nrow(smallbnd4["est"])
-  
-  pal <- palette(brewer.pal(n=n, name = "Greens"))
 
   ptest <- tryCatch(
     plot(smallbnd4["est"], key.pos=1, axes=TRUE, key.width=lcm(1.3), 
  	    graticule=TRUE, key.length=1.0, breaks="equal", nbreaks=4, 
- 	    pal=palette(brewer.pal(n=n, name="Greens")),
+ 	    pal=brewer.pal(n=n, name="Oranges"),
  	    border="black", lwd=.5, main=""),
      	 	error=function(e) {
 			return(NULL) })
@@ -647,5 +650,3 @@ Burrill, E.A., Wilson, A.M., Turner, J.A., Pugh, S.A., Menlove, J., Christiansen
 &nbsp; 
 
 Frescino, Tracey S.; Patterson, Paul L.; Moisen, Gretchen G.; Toney, Chris; Freeman, Elizabeth A. 2018. FIESTA: A Forest Inventory Estimation and Analysis R Package. USDA Forest Service, Rocky Mountain Research Station, 507 25th street, Ogden, UT, USA.
-
-

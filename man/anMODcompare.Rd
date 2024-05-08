@@ -15,6 +15,7 @@ anMODcompare(
   pcfilter = NULL,
   estvarlst = c("BA", "VOLCFNET", "VOLBFNET", "TPA_UNADJ", "DRYBIO_AG", "CARBON_AG"),
   tfilterlst = "live",
+  intensity1 = TRUE,
   forprop = TRUE,
   byeach = FALSE,
   prednames = NULL,
@@ -60,6 +61,9 @@ pltassgn).  Must be R logical syntax.}
 (e.g., 'VOLCFNET').}
 
 \item{tfilterlst}{String vector. One or more tree filters ('live', 'dead').}
+
+\item{intensity1}{Logical. If TRUE, uses only INTENSITY=1 (i.e., P2 plots)
+for GB and MA estimates, to assure an equal probability sample.}
 
 \item{byeach}{Logical. If TRUE, creates an SAdom for each smallbnd polygon.}
 

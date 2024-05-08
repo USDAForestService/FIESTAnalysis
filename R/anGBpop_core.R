@@ -575,7 +575,6 @@ anGBpop_core <- function(GBpopdat,
   colvar <- "DIACL"
   estvar <- "VOLCFNET"
   estvar.filter <- "STATUSCD == 1 & DIA >= 5"
-
   estdat <- modGBtree(GBpopdat=GBpopdat,
                               sumunits=TRUE,
 		                          landarea=landarea,
