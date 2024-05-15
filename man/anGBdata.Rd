@@ -108,13 +108,18 @@ boundary for use in FIESTA's Green-Book module.
     package="FIESTAnalysis")
 
   ## Get data for calculating GB population data and generating GB estimates
-  GBdata <- anGBdata(WYbhfn, datsource="datamart", strat_layer=fornffn, evalCur=TRUE)
+  GBdata <- anGBdata(WYbhfn, 
+                     datsource = "datamart", 
+                     strat_layer = fornffn, 
+                     eval = 'FIA',
+                     eval_opts = list(Cur = TRUE),
+                     savexy = TRUE)
   names(GBdata)
 
   plot(sf::st_geometry(GBdata$bnd))
-  plot(sf::st_geometry(GBdata$xyplt), add=TRUE, pch=18, cex=.5)
+  plot(sf::st_geometry(GBdata$spxy), add=TRUE, pch=18, cex=.5)
 
-  dim(GBdata$xyplt)
+  dim(GBdata$spxy)
   dim(GBdata$plt)
   dim(GBdata$pltassgn)
 

@@ -164,6 +164,7 @@ tabgrp <- function(GBpopdat = NULL,
       pltcondx <- dat$xLUT
       rowvar <- dat$xLUTnm
       ref_row <- setDF(dat$LUT)
+
       if (rowgrp) {
         if (any(c(rowvar, row.orderby) == "OWNCD")) {
           rowgrpnm <- "OWNGRPCD"
@@ -366,7 +367,7 @@ tabgrp <- function(GBpopdat = NULL,
     if (esttype != "AREA")
       GBpopdat$treex <- treex
   }
-
+print("XXXXXXXXXXX")
   esttabcol <- {}
   psetabcol <- {}
   pse <- NULL

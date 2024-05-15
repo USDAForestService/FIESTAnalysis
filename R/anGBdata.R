@@ -57,13 +57,18 @@
 #'     package="FIESTAnalysis")
 #'
 #'   ## Get data for calculating GB population data and generating GB estimates
-#'   GBdata <- anGBdata(WYbhfn, datsource="datamart", strat_layer=fornffn, evalCur=TRUE)
+#'   GBdata <- anGBdata(WYbhfn, 
+#'                      datsource = "datamart", 
+#'                      strat_layer = fornffn, 
+#'                      eval = 'FIA',
+#'                      eval_opts = list(Cur = TRUE),
+#'                      savexy = TRUE)
 #'   names(GBdata)
 #'
 #'   plot(sf::st_geometry(GBdata$bnd))
-#'   plot(sf::st_geometry(GBdata$xyplt), add=TRUE, pch=18, cex=.5)
+#'   plot(sf::st_geometry(GBdata$spxy), add=TRUE, pch=18, cex=.5)
 #'
-#'   dim(GBdata$xyplt)
+#'   dim(GBdata$spxy)
 #'   dim(GBdata$plt)
 #'   dim(GBdata$pltassgn)
 #'
@@ -89,8 +94,8 @@ anGBdata <- function(bnd_layer,
                      minplots = 0, 
                      showsteps = FALSE, 
                      cex.plots = 0.5, 
-                     returnxy = FALSE, 
-					 savexy = FALSE,
+                     returnxy = FALSE,
+                     savexy = FALSE,
                      savedata = FALSE, 
                      savesteps = FALSE, 
                      saveobj = FALSE, 
@@ -120,9 +125,11 @@ anGBdata <- function(bnd_layer,
 
   ## Set savedata defaults
   savedata_defaults_list <- formals(savedata_options)[-length(formals(savedata_options))]
+  
   for (i in 1:length(savedata_defaults_list)) {
     assign(names(savedata_defaults_list)[[i]], savedata_defaults_list[[i]])
   } 
+  
   ## Set user-supplied savedata values
   if (length(savedata_opts) > 0) {
     if (!savedata) {
@@ -309,8 +316,8 @@ anGBdata <- function(bnd_layer,
   } else {
     message("summarizing estimation unit data...")
     stratdat <- spGetEstUnit(spxy, unittype="POLY", 
-                                     uniqueid=xy.uniqueid, 
-                                     unit_layer=bnd, unitvar=bnd.att)
+                             uniqueid=xy.uniqueid, 
+                             unit_layer=bnd, unitvar=bnd.att)
     pltassgn <- stratdat$pltassgn
     unitarea <- stratdat$unitarea
     unitvar <- stratdat$unitvar
@@ -321,15 +328,15 @@ anGBdata <- function(bnd_layer,
   ##########################################
   ## Create output list
   ##########################################
-  returnlst <- list(bnd=bnd, 
-                    tabs=tabs, 
-                    tabIDs=tabIDs, 
-                    pltassgn=data.table::setDF(pltassgn), 
-                    pltassgnid=pltassgnid, 
-                    pjoinid=pjoinid, 
-                    unitarea=data.table::setDF(unitarea), 
-                    unitvar=unitvar, 
-                    areavar=areavar)
+  returnlst <- list(bnd = bnd, 
+                    tabs = tabs, 
+                    tabIDs = tabIDs, 
+                    pltassgn = data.table::setDF(pltassgn), 
+                    pltassgnid = pltassgnid, 
+                    pjoinid = pjoinid, 
+                    unitarea = data.table::setDF(unitarea), 
+                    unitvar = unitvar, 
+                    areavar = areavar)
   if (strata) {
     returnlst$stratalut <- stratalut
     returnlst$strvar <- strvar

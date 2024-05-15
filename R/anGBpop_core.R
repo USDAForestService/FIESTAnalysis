@@ -169,6 +169,11 @@ anGBpop_core <- function(GBpopdat,
   datlut <- datLUTclass(x=GBpopdat$treex, xvar="DIA", cutbreaks=treedia.brks)
   GBpopdat$treex <- datlut$xLUT
 
+  ## Add BA if not already in dataset
+  if (!"BA" %in% names(GBpopdat$treex)) {
+    GBpopdat$treex$BA <- GBpopdat$treex$DIA * GBpopdat$treex$DIA * 0.005454
+  }
+  
 
   #######################################################################################
   ## 01 - Area by land class and reserved status
@@ -625,7 +630,7 @@ anGBpop_core <- function(GBpopdat,
   colvar <- "AGENTCD"
   estvar <- "BA"
   estvar.filter <- "STATUSCD == 2 & STANDING_DEAD_CD == 1"
-
+  
   estdat <- modGBtree(GBpopdat=GBpopdat,
                               sumunits=TRUE,
 		                          landarea=landarea,

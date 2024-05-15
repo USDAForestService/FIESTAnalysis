@@ -17,6 +17,9 @@ anMODcompare(
   tfilterlst = "live",
   intensity1 = TRUE,
   forprop = TRUE,
+  totals = FALSE,
+  pse = FALSE,
+  estround = 2,
   byeach = FALSE,
   prednames = NULL,
   modelselect = TRUE,
@@ -64,6 +67,15 @@ pltassgn).  Must be R logical syntax.}
 
 \item{intensity1}{Logical. If TRUE, uses only INTENSITY=1 (i.e., P2 plots)
 for GB and MA estimates, to assure an equal probability sample.}
+
+\item{forprop}{Logical. If TRUE, adds forest estimates of forest proportion.}
+
+\item{totals}{Logical. If TRUE, sums per acre values to total values by 
+by multiplying by total acres.}
+
+\item{pse}{Logical. Add pse columns to table.}
+
+\item{estround}{Integer. Number of digits to round estimates and estimates.se.}
 
 \item{byeach}{Logical. If TRUE, creates an SAdom for each smallbnd polygon.}
 

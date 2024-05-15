@@ -117,6 +117,11 @@ anGBpop_report <- function(GBpopdat,
     report_imagefn <- file.path(reportfolder, "report_image.PNG")
   }
 
+  ## Add BA if not already in dataset
+  if (!"BA" %in% names(GBpopdat$treex)) {
+    GBpopdat$treex$BA <- GBpopdat$treex$DIA * GBpopdat$treex$DIA * 0.005454
+  }
+  
 
 #  ref_spcd <- ref_codes[ref_codes$VARIABLE == "SPCD", ]
   spcdlst <- table(GBpopdat$seedx$SPCD)[table(GBpopdat$seedx$SPCD) > 5]
