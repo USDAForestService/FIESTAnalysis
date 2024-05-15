@@ -113,7 +113,7 @@ boundary for use in FIESTA's Green-Book module.
                      strat_layer = fornffn, 
                      eval = 'FIA',
                      eval_opts = list(Cur = TRUE),
-                     savexy = TRUE)
+                     returnxy = TRUE)
   names(GBdata)
 
   plot(sf::st_geometry(GBdata$bnd))
