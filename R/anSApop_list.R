@@ -7,6 +7,7 @@
 #' @param smallbndlst sf R object. List object of smallbnds associated with SAdatalst.
 #' @param smallbnd.domain String. Name of unique identifier for smallbnd.
 #' @param prednames String vector. One or more predictors to use for estimation. 
+#' @param addxy Logical. If TRUE, adds X/Y attributes to pltassgn.
 #' @param saveobj Logical. If TRUE, saves SApopdat object to outfolder.
 #' @param objnm String. If savedata=TRUE, name of object to save. 
 #' @param outfolder String. Name of outfolder. If NULL, saves to working directory.
@@ -36,6 +37,7 @@ anSApop_list <- function(SAdatalst,
                          smallbndlst, 
                          smallbnd.domain,
                          prednames = NULL, 
+                         addxy = FALSE,
                          saveobj = FALSE,
                          objnm = "SApopdat",
                          outfolder = NULL, 
@@ -101,11 +103,12 @@ anSApop_list <- function(SAdatalst,
     SAdata <- SAdatalst[[i]]
     smallbnd <- smallbndlst[[i]]
     nm <- names(SApoplst)[[i]]
-	
+    
     pop <- modSApop(SAdata = SAdata, 
                     smallbnd = smallbnd, 
                     smallbnd.domain = smallbnd.domain,
-                    prednames = prednames)
+                    prednames = prednames,
+                    addxy = addxy)
     if (is.null(pop)) {
       message("no data extracted for: ", SAdatanm)
       SApoplst[[nm]] <- NA

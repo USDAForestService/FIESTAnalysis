@@ -203,9 +203,11 @@ anGBdata <- function(bnd_layer,
   ## Get FIA plot data from SQLite within boundary
   ####################################################################
   if (is.null(pltdat)) {
-    pltdat <- spGetPlots(bnd=bnd_layer, 
-                         bnd_dsn=bnd_dsn, bnd.filter=bnd.filter, 
-                         RS=RS, returnxy=TRUE, ...)
+    pltdat <- spGetPlots(bnd = bnd_layer, 
+                         bnd_dsn = bnd_dsn, 
+                         bnd.filter = bnd.filter, 
+                         RS = RS, 
+                         returnxy = TRUE, ...)
     if (is.null(pltdat)) return(NULL)
     if (saveobj) {
       message("saving pltdat object to: ",
@@ -216,7 +218,7 @@ anGBdata <- function(bnd_layer,
     pltdat.names <- c("bnd", "xy.uniqueid", "pjoinid", "tabs", "tabIDs")
     if (!all(pltdat.names %in% names(pltdat))) {
       stop("missing components in pltdat list: ",
-		toString(pltdat.names[!pltdat.names %in% names(pltdat)]))
+		          toString(pltdat.names[!pltdat.names %in% names(pltdat)]))
     }
   }
 
@@ -344,6 +346,10 @@ anGBdata <- function(bnd_layer,
   } 
 
   if (returnxy) {
+    xy.coords <- data.frame(sf::st_coordinates(spxy))
+    names(xy.coords) <- c(x,y)
+    spxy <- sf::st_sf(data.frame(spxy, xy.coords)) 
+    
     returnlst$spxy <- spxy
     returnlst$xy.uniqueid <- xy.uniqueid
   }

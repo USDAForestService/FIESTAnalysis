@@ -9,6 +9,7 @@ anSApop_list(
   smallbndlst,
   smallbnd.domain,
   prednames = NULL,
+  addxy = FALSE,
   saveobj = FALSE,
   objnm = "SApopdat",
   outfolder = NULL,
@@ -25,6 +26,8 @@ anSApop_list(
 \item{smallbnd.domain}{String. Name of unique identifier for smallbnd.}
 
 \item{prednames}{String vector. One or more predictors to use for estimation.}
+
+\item{addxy}{Logical. If TRUE, adds X/Y attributes to pltassgn.}
 
 \item{saveobj}{Logical. If TRUE, saves SApopdat object to outfolder.}
 

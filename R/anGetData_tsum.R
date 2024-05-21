@@ -271,7 +271,7 @@ anGetData_tsum <- function(bnd_layer,
                          bnd.filter = bnd.filter, 
                          RS = RS, 
                          returnxy = TRUE, 
-						 istree = TRUE,
+						             istree = TRUE,
                          ...)
     }	
     if (is.null(pltdat)) return(NULL)
@@ -597,7 +597,7 @@ anGetData_tsum <- function(bnd_layer,
   pltvars <- names(pltassgn)[!names(pltassgn) %in% names(tdatp)]
   pltassgn <- pltassgn[pltassgn$PLT_CN %in% tdatp$CN, unique(c(pltassgnid, pltvars, outnames))]
 
-  if (nrow(tdatp) == length(unique(tdatc$PLT_CN))) {
+  if (nrow(tdatp) != length(unique(tdatc$PLT_CN))) {
     message("number of plots are different")
   }
     
@@ -754,32 +754,51 @@ anGetData_tsum <- function(bnd_layer,
   }
 
   if (exportsp) {
-    message("exporting point data...")   
-    spxy_pub <- spMakeSpatialPoints(
-                 plt[, c("CN", "STATECD", "UNITCD", "COUNTYCD", "PLOT",
-                          "PLOT_ID", "LON_PUBLIC", "LAT_PUBLIC", 
-                          "PLOT_STATUS_CD", "INVYR", 
-                          "MEASYEAR", "MEASMON", "INTENSITY", 
-                          "NBRCND", "NBRCNDSAMP", "NBRCNDFOR", 
-                          "FORNONSAMP", "P2PANEL")], 
-                 xy.uniqueid = "CN",
-                 xvar = "LON_PUBLIC", 
-                 yvar = "LAT_PUBLIC",
+    makesp <- TRUE
+    message("exporting point data...")  
+    pltvars <- c("CN", "STATECD", "UNITCD", "COUNTYCD", "PLOT",
+                 "PLOT_ID", "LON_PUBLIC", "LAT_PUBLIC", 
+                 "PLOT_STATUS_CD", "INVYR", 
+                 "MEASYEAR", "MEASMON", "INTENSITY", 
+                 "NBRCND", "NBRCNDSAMP", "NBRCNDFOR", 
+                 "FORNONSAMP", "P2PANEL")
+    pltvars <- pltvars[pltvars %in% names(plt)]
+    if (all(c("CN", "LON_PUBLIC", "LAT_PUBLIC") %in% pltvars)) {
+      xy.uniqueid <- "CN"
+      xvar <- "LON_PUBLIC"
+      yvar <- "LAT_PUBLIC"
+    } else {
+      if ("CN" %in% pltvars) {
+        xy.uniqueid <- "CN"
+      } else if ("PLT_CN" %in% pltvars) {
+        xy.uniqueid <- "PLT_CN"
+      } else {
+        makesp <- FALSE
+        message("CN or PLT_CN not in plt... cannot create spatial points")
+      }
+      if (all(c("LON", "LAT") %in% pltvars)) {
+        xvar <- "LON"
+        yvar <- "LAT"
+      } else if (all(c("LON_ACTUAL", "LAT_ACTUAL") %in% pltvars)) {
+        xvar <- "LON_ACTUAL"
+        yvar <- "LAT_ACTUAL"
+      } else {
+        makesp <- FALSE
+        message("LON and LAT variable are not in plt... cannot create spatial points")
+      }
+    }
+      
+    if (makesp) {
+      spxy_pub <- spMakeSpatialPoints(
+                 plt[, pltvars], 
+                 xy.uniqueid = xy.uniqueid,
+                 xvar = xvar, 
+                 yvar = yvar,
                  exportsp = TRUE, 
                  savedata_opts = list(outfolder=outfolder, 
                                       out_layer = "spxy_PUBLIC",
                                       outfn.pre = outfn.pre))
-
-    #if (any(grepl("ACTUAL", xy_opts))) {            
-    #  spxy <- merge(spxy, 
-    #              plt[, c("CN", "PLOT_STATUS_CD", "INVYR", 
-    #                      "MEASYEAR", "MEASMON", "INTENSITY", 
-    #                      "NBRCND", "NBRCNDSAMP", "NBRCNDFOR", 
-    #                      "FORNONSAMP", "P2PANEL")], by.x="PLT_CN", by.y="CN")
-    #  spExportSpatial(spxy, 
-    #                  savedata_opts = list(outfolder=outfolder, 
-    #                                       out_layer = "spxy_ACTUAL")) 
-    #}
+    }
   }   
 
   return(returnlst)
