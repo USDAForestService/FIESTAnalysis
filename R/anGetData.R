@@ -281,6 +281,7 @@ anGetData <- function(bnd_layer,
   ## If all AOIs have less than 2 plots, return NULL
   polyatts <- c(bnd.att, "AOI")
   polyvarlst <- unique(polyatts[polyatts %in% names(bnd)])
+
   if (length(polyvarlst) > 0) {
     extpoly <- tryCatch(spExtractPoly(xyplt = spxy, 
                                     polyvlst = bnd, 
@@ -304,7 +305,7 @@ anGetData <- function(bnd_layer,
       vars2keep <- vars2keep[vars2keep != "AOI"]
     }
   }
-  
+ 
   pltcnt <- test[AOI == 1, .N, by=bnd.att]
   message("checking number of plots by domain...")
   message(paste0(utils::capture.output(pltcnt), collapse = "\n"))
@@ -376,7 +377,7 @@ anGetData <- function(bnd_layer,
                     unitzonal=data.table::setDF(unitzonal), 
                     prednames=prednames, predfac=predfac, 
                     zonalnames=zonalnames, npixelvar=npixelvar, pltcnt=pltcnt,
-                    states=states, invyrs=invyrs)
+                    states=states, invyrs=invyrs, vars2keep=vars2keep)
   if (length(predfac) > 0) {
     returnlst$predfac.levels <- auxdat$predfac.levels
   }
