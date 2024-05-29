@@ -36,6 +36,7 @@
 anSApop_list <- function(SAdatalst, 
                          smallbndlst, 
                          smallbnd.domain,
+                         largebnd.unique = NULL,
                          prednames = NULL, 
                          addxy = FALSE,
                          saveobj = FALSE,
@@ -107,6 +108,7 @@ anSApop_list <- function(SAdatalst,
     pop <- modSApop(SAdata = SAdata, 
                     smallbnd = smallbnd, 
                     smallbnd.domain = smallbnd.domain,
+                    largebnd.unique = largebnd.unique,
                     prednames = prednames,
                     addxy = addxy)
     if (is.null(pop)) {
