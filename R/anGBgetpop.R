@@ -18,20 +18,7 @@
 #' @return Estimate.
 #' @author Tracey S. Frescino
 #' @keywords data
-#' @examples
-#'
-#'
-#'   ## Get data for WY Bighorn administrative boundary using
-#'   WYbhfn <- system.file("extdata", "sp_data/WYbighorn_adminbnd.shp", package="FIESTA")
-#'   fornffn <- system.file("extdata", "sp_data/WYbighorn_forest_nonforest_250m.tif", package="FIESTA")
-#'
-#'   ## Get population data for generating GB estimates
-#'   GBpop <- anGBpop(WYbhfn, datsource="datamart", strat_layer=fornffn)
-#'   names(GBpop)
-#'
-#'   names(GBpop$GBdata)
-#'   names(GBpop$GBpopdat)
-#'
+
 #' @export
 anGBgetpop <- function(GBdata = NULL,
                     popType = "VOL",

@@ -6,6 +6,7 @@
 #' @param SAdatalst sf R object. List object output from FIESTAnalysis::anGetData_list().
 #' @param smallbndlst sf R object. List object of smallbnds associated with SAdatalst.
 #' @param smallbnd.domain String. Name of unique identifier for smallbnd.
+#' @param largebnd.unique String. Name of unique identifier for largebnd.
 #' @param prednames String vector. One or more predictors to use for estimation. 
 #' @param addxy Logical. If TRUE, adds X/Y attributes to pltassgn.
 #' @param saveobj Logical. If TRUE, saves SApopdat object to outfolder.

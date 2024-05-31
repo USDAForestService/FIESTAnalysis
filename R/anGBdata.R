@@ -347,7 +347,7 @@ anGBdata <- function(bnd_layer,
 
   if (returnxy) {
     xy.coords <- data.frame(sf::st_coordinates(spxy))
-    names(xy.coords) <- c(x,y)
+    #names(xy.coords) <- c(x,y)
     spxy <- sf::st_sf(data.frame(spxy, xy.coords)) 
     
     returnlst$spxy <- spxy

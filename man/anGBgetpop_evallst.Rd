@@ -60,12 +60,12 @@ module, for one or more FIA Evaluations.
 }
 \examples{
   ## Calculate population data for Utah, area evaluations 2015-2019
-  GBpoplst <- anGBgetpop_evallst(states="Utah", 
-                        eval_opts=list(Endyr=c(2015:2019), evalType="CURR"))
+  GBpoplst <- anGBgetpop_evallst(states = "Utah", 
+                        eval_opts = list(Endyr=c(2015:2019), Type = "CURR"))
 
   ## Get acres by forest type from each Evaluation in GBpoplst
-  lapply(GBpoplst, function(x) modGBarea(GBpopdat=x, rowvar="FORTYPGRPCD",
-	landarea="FOREST", row.FIAname=TRUE))
+  lapply(GBpoplst, function(x) modGBarea(GBpopdat = x, rowvar = "FORTYPGRPCD",
+	              landarea = "FOREST", table_opts = list(row.FIAname=TRUE)))
 
 }
 \author{

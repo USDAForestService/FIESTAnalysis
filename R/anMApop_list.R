@@ -25,7 +25,7 @@ anMApop_list <- function(datalst,
                          overwrite = FALSE, 
                          outfn.pre = NULL, 
                          outfn.date = FALSE,
-						 ...) {
+						             ...) {
 
   ## Set global variables
   gui <- FALSE
@@ -86,7 +86,7 @@ anMApop_list <- function(datalst,
                     prednames = prednames, 
 					...)
     if (is.null(pop)) {
-      message("no data extracted for: ", SAdatanm)
+      message("no data extracted for: ", nm)
       MApoplst[[nm]] <- NA
     } else {
       MApoplst[[nm]] <- pop
@@ -96,7 +96,7 @@ anMApop_list <- function(datalst,
   if (saveobj) {
     objfn <- getoutfn(outfn=objnm, ext="rda", outfolder=outfolder, 
                       overwrite=overwrite, outfn.pre=outfn.pre, outfn.date=outfn.date)
-    save(SApoplst, file=objfn)
+    save(MApoplst, file=objfn)
     message("saving object to: ", objfn)
   } 
   

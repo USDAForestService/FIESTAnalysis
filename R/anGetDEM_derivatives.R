@@ -223,7 +223,7 @@ anGetDEM_derivatives <- function(demfn,
       returnlst[["aspect_northing"]] <- aspnfn
       
       
-      rasterCalc(calc = "northness(A)*100", 
+      gdalraster::calc(expr = "northness(A)*100", 
                  rasterfiles = outfilenm, 
                  dstfile = aspnfn, 
                  fmt = of, 
@@ -241,14 +241,14 @@ anGetDEM_derivatives <- function(demfn,
       message("saving aspect easting to: ", outfilenm)
       returnlst[["aspect_easting"]] <- aspefn
       
-      rasterCalc(calc = "eastness(A)*100", 
+      gdalraster::calc(expr = "eastness(A)*100", 
                  rasterfiles = outfilenm, 
                  dstfile = aspefn, 
                  fmt = of, 
                  dtName = "Int16",
                  nodata_value = nodata.val,
                  setRasterNodataValue = TRUE,
-                 options=co)
+                 options = co)
     }
   }
   return(returnlst)

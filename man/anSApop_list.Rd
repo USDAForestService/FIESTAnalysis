@@ -26,6 +26,8 @@ anSApop_list(
 
 \item{smallbnd.domain}{String. Name of unique identifier for smallbnd.}
 
+\item{largebnd.unique}{String. Name of unique identifier for largebnd.}
+
 \item{prednames}{String vector. One or more predictors to use for estimation.}
 
 \item{addxy}{Logical. If TRUE, adds X/Y attributes to pltassgn.}
