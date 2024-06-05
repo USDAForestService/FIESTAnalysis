@@ -317,7 +317,7 @@ anGetData <- function(bnd_layer,
     message("ALL AOIs have ", minplots, " plots or less... no estimates generated")
     #return(NULL)
   }
- 
+
   ####################################################################
   ## Get model data
   ####################################################################
