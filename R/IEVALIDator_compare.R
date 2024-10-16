@@ -1135,9 +1135,8 @@ checkpop <- function(FIADBpop, FIESTApop, evaltype = "01", rnd = 10) {
   FIESTApopvars <- popvars[popvars %in% names(FIESTApop)]
   FIESTApop <- data.table::setDT(FIESTApop)[, c("ESTN_UNIT", "STRATUMCD", FIESTApopvars), with=FALSE]
   
-  
   stratvars <- c("ESTN_UNIT", "STRATUMCD")
-  chkclass <- check.matchclass(FIADBpop, FIESTApop, stratvars)
+  chkclass <- FIESTAutils::check.matchclass(FIADBpop, FIESTApop, stratvars)
   FIADBpop <- chkclass$tab1
   FIESTApop <- chkclass$tab2
   
