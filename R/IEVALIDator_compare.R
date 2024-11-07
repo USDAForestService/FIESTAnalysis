@@ -40,7 +40,7 @@ getattnbr <- function(popType = "CURR",
                       estvar = NULL, 
                       estvar.filter = NULL,
                       landarea = "Forest", 
-                      chng_type = "TOTAL",
+                      chng_type = "total",
                       woodland = "Y",
                       dia5inch = TRUE,
                       saplings = FALSE,
@@ -136,7 +136,7 @@ getattnbr <- function(popType = "CURR",
   } else if (popType == 'CHNG') {
     
     eval_typ <- "EXPCHNG"
-    if (chng_type == "total") {
+    if (tolower(chng_type) == "total") {
       estimate <- "AREA CHANGE"
     } else {
       estimate <- "AREA CHANGE ANNUAL"
@@ -147,11 +147,11 @@ getattnbr <- function(popType = "CURR",
       att_search <- "either measurement"
     }
     
-    attribute_nbr <- tmpdf[tmpdf$ESTIMATE == estimate & 
-                           tmpdf$LAND_BASIS == land_basis & 
-                           tmpdf$EVAL_TYP == eval_typ, "ATTRIBUTE_NBR"]
-    
-    if (length(attribute_nbr) > 1) {
+    tmpdf <- tmpdf[tmpdf$ESTIMATE == estimate & 
+                       tmpdf$LAND_BASIS == land_basis & 
+                       tmpdf$EVAL_TYP == eval_typ,]
+   
+    if (nrow(tmpdf) > 1) {
       attribute_nbr <- tmpdf[tmpdf$ESTIMATE == estimate & 
                              grepl(att_search, tmpdf$ATTRIBUTE_DESCR) &
                              tmpdf$LAND_BASIS == land_basis & 
@@ -578,6 +578,10 @@ getFIESTAest <- function(evalid,
   ## Check database connection
   if (is.null(conn)) {
     conn <- DBtestSQLite(dsn, dbconnopen = TRUE, showlist = FALSE)
+  } else {
+    if (!DBI::dbIsValid(conn)) {
+      stop("database connection is invalid")
+    }
   }
   
   ## Check evalid
@@ -601,7 +605,7 @@ getFIESTAest <- function(evalid,
   if (popType == "VOL" && is.null(estvar)) {
     popType <- "CURR"
   }
-  
+
   ###############################################################################
   ## Get FIESTA estimate 
   ###############################################################################
@@ -626,7 +630,7 @@ getFIESTAest <- function(evalid,
     message("popdat is invalid for ", evalid)
     break()
   }
-  
+
   ## Get estimates
   if (popType == "CURR") {
     est <- tryCatch(
@@ -679,7 +683,6 @@ getFIESTAest <- function(evalid,
     }
     
   } else if (popType == "CHNG") {
-    
     est <- tryCatch(
       modGBchng(GBpopdat = popdat,
                 sumunits = TRUE,
@@ -802,14 +805,15 @@ compareAPI <- function(EVALIDatorlst,
   dfdiff <- df[with(df, abs(Estimate.diff) > precision_threshold),]
   if (nrow(dfdiff) > 0) {
     diffcnt <- diffcnt + 1
-    compare_res[[evalid]] <- dfdiff
+    #compare_res[[evalid]] <- dfdiff
   }
   
   if (diffcnt > 0) {
-    msg <- paste0("\nFound differences > ", precision_threshold, " in ",
-                  diffcnt, "/", length(evalids), " evalids")
+    #msg <- paste0("\nFound differences > ", precision_threshold, " in ",
+    #              diffcnt, "/", length(evalid), " evalid")
+    msg <- paste0("\nFound differences > ", precision_threshold)
     message(msg)
-    return(compare_res)
+    return(dfdiff)
   } else {
     message("\nAll estimates match")
     return(NULL)
@@ -871,19 +875,19 @@ compareAPI_evalid <- function(evalids,
     ## DESCRIPTION: gets differences based on precision_threshold
     
     ## Subset data frame of estimate differences
+    diffcnt <- 0
     df[["Estimate.diff"]] <- round(df[["Estimate.fiesta"]] - df[["ESTIMATE"]], 8)
     df[["Estimate.pdiff"]] <- round(df[["Estimate.diff"]] / df[["ESTIMATE"]] * 100, 6)
     dfdiff <- df[with(df, abs(Estimate.diff) > precision_threshold),]
     if (nrow(dfdiff) > 0) {
       diffcnt <- diffcnt + 1
-      compare_res[[evalid]] <- dfdiff
+      #compare_res[[evalid]] <- dfdiff
     }
     
     if (diffcnt > 0) {
-      msg <- paste0("\nFound differences > ", precision_threshold, " in ",
-                    diffcnt, "/", length(evalids), " evalids")
+      msg <- paste0("\nFound differences > ", precision_threshold)
       message(msg)
-      return(compare_res)
+      return(dfdiff)
     } else {
       message("\nAll estimates match for ", compareType)
       return(NULL)
@@ -922,7 +926,7 @@ compareAPI_evalid <- function(evalids,
   }
   message("getting estimates from EVALIDator for attribute number ", attribute_nbr)
 
-  
+ 
   ## Loop through evalids
   evalidlst <- vector(mode = "list", length = length(evalids))
   names(evalidlst) <- evalids
@@ -956,12 +960,6 @@ compareAPI_evalid <- function(evalids,
     ###############################################################################
     ## Get FIESTA estimate 
     ###############################################################################
-    #source("C:\\_tsf\\_GitHub\\tfrescino\\FIESTAdev\\R\\check.popdataCHNG.R")
-    #source("C:\\_tsf\\_GitHub\\tfrescino\\FIESTAdev\\R\\modGBpop.R")
-    #source("C:\\_tsf\\_GitHub\\tfrescino\\FIESTAdev\\R\\check.condCHNG.R")
-    #source("C:\\_tsf\\_GitHub\\tfrescino\\FIESTAdev\\R\\getGBestimates.R")
-    #source("C:\\_tsf\\_GitHub\\tfrescino\\FIESTAdev\\R\\modGBchng.R")
-    #source("C:\\_tsf\\FIESTA\\FIESTA_WebApp\\EVALIDator_compare\\getFIESTAest.R")
     message("getting estimates from FIESTA...\n")
     FIESTAlst <- 
       getFIESTAest(evalid = evalid,
@@ -1016,8 +1014,11 @@ compareAPI_evalid <- function(evalids,
                       ESTIMATE = unlist(eval_grpest$ESTIMATE))
     comparelst$GRP <- getdiff(GRP, precision_threshold, "GRP")
     
-    evalidlst[[evalid]] <- comparelst
-  }    
+    #if (length(comparelst) > 0) {
+      evalidlst[[evalid]] <- comparelst
+    #}
+  }  
+  return(evalidlst)
 }
 
 
@@ -1060,12 +1061,28 @@ getFIADBpop <- function(state = NULL,
   }
   
   ## Define variables to subset
-  FIADBpopvars <- c("STATECD", "ESTN_UNIT", "STRATUMCD", "EXPNS", "P2POINTCNT",
-                    "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MICR", "ADJ_FACTOR_MACR")
+  FIADBpopvars <- c("STATECD", "ESTN_UNIT", "STRATUMCD", "EXPNS", "P2POINTCNT")
+  if (evaltype == "01") {
+    FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_MICR")
+  }
+  if (evaltype == "03") {
+    FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_MICR")
+  }
   if (evaltype == "10") {
-    FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_P2VEG_SUBP")
+    FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_P2VEG_SUBP")
+  }
+  if (evaltype == "07") {
+    FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_CWD", "ADJ_FACTOR_FWD_SM", 
+                      "ADJ_FACTOR_FWD_LG")
+  }
+  if (evaltype == "09") {
+    FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_INV_SUBP")
+  }
+  if (evaltype == "08") {
+    FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_REGEN_MICR")
   }
   
+
   if (is.null(dbconn) && !is.null(dsn)) {
     dbconn <- DBtestSQLite(dsn, dbconnopen=TRUE)
   } 
@@ -1128,6 +1145,29 @@ checkpop <- function(FIADBpop, FIESTApop, evaltype = "01", rnd = 10) {
     popvars <- c(popvars, "ADJ_FACTOR_P2VEG_SUBP")
   }
   
+  popvars <- c("EXPNS", "P2POINTCNT")
+  if (evaltype == "01") {
+    popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_MICR")
+  }
+  if (evaltype == "03") {
+    popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_MICR")
+  }
+  if (evaltype == "10") {
+    popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_P2VEG_SUBP")
+  }
+  if (evaltype == "07") {
+    popvars <- c(popvars, "ADJ_FACTOR_CWD", "ADJ_FACTOR_FWD_SM", 
+                      "ADJ_FACTOR_FWD_LG")
+  }
+  if (evaltype == "09") {
+    popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_INV_SUBP")
+  }
+  if (evaltype == "08") {
+    popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_REGEN_MICR")
+  }
+  
+  
+  
   ## Change names in FIADBpop
   names(FIADBpop)[names(FIADBpop) %in% popvars] <- 
     paste0(names(FIADBpop)[names(FIADBpop) %in% popvars], "_FIADB")
@@ -1143,7 +1183,6 @@ checkpop <- function(FIADBpop, FIESTApop, evaltype = "01", rnd = 10) {
   pop <- merge(FIADBpop, FIESTApop[, c(stratvars, FIESTApopvars), with=FALSE], 
                by=stratvars)
   
-  
   adjvars <- popvars[grepl("ADJ_", FIESTApopvars)]
   for (i in 1:length(FIESTApopvars)) {
     popvar <- FIESTApopvars[i] 
@@ -1158,8 +1197,7 @@ checkpop <- function(FIADBpop, FIESTApop, evaltype = "01", rnd = 10) {
       pop[[paste0("DIFF_", poptyp)]] <- round(pop[[paste0(popvar, "_FIADB")]] - pop[[popvar]], rnd)
     }
   }
-  
-  #message(paste0(utils::capture.output(data.frame(pop)), collapse = "\n"))
+ #message(paste0(utils::capture.output(data.frame(pop)), collapse = "\n"))
   
   cols <- names(pop)[startsWith(names(pop), "DIFF_")]
   popdiff <- pop[pop[, rowSums(.SD) != 0, .SDcols = cols],]
@@ -1231,7 +1269,7 @@ compareADJ <- function(evalids,
       message("all adjustment factors match...")
     } else {
       message("some adjustment factors do not match...")
-      messagedf(pop_compare)
+      FIESTAutils::messagedf(pop_compare)
       compare_adj[[as.character(evalid)]] <- pop_compare
     }
   }
