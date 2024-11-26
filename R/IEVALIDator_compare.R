@@ -208,8 +208,7 @@ getattnbr <- function(popType = "CURR",
     if (nrow(tmpdf) == 0) {
       stop("invalid land_basis: ", land_basis)
     }
-print("TTT")
-print(tmpdf)
+
     tmpdf <- tmpdf[tmpdf$EVAL_TYP == eval_typ,]
     if (nrow(tmpdf) == 0) {
       stop("invalid eval_typ: ", eval_typ)
