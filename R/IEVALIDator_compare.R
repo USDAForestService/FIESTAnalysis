@@ -67,7 +67,7 @@ getattnbr <- function(popType = "CURR",
   chng_measurements <- "both"
   
   landarealst <- c("FOREST", "TIMBERLAND", "ALL")
-  landarea <- pcheck.varchar(var2check = landarea, varnm = "landarea",
+  landarea <- FIESTAutils::pcheck.varchar(var2check = landarea, varnm = "landarea",
                   checklst = landarealst, caption = "landarea", 
                   stopifnull = TRUE)
   
@@ -110,7 +110,7 @@ getattnbr <- function(popType = "CURR",
       message("EVALIDATOR_POP_ESTIMATE missing key variables: ", toString(popvars))
     }
   }
-  EVALIDATOR_POP_ESTIMATE <- setDF(EVALIDATOR_POP_ESTIMATE)
+  EVALIDATOR_POP_ESTIMATE <- data.table::setDF(EVALIDATOR_POP_ESTIMATE)
   ## Remove spaces for consistency
   EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE <- gsub(" ", "", EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE)
   EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE <- gsub("\n", "", EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE)
@@ -160,8 +160,14 @@ getattnbr <- function(popType = "CURR",
     
   } else if (popType == "VOL") {
     
+    if (is.null(estvar)) {
+      stop("must include estvar")
+    }
+    
     ## Define estn_type
-    if (!is.null(estvar.filter)) {
+    if (is.null(estvar.filter)) {
+      estn_type <- "AL"
+    } else {
       estvar.filter <- gsub(" ", "", estvar.filter)
       if (grepl("STATUSCD==1", estvar.filter, ignore.case = TRUE)) {
         estn_type <- "AL"
@@ -185,12 +191,13 @@ getattnbr <- function(popType = "CURR",
       message("estn_attribute not in EVALIDATOR_POP_ESTIMATE table:")
       print(paste(estimate_options, sep = "\n"))
     }
-    
+  
     tmpdf <- tmpdf[
       (!is.na(tmpdf$ESTN_ATTRIBUTE) & tmpdf$ESTN_ATTRIBUTE == estn_attribute),]
     if (nrow(tmpdf) == 0) {
       stop("invalid estn_attribute: ", estn_attribute)
     }
+
     if (estvar == "TPA_UNADJ") {
       tmpdf <- tmpdf[tmpdf$ESTIMATE_GRP_DESCR == "Tree number",]
     }
@@ -201,6 +208,8 @@ getattnbr <- function(popType = "CURR",
     if (nrow(tmpdf) == 0) {
       stop("invalid land_basis: ", land_basis)
     }
+print("TTT")
+print(tmpdf)
     tmpdf <- tmpdf[tmpdf$EVAL_TYP == eval_typ,]
     if (nrow(tmpdf) == 0) {
       stop("invalid eval_typ: ", eval_typ)
@@ -213,7 +222,8 @@ getattnbr <- function(popType = "CURR",
                           !grepl("timber", tmpdf$ATTRIBUTE_DESCR)), ]
       } else {
         if (estn_attribute == "VOLTSGRS") {
-          tmpdf <- tmpdf[(!grepl("timber", tmpdf$ATTRIBUTE_DESCR) & grepl("woodland", tmpdf$ATTRIBUTE_DESCR)),]
+          tmpdf <- tmpdf[((grepl("timber", tmpdf$ATTRIBUTE_DESCR) & grepl("woodland", tmpdf$ATTRIBUTE_DESCR))
+                         | (!grepl("timber", tmpdf$ATTRIBUTE_DESCR) & !grepl("woodland", tmpdf$ATTRIBUTE_DESCR))),]
         } else {
           tmpdf <- tmpdf[(!grepl("woodland", tmpdf$ATTRIBUTE_DESCR)),]
         }
@@ -274,6 +284,7 @@ getAPIest <- function(evalid,
                       dsn = NULL, conn = NULL,
                       attribute_nbr = NULL,
                       attribute_nbrd = NULL,
+                      strFilter = NULL,
                       EVALIDATOR_POP_ESTIMATE = NULL) {
   
   ## DESCRIPTION: get estimate from EVALIDator API
@@ -301,6 +312,7 @@ getAPIest <- function(evalid,
   ## dsn - data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
   ## conn - open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
   ## EVALIDATOR_POP_ESTIMATE - table with attribute numbers (if attribute_nbr is NULL)
+  ## strFilter - an additional filter to add (e.g., 'cond.owncd%20=%2011', 'tree.cclcd%20in20%(1,2,3))
   
   
   
@@ -372,6 +384,7 @@ getAPIest <- function(evalid,
       getattnbr(popType = popType,
                 conn = conn,
                 estvar = estvar,
+                estvar.filter = estvar.filter,
                 landarea = landarea, 
                 estn_type = estn_type,
                 chng_type = chng_type,
@@ -401,6 +414,7 @@ getAPIest <- function(evalid,
           getattnbr(popType = popType,
                     conn = conn,
                     estvar = estvard,
+                    estvar.filter = estvard.filter,
                     landarea = landarea, 
                     estn_type = estd_type,
                     chng_type = chng_type,
@@ -462,13 +476,12 @@ getAPIest <- function(evalid,
   }
   
   
-  
   # get url for evalidator api call
   if (popType %in% c("CURR", "VOL")) {
     if (popType == "CURR") {
       attribute_nbrd <- NULL
     }
-    
+     
     url <- tryCatch(
       paste0("https://apps.fs.usda.gov/fiadb-api/fullreport?",
              "pselected=State%20code",
@@ -476,6 +489,7 @@ getAPIest <- function(evalid,
              "&cselected=", colvarstr,
              "&snum=", attribute_nbr,
              "&sdenom=", attribute_nbrd,
+             "&strFilter=", strFilter,
              "&wc=", evalgrp,
              "&outputFormat=NJSON"),
       error = function(e) {
@@ -549,6 +563,7 @@ getFIESTAest <- function(evalid,
                          chng_type = "total",
                          chng_measurements = "both",
                          woodland = "Y",
+                         defaultVars = FALSE,
                          dsn = NULL, conn = NULL) {
   
   ## DESCRIPTION: get estimate from FIESTA
@@ -615,6 +630,7 @@ getFIESTAest <- function(evalid,
              pltassgn = "POP_PLOT_STRATUM_ASSGN",
              dsn = dsn,
              dbconn = conn,
+             defaultVars = defaultVars,
              unit_opts=list(unitvar2 = "STATECD", minplotnum.unit=2),
              stratalut = "POP_STRATUM",
              unitarea = "POP_ESTN_UNIT",
@@ -743,7 +759,8 @@ compareAPI <- function(EVALIDatorlst,
   
   
   compareTypelst <- c("TOTALS", "ROW", "COL", "GRP")
-  compareType <- pcheck.varchar(var2check = compareType, varnm = "compareType",
+  compareType <- FIESTAutils::pcheck.varchar(var2check = compareType, 
+                             varnm = "compareType",
                              checklst = compareTypelst, caption = "compareType", 
                              stopifnull = TRUE)
   
