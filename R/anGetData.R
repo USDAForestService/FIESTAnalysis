@@ -366,18 +366,19 @@ anGetData <- function(bnd_layer,
   #   unitzonal$N <- NULL
   # }
 
+  
   ##########################################
   ## Create output list
   ##########################################
-  returnlst <- list(bnd=bnd, tabs=tabs, tabIDs=tabIDs, 
-                    pltassgn=data.table::setDF(pltassgn), 
-                    pltassgnid=pltassgnid, pjoinid=pjoinid, 
-                    unitarea=data.table::setDF(unitarea), 
-                    unitvar=unitvar, areavar=areavar, 
-                    unitzonal=data.table::setDF(unitzonal), 
-                    prednames=prednames, predfac=predfac, 
-                    zonalnames=zonalnames, npixelvar=npixelvar, pltcnt=pltcnt,
-                    states=states, invyrs=invyrs, vars2keep=vars2keep)
+  returnlst <- list(bnd=bnd, tabs = tabs, tabIDs = tabIDs, 
+                    pltassgn = pltassgn, 
+                    pltassgnid = pltassgnid, pjoinid = pjoinid, 
+                    unitarea = unitarea, 
+                    unitvar = unitvar, areavar=areavar, 
+                    unitzonal = unitzonal, 
+                    prednames = prednames, predfac = predfac, 
+                    zonalnames = zonalnames, npixelvar = npixelvar, pltcnt = pltcnt,
+                    states = states, invyrs = invyrs, vars2keep = vars2keep)
   if (length(predfac) > 0) {
     returnlst$predfac.levels <- auxdat$predfac.levels
   }
