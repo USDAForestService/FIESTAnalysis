@@ -30,13 +30,13 @@ title.ref <- params$title.ref
 #domain <- params$domain
 totals <- params$totals
 
-SApopdatlst = SApopdatlst 
-SApackage = SApackage
-SAmethod = SAmethod 
-AOInm = AOInm
-title.ref = title.ref
-totals = FALSE
-outfolder = outfolder
+#SApopdatlst = SApopdatlst 
+#SApackage = SApackage
+#SAmethod = SAmethod 
+#AOInm = AOInm
+#title.ref = title.ref
+#totals = FALSE
+#outfolder = outfolder
 
 ```
 

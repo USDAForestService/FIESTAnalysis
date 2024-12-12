@@ -205,8 +205,7 @@ anSApop_core <- function(SApopdatlst,
                       estvar=estvar,
                       estvar.filter=estvar.filter,
                       modelselect=modelselect,
-				multest=TRUE,
-				savemultest=TRUE, 
+				              multest=TRUE,
                       na.fill=na.fill,
 		                  savedata=savedata,
 		                  returntitle=returntitle,
@@ -234,7 +233,7 @@ anSApop_core <- function(SApopdatlst,
                footnote1=footnote1, footnote2=footnote2, footnote3=footnote3)
   }
 
-
+  
   #######################################################################################
   ## 02 - Net cuft volume of live trees on forest land
   #######################################################################################
@@ -249,8 +248,7 @@ anSApop_core <- function(SApopdatlst,
                       estvar=estvar,
                       estvar.filter=estvar.filter,
                       modelselect=modelselect,
-				multest=TRUE,
-				savemultest=TRUE, 
+				              multest=TRUE,
                       na.fill=na.fill,
                       savedata=savedata,
 		                  returntitle=returntitle,
@@ -289,6 +287,8 @@ anSApop_core <- function(SApopdatlst,
   estvar <- "BA"
   estvar.filter <- "STATUSCD == 1 & DIA >= 1"
 
+  devtools::load_all("C:/_tsf/_GitHub/FIESTA/R")
+  
   estdat <- modSAtree(SApopdatlst=SApopdatlst,
                       landarea=landarea,
                       estvar=estvar, 
@@ -332,37 +332,43 @@ anSApop_core <- function(SApopdatlst,
   estvar <- "BA"
   estvar.filter <- "STATUSCD == 1 & DIA >= 1"
 
-  estdat <- modSAtree(SApopdatlst=SApopdatlst,
-					landarea=landarea,
-		                  pcfilter=pcfilter, 
-		                  estvar=estvar, 
-		                  estvar.filter=estvar.filter,
-		                  modelselect=modelselect,
-		                  na.fill=na.fill,
-		                  savedata=savedata,
-		                  returntitle=returntitle,
-		                  table_opts = table_options(allin1=allin1),
-		                  title_opts = title_options(
-		                               title.ref=title.ref, 
-		                               title.unitvar="fire",
-		                               title.filter=fortypgrpnm),
-		                  savedata_opts = savedata_options(
-		                                  outfolder=outfolder,
-		                                  outfn.pre=outfn.pre2,
-		                                  outfn.date=outfn.date,
-		                                  overwrite_layer=overwrite)
-		                  )
-  #estdat$est
-  esttab <- estdat$est
-  tabtitle <- estdat$titlelst$title.estpse
+  
+  estdat <- tryCatch(
+    modSAtree(SApopdatlst=SApopdatlst,
+					    landarea=landarea,
+		          pcfilter=pcfilter, 
+		          estvar=estvar, 
+		          estvar.filter=estvar.filter,
+		          modelselect=modelselect,
+		          na.fill=na.fill,
+		          savedata=savedata,
+		          returntitle=returntitle,
+		          table_opts = table_options(allin1=allin1),
+		          title_opts = title_options(
+		                       title.ref=title.ref, 
+		                       title.unitvar="fire",
+		                       title.filter=fortypgrpnm),
+		          savedata_opts = savedata_options(
+		                          outfolder=outfolder,
+		                          outfn.pre=outfn.pre2,
+		                          outfn.date=outfn.date,
+		                          overwrite_layer=overwrite)),
+      error = function(e) {
+      message(e,"\n")
+      return(NULL) })
+  
+  if (!is.null(estdat)) {
+    esttab <- estdat$est
+    tabtitle <- estdat$titlelst$title.estpse
 
-  if (xlsx) {
-    coltottxt <- "All forest land"
-    cellwidth <- 14
-    write2xlsx(esttab=esttab, 
+    if (xlsx) {
+      coltottxt <- "All forest land"
+      cellwidth <- 14
+      write2xlsx(esttab=esttab, 
                tabtitle=paste0("Table ", tabnm, ". ", tabtitle), 
                outfolder=outfolder, fill=fill, allin1=allin1, addSEcol=addSEcol, 
                coltottxt=coltottxt, cellwidth=cellwidth, wbnm=wbnm, sheetnm=tabnm, 
                footnote1=footnote1, footnote2=footnote2, footnote3=footnote3)
+    }
   }
 }
