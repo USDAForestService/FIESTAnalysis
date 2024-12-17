@@ -286,8 +286,6 @@ anSApop_core <- function(SApopdatlst,
   landarea <- "FOREST"
   estvar <- "BA"
   estvar.filter <- "STATUSCD == 1 & DIA >= 1"
-
-  devtools::load_all("C:/_tsf/_GitHub/FIESTA/R")
   
   estdat <- modSAtree(SApopdatlst=SApopdatlst,
                       landarea=landarea,
