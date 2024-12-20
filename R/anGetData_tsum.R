@@ -503,13 +503,10 @@ anGetData_tsum <- function(bnd_layer,
   conddatp <- datSumCond(cond = cond,
                          plt = plt,
                          adjcond = TRUE,
-                         NAto0 = TRUE,
                          csumvar = "CONDPROP_UNADJ",
                          cfilter = "COND_STATUS_CD == 1",
                          csumvarnm = csumvarnm,
                          getadjplot = getadjplot,
-                         puniqueid = puniqueid,
-                         cuniqueid = cuniqueid,
                          cround = cround)
   cdatp <- conddatp$condsum
   csumvar <- conddatp$csumvarnm
@@ -517,13 +514,10 @@ anGetData_tsum <- function(bnd_layer,
   conddatc <- datSumCond(cond = cond,
                          bycond = TRUE,
                          adjcond = TRUE,
-                         NAto0 = TRUE,
                          csumvar = "CONDPROP_UNADJ",
                          cfilter = "COND_STATUS_CD == 1",
                          csumvarnm = csumvarnm,
                          getadjplot = getadjplot,
-                         puniqueid = puniqueid,
-                         cuniqueid = cuniqueid,
                          cround = cround)
   cdatc <- conddatc$condsum
 
@@ -544,15 +538,12 @@ anGetData_tsum <- function(bnd_layer,
                          plt = cdatp,
                          cond = cond,
                          bycond = FALSE,
-                         TPA = TPA, 
-                         adjtree = adjtree, 
-                         NAto0 = TRUE, 
                          tsumvarlst = estvarlst, 
                          getadjplot = FALSE,
                          tfilter = estvar.filter, 
-                         puniqueid = puniqueid,
-                         cuniqueid = cuniqueid,
-                         tround = tround)
+                         datSum_opts = list(adjtree = adjtree, 
+                                            TPA = TPA,
+                                            tround = tround))
   tdatp <- treedatp$treedat
   sumvars <- unique(c(csumvar, treedatp$sumvars))
   tdatp_meta <- treedatp$meta  
@@ -562,15 +553,12 @@ anGetData_tsum <- function(bnd_layer,
   treedatc <- datSumTree(tree = treex, 
                          cond = cdatc, 
                          bycond = TRUE,
-                         TPA = TPA, 
-                         adjtree = adjtree, 
-                         NAto0 = TRUE, 
                          tsumvarlst = estvarlst, 
                          getadjplot = FALSE,
                          tfilter = estvar.filter, 
-                         puniqueid = puniqueid,
-                         cuniqueid = cuniqueid,
-                         tround = tround)
+                         datSum_opts = list(adjtree = adjtree, 
+                                            TPA = TPA,
+                                            tround = tround))
   tdatc <- treedatc$treedat
   sumvars <- unique(c(csumvar, treedatc$sumvars))
   tdatc_meta <- treedatc$meta  

@@ -385,7 +385,6 @@ getAPIest <- function(evalid,
                 estvar = estvar,
                 estvar.filter = estvar.filter,
                 landarea = landarea, 
-                estn_type = estn_type,
                 chng_type = chng_type,
                 woodland = woodland,
                 dia5inch = dia5inch)
@@ -415,7 +414,6 @@ getAPIest <- function(evalid,
                     estvar = estvard,
                     estvar.filter = estvard.filter,
                     landarea = landarea, 
-                    estn_type = estd_type,
                     chng_type = chng_type,
                     dia5inch = dia5inch)
       }
