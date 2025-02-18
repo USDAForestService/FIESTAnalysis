@@ -87,7 +87,7 @@ getattnbr <- function(popType = "CURR",
   }
   
   ## Get EVALIDATOR_POP_ESTIMATE
-  popvars <- c("ATTRIBUTE_NBR", "ATTRIBUTE_DESCR", "ESTN_TYPE")
+  popvars <- tolower(c("ATTRIBUTE_NBR", "ATTRIBUTE_DESCR", "ESTN_TYPE"))
   if (is.null(EVALIDATOR_POP_ESTIMATE)) {
     if (is.null(conn)) {
       if (is.null(dsn)) {
@@ -105,19 +105,23 @@ getattnbr <- function(popType = "CURR",
       EVALIDATOR_POP_ESTIMATE <- DBI::dbReadTable(conn, "EVALIDATOR_POP_ESTIMATE")
       #EVALIDATOR_POP_ESTIMATE[EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE %in% attributes, c(1,2,7,20,15,18)]
     }
+    names(EVALIDATOR_POP_ESTIMATE) <- tolower(names(EVALIDATOR_POP_ESTIMATE))
   } else {
     if (!all(popvars %in% names(EVALIDATOR_POP_ESTIMATE))) {
+      names(EVALIDATOR_POP_ESTIMATE) <- tolower(names(EVALIDATOR_POP_ESTIMATE))
       message("EVALIDATOR_POP_ESTIMATE missing key variables: ", toString(popvars))
     }
   }
   EVALIDATOR_POP_ESTIMATE <- data.table::setDF(EVALIDATOR_POP_ESTIMATE)
-  ## Remove spaces for consistency
-  EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE <- gsub(" ", "", EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE)
-  EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE <- gsub("\n", "", EVALIDATOR_POP_ESTIMATE$ESTN_ATTRIBUTE)
   
-  tmpvars <- c("ATTRIBUTE_NBR", "ATTRIBUTE_DESCR", "EVAL_TYP", "LAND_BASIS", "ESTIMATE", "ESTN_TYPE",
-               "ESTN_TREE_PORTION", "ESTN_ATTRIBUTE", "ESTN_UNITS_ATTRIBUTE", "ESTN_UNITS_DISPLAY",
-               "ESTIMATE_VARIANT", "GROWTH_ACCT")
+  ## Remove spaces for consistency
+  EVALIDATOR_POP_ESTIMATE$estn_attribute <- gsub(" ", "", EVALIDATOR_POP_ESTIMATE$estn_attribute)
+  EVALIDATOR_POP_ESTIMATE$estn_attribute <- gsub("\n", "", EVALIDATOR_POP_ESTIMATE$estn_attribute)
+  
+  tmpvars <- tolower(c("ATTRIBUTE_NBR", "ATTRIBUTE_DESCR", "EVAL_TYP", "LAND_BASIS", 
+                       "ESTIMATE_GRP_DESCR", "ESTIMATE", "ESTN_TYPE", "ESTN_TREE_PORTION", 
+                       "ESTN_ATTRIBUTE", "ESTN_UNITS_ATTRIBUTE", "ESTN_UNITS_DISPLAY", 
+                       "ESTIMATE_VARIANT", "GROWTH_ACCT"))
   tmpdf <- EVALIDATOR_POP_ESTIMATE[, tmpvars]
 
   
@@ -129,9 +133,9 @@ getattnbr <- function(popType = "CURR",
     eval_typ <- "EXPCURR"
     estimate <- "AREA"
     
-    attribute_nbr <- tmpdf[tmpdf$ESTIMATE == estimate & 
-                           tmpdf$LAND_BASIS == land_basis & 
-                           tmpdf$EVAL_TYP == eval_typ, "ATTRIBUTE_NBR"]
+    attribute_nbr <- tmpdf[tmpdf$estimate == estimate & 
+                           tmpdf$land_basis == land_basis & 
+                           tmpdf$eval_typ == eval_typ, "attribute_nbr"]
     
   } else if (popType == 'CHNG') {
     
@@ -147,15 +151,15 @@ getattnbr <- function(popType = "CURR",
       att_search <- "either measurement"
     }
     
-    tmpdf <- tmpdf[tmpdf$ESTIMATE == estimate & 
-                       tmpdf$LAND_BASIS == land_basis & 
-                       tmpdf$EVAL_TYP == eval_typ,]
+    tmpdf <- tmpdf[tmpdf$estimate == estimate & 
+                       tmpdf$land_basis == land_basis & 
+                       tmpdf$eval_typ == eval_typ,]
    
     if (nrow(tmpdf) > 1) {
-      attribute_nbr <- tmpdf[tmpdf$ESTIMATE == estimate & 
+      attribute_nbr <- tmpdf[tmpdf$estimate == estimate & 
                              grepl(att_search, tmpdf$ATTRIBUTE_DESCR) &
-                             tmpdf$LAND_BASIS == land_basis & 
-                             tmpdf$EVAL_TYP == eval_typ, "ATTRIBUTE_NBR"]
+                             tmpdf$land_basis == land_basis & 
+                             tmpdf$eval_typ == eval_typ, "attribute_nbr"]
     }
     
   } else if (popType == "VOL") {
@@ -186,67 +190,68 @@ getattnbr <- function(popType = "CURR",
       estn_attribute <- paste0(estn_attribute, "/2000")
     }  
     
-    estimate_options <- sort(unique(tmpdf$ESTN_ATTRIBUTE))
+    estimate_options <- sort(unique(tmpdf$estn_attribute))
     if (!estn_attribute %in% estimate_options) {
       message("estn_attribute not in EVALIDATOR_POP_ESTIMATE table:")
       print(paste(estimate_options, sep = "\n"))
     }
   
     tmpdf <- tmpdf[
-      (!is.na(tmpdf$ESTN_ATTRIBUTE) & tmpdf$ESTN_ATTRIBUTE == estn_attribute),]
+      (!is.na(tmpdf$estn_attribute) & tmpdf$estn_attribute == estn_attribute),]
     if (nrow(tmpdf) == 0) {
       stop("invalid estn_attribute: ", estn_attribute)
     }
 
     if (estvar == "TPA_UNADJ") {
-      tmpdf <- tmpdf[tmpdf$ESTIMATE_GRP_DESCR == "Tree number",]
+      tmpdf <- tmpdf[tmpdf$estimate_grp_desc == "Tree number",]
     }
-    if (!land_basis %in% unique(tmpdf$LAND_BASIS)) {
+    
+    if (!land_basis %in% unique(tmpdf$land_basis)) {
       land_basis <- "Forest land"
     }
-    tmpdf <- tmpdf[tmpdf$LAND_BASIS == land_basis,]
+    tmpdf <- tmpdf[tmpdf$land_basis == land_basis,]
     if (nrow(tmpdf) == 0) {
       stop("invalid land_basis: ", land_basis)
     }
 
-    tmpdf <- tmpdf[tmpdf$EVAL_TYP == eval_typ,]
+    tmpdf <- tmpdf[tmpdf$eval_typ == eval_typ,]
     if (nrow(tmpdf) == 0) {
       stop("invalid eval_typ: ", eval_typ)
     }
-    tmpdf <- tmpdf[tmpdf$ESTN_TYPE == estn_type,]
+    tmpdf <- tmpdf[tmpdf$estn_type == estn_type,]
 
     if (estn_attribute == "VOLTSGRS" || startsWith(estn_attribute, "DRYBIO")) {
       if (woodland == "only") {
-        tmpdf <- tmpdf[(grepl("woodland", tmpdf$ATTRIBUTE_DESCR) & 
-                          !grepl("timber", tmpdf$ATTRIBUTE_DESCR)), ]
+        tmpdf <- tmpdf[(grepl("woodland", tmpdf$attribute_descr) & 
+                          !grepl("timber", tmpdf$attribute_descr)), ]
       } else {
         if (estn_attribute == "VOLTSGRS") {
-          tmpdf <- tmpdf[((grepl("timber", tmpdf$ATTRIBUTE_DESCR) & grepl("woodland", tmpdf$ATTRIBUTE_DESCR))
-                         | (!grepl("timber", tmpdf$ATTRIBUTE_DESCR) & !grepl("woodland", tmpdf$ATTRIBUTE_DESCR))),]
+          tmpdf <- tmpdf[((grepl("timber", tmpdf$attribute_descr) & grepl("woodland", tmpdf$attribute_descr))
+                         | (!grepl("timber", tmpdf$attribute_descr) & !grepl("woodland", tmpdf$attribute_descr))),]
         } else {
-          tmpdf <- tmpdf[(!grepl("woodland", tmpdf$ATTRIBUTE_DESCR)),]
+          tmpdf <- tmpdf[(!grepl("woodland", tmpdf$attribute_descr)),]
         }
       }
     } 
     
     if (nrow(tmpdf) > 1) {
       if (dia5inch) {
-        if (!any(grepl("at least 5 inches", tmpdf$ATTRIBUTE_DESCR))) {
+        if (!any(grepl("at least 5 inches", tmpdf$attribute_descr))) {
           message("no attribute exists for dia5inch")
           message(paste0(utils::capture.output(tmpdf[,popvars]), collapse = "\n"))
         } else {
-          tmpdf <- tmpdf[grepl("at least 5 inches", tmpdf$ATTRIBUTE_DESCR), ]
+          tmpdf <- tmpdf[grepl("at least 5 inches", tmpdf$attribute_descr), ]
         }
       } else if (!saplings) {
-        tmpdf <- tmpdf[!grepl("saplings", tmpdf$ATTRIBUTE_DESCR), ]
+        tmpdf <- tmpdf[!grepl("saplings", tmpdf$attribute_descr), ]
       }
     }
 
     if (nrow(tmpdf) == 0) {
       stop("invalid estn_type: ", estn_type)
     } else {
-      attribute_nbr <- tmpdf[, "ATTRIBUTE_NBR"]
-      df <- tmpdf[, c("ATTRIBUTE_NBR", "ATTRIBUTE_DESCR")]
+      attribute_nbr <- tmpdf[, "attribute_nbr"]
+      df <- tmpdf[, c("attribute_nbr", "attribute_descr")]
       message(paste0(utils::capture.output(df), collapse = "\n"))
     }
   }
@@ -255,11 +260,11 @@ getattnbr <- function(popType = "CURR",
     stop("no attribute number exists in database")
   } else if (length(attribute_nbr) > 1) {
     message("more than one attributes exist...")
-    df <- tmpdf[tmpdf$ATTRIBUTE_NBR %in% attribute_nbr[[1]], popvars]
+    df <- tmpdf[tmpdf$attribute_nbr %in% attribute_nbr[[1]], popvars]
     message(paste0(utils::capture.output(df), collapse = "\n"))
     stop()
   }
-  attribute_desc <- tmpdf[tmpdf$ATTRIBUTE_NBR %in% attribute_nbr, "ATTRIBUTE_DESCR"]
+  attribute_desc <- tmpdf[tmpdf$attribute_nbr %in% attribute_nbr, "attribute_descr"]
   message("attribute number ", attribute_nbr, ": \n", attribute_desc)  
   
   return(attribute_nbr) 
@@ -1095,7 +1100,7 @@ getFIADBpop <- function(state = NULL,
   if (evaltype == "08") {
     FIADBpopvars <- c(FIADBpopvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_REGEN_MICR")
   }
-  
+  FIADBpopvars <- tolower(FIADBpopvars)
 
   if (is.null(dbconn) && !is.null(dsn)) {
     dbconn <- DBtestSQLite(dsn, dbconnopen=TRUE)
@@ -1133,12 +1138,14 @@ getFIADBpop <- function(state = NULL,
     pop_estn_unit <- sqldf::sqldf(pop_estn_unit_qry)
     pop_stratum <- sqldf::sqldf(pop_stratum_qry)
   }
+  names(pop_estn_unit) <- tolower(names(pop_estn_unit))
+  names(pop_stratum) <- tolower(names(pop_stratum))
   
   pop_stratum <- pop_stratum[, FIADBpopvars]
-  pop_stratum <- pop_stratum[order(pop_stratum$STATECD, pop_stratum$ESTN_UNIT, pop_stratum$STRATUMCD), ]
-  pop_estn_unit <- pop_estn_unit[order(pop_estn_unit$STATECD, pop_estn_unit$ESTN_UNIT), ]
-  pop_stratum$STRATUMCD <- as.character(pop_stratum$STRATUMCD)
-  pop_stratum <- pop_stratum[order(pop_stratum$ESTN_UNIT, pop_stratum$STRATUMCD),]
+  pop_stratum <- pop_stratum[order(pop_stratum$statecd, pop_stratum$estn_unit, pop_stratum$stratumcd), ]
+  pop_estn_unit <- pop_estn_unit[order(pop_estn_unit$statecd, pop_estn_unit$estn_unit), ]
+  pop_stratum$stratumcd <- as.character(pop_stratum$stratumcd)
+  pop_stratum <- pop_stratum[order(pop_stratum$estn_unit, pop_stratum$stratumcd),]
   
   if (!dbconnopen && !is.null(dbconn)) {
     DBI::dbDisconnect(dbconn)
@@ -1148,48 +1155,52 @@ getFIADBpop <- function(state = NULL,
   #return(pop_stratum)
 }
 
-checkpop <- function(FIADBpop, FIESTApop, evaltype = "01", rnd = 10) {
+checkpop <- function(FIADBpop, FIESTApop, evalendtype = "01", rnd = 10) {
   ## DESCRIPTION: compare population data generated by FIESTA with 
   ##              population data from FIADB.
+  
+  ## change names to lowercase
+  names(FIADBpop) <- tolower(names(FIADBpop))
+  names(FIESTApop) <- tolower(names(FIESTApop))
   
   ## Define variables to compare
   popvars <- c("EXPNS", "P2POINTCNT",
                "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MICR", "ADJ_FACTOR_MACR")
-  if (evaltype == "10") {
+  if (evalendtype == "10") {
     popvars <- c(popvars, "ADJ_FACTOR_P2VEG_SUBP")
   }
   
   popvars <- c("EXPNS", "P2POINTCNT")
-  if (evaltype == "01") {
+  if (evalendtype == "01") {
     popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_MICR")
   }
-  if (evaltype == "03") {
+  if (evalendtype == "03") {
     popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_MICR")
   }
-  if (evaltype == "10") {
+  if (evalendtype == "10") {
     popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_P2VEG_SUBP")
   }
-  if (evaltype == "07") {
+  if (evalendtype == "07") {
     popvars <- c(popvars, "ADJ_FACTOR_CWD", "ADJ_FACTOR_FWD_SM", 
                       "ADJ_FACTOR_FWD_LG")
   }
-  if (evaltype == "09") {
+  if (evalendtype == "09") {
     popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_INV_SUBP")
   }
-  if (evaltype == "08") {
+  if (evalendtype == "08") {
     popvars <- c(popvars, "ADJ_FACTOR_SUBP", "ADJ_FACTOR_MACR", "ADJ_FACTOR_REGEN_MICR")
   }
+  popvars <- tolower(popvars) 
   
-  
-  
+
   ## Change names in FIADBpop
   names(FIADBpop)[names(FIADBpop) %in% popvars] <- 
-    paste0(names(FIADBpop)[names(FIADBpop) %in% popvars], "_FIADB")
+    paste0(names(FIADBpop)[names(FIADBpop) %in% popvars], "_fiadb")
   
   FIESTApopvars <- popvars[popvars %in% names(FIESTApop)]
-  FIESTApop <- data.table::setDT(FIESTApop)[, c("ESTN_UNIT", "STRATUMCD", FIESTApopvars), with=FALSE]
+  stratvars <- c("estn_unit", "stratumcd")
+  FIESTApop <- data.table::setDT(FIESTApop)[, c(stratvars, FIESTApopvars), with=FALSE]
   
-  stratvars <- c("ESTN_UNIT", "STRATUMCD")
   chkclass <- FIESTAutils::check.matchclass(FIADBpop, FIESTApop, stratvars)
   FIADBpop <- chkclass$tab1
   FIESTApop <- chkclass$tab2
@@ -1197,23 +1208,25 @@ checkpop <- function(FIADBpop, FIESTApop, evaltype = "01", rnd = 10) {
   pop <- merge(FIADBpop, FIESTApop[, c(stratvars, FIESTApopvars), with=FALSE], 
                by=stratvars)
   
-  adjvars <- popvars[grepl("ADJ_", FIESTApopvars)]
+  adjvars <- popvars[grepl("adj_", FIESTApopvars)]
+  
+
   for (i in 1:length(FIESTApopvars)) {
     popvar <- FIESTApopvars[i] 
     if (popvar %in% adjvars) {
-      poptyp <- sub("ADJ_FACTOR_", "", popvar)
+      poptyp <- sub("adj_factor_", "", popvar)
     } else {
       poptyp <- popvar
     }
-    if (sum(pop[[paste0(popvar, "_FIADB")]]) == 0 || sum(pop[[popvar]]) == 0) {
-      pop[[paste0("DIFF_", poptyp)]] <- 0
+    if (sum(pop[[paste0(popvar, "_fiadb")]]) == 0 || sum(pop[[popvar]]) == 0) {
+      pop[[paste0("diff_", poptyp)]] <- 0
     } else {
-      pop[[paste0("DIFF_", poptyp)]] <- round(pop[[paste0(popvar, "_FIADB")]] - pop[[popvar]], rnd)
+      pop[[paste0("diff_", poptyp)]] <- round(pop[[paste0(popvar, "_fiadb")]] - pop[[popvar]], rnd)
     }
   }
  #message(paste0(utils::capture.output(data.frame(pop)), collapse = "\n"))
   
-  cols <- names(pop)[startsWith(names(pop), "DIFF_")]
+  cols <- names(pop)[startsWith(names(pop), "diff_")]
   popdiff <- pop[pop[, rowSums(.SD) != 0, .SDcols = cols],]
   
   return(popdiff)
