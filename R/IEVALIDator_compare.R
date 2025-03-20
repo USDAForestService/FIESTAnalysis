@@ -41,6 +41,7 @@ getattnbr <- function(popType = "CURR",
                       estvar.filter = NULL,
                       landarea = "Forest", 
                       chng_type = "total",
+                      chng_measurements = "both",
                       woodland = "Y",
                       dia5inch = TRUE,
                       saplings = FALSE,
@@ -53,18 +54,16 @@ getattnbr <- function(popType = "CURR",
   ## popType - c('CURR', 'VOL', 'CHNG', 'P2VEG')      
   ## estvar - c('AREA', 'CHNG', 'VOLCFNET', 'VOLBFNET', 'TPA_UNADJ', 'DRYBIO_AG/2000')
   ## landarea - c('FOREST', 'TIMBERLAND, 'ALL')
-  ## estn_type - c('GS', 'STGD', 'AL') - (growing-stock; standing-dead; all live)
+  ## estn_type - c('GS', 'STGD', 'AL', 'SL') - (growing-stock; standing-dead; all live; saw-log)
   ## estimate - c('AREA CHANGE ANNUAL', 'AREA CHANGE")
   ## chng_type - c('total', 'annual')
+  ## chng_measurements - c('both', 'either')
   ## woodland - c('Y', 'N', 'only')
   ## dia5inch Logical. If TRUE, gets attribute with 5 inches and above
   ## dsn - data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table
   ## conn - open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table
   ## EVALIDATOR_POP_ESTIMATE - table with attribute numbers
   
-  
-  ## CHNG_MEASUREMENTS - c('both', 'either')
-  chng_measurements <- "both"
   
   landarealst <- c("FOREST", "TIMBERLAND", "ALL")
   landarea <- FIESTAutils::pcheck.varchar(var2check = landarea, varnm = "landarea",
@@ -157,7 +156,7 @@ getattnbr <- function(popType = "CURR",
    
     if (nrow(tmpdf) > 1) {
       attribute_nbr <- tmpdf[tmpdf$estimate == estimate & 
-                             grepl(att_search, tmpdf$ATTRIBUTE_DESCR) &
+                             grepl(att_search, tmpdf$attribute_descr) &
                              tmpdf$land_basis == land_basis & 
                              tmpdf$eval_typ == eval_typ, "attribute_nbr"]
     }
@@ -173,7 +172,9 @@ getattnbr <- function(popType = "CURR",
       estn_type <- "AL"
     } else {
       estvar.filter <- gsub(" ", "", estvar.filter)
-      if (grepl("STATUSCD==1", estvar.filter, ignore.case = TRUE)) {
+      if (estvar == "VOLBSNET") {
+        estn_type <- "SL"
+      } else if (grepl("STATUSCD==1", estvar.filter, ignore.case = TRUE)) {
         estn_type <- "AL"
       } else if (grepl("STATUSCD==2", estvar.filter, ignore.case = TRUE)) {
         estn_type <- "STGD"
@@ -183,9 +184,15 @@ getattnbr <- function(popType = "CURR",
         stop("estvar.filter not supported: ", estvar.filter)
       }
     } 
+    
+    if (estvar == "BA") {
+      estn_attribute <- "TPA_UNADJ"
+    } else {
+      estn_attribute <- estvar
+    }
+    
 
     eval_typ <- "EXPVOL"
-    estn_attribute <- estvar
     if (!is.null(estn_attribute) && estn_attribute %in% c("DRYBIO_AG", "CARBON_AG")) {
       estn_attribute <- paste0(estn_attribute, "/2000")
     }  
@@ -195,17 +202,21 @@ getattnbr <- function(popType = "CURR",
       message("estn_attribute not in EVALIDATOR_POP_ESTIMATE table:")
       print(paste(estimate_options, sep = "\n"))
     }
-  
+
     tmpdf <- tmpdf[
       (!is.na(tmpdf$estn_attribute) & tmpdf$estn_attribute == estn_attribute),]
     if (nrow(tmpdf) == 0) {
       stop("invalid estn_attribute: ", estn_attribute)
     }
 
-    if (estvar == "TPA_UNADJ") {
-      tmpdf <- tmpdf[tmpdf$estimate_grp_desc == "Tree number",]
+    if (estn_attribute == "TPA_UNADJ") {
+      if (estvar == "BA") {
+        tmpdf <- tmpdf[tmpdf$estimate_grp_desc == "Tree basal area",]
+      } else {
+        tmpdf <- tmpdf[tmpdf$estimate_grp_desc == "Tree number",]
+      }
     }
-    
+
     if (!land_basis %in% unique(tmpdf$land_basis)) {
       land_basis <- "Forest land"
     }
@@ -218,9 +229,13 @@ getattnbr <- function(popType = "CURR",
     if (nrow(tmpdf) == 0) {
       stop("invalid eval_typ: ", eval_typ)
     }
+    
     tmpdf <- tmpdf[tmpdf$estn_type == estn_type,]
-
-    if (estn_attribute == "VOLTSGRS" || startsWith(estn_attribute, "DRYBIO")) {
+    if (nrow(tmpdf) == 0) {
+      stop("invalid estn_type: ", estn_type)
+    }
+    
+    if (estn_attribute %in% c("VOLTSGRS","VOLTSSND") || startsWith(estn_attribute, "DRYBIO")) {
       if (woodland == "only") {
         tmpdf <- tmpdf[(grepl("woodland", tmpdf$attribute_descr) & 
                           !grepl("timber", tmpdf$attribute_descr)), ]
@@ -242,8 +257,14 @@ getattnbr <- function(popType = "CURR",
         } else {
           tmpdf <- tmpdf[grepl("at least 5 inches", tmpdf$attribute_descr), ]
         }
-      } else if (!saplings) {
-        tmpdf <- tmpdf[!grepl("saplings", tmpdf$attribute_descr), ]
+      } else {
+        if (saplings) {
+          tmpdf <- tmpdf[grepl("saplings", tmpdf$attribute_descr), ]
+        } else {
+          if (any(grepl("at least 1 inch", tmpdf$attribute_descr))) {
+            tmpdf <- tmpdf[grepl("at least 1 inch", tmpdf$attribute_descr), ]
+          }
+        }
       }
     }
 
@@ -284,6 +305,7 @@ getAPIest <- function(evalid,
                       chng_type = "total",
                       chng_measurements = "both",
                       woodland = "Y",
+                      saplings = FALSE,
                       dia5inch = FALSE, 
                       dsn = NULL, conn = NULL,
                       attribute_nbr = NULL,
@@ -316,9 +338,9 @@ getAPIest <- function(evalid,
   ## dsn - data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
   ## conn - open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
   ## EVALIDATOR_POP_ESTIMATE - table with attribute numbers (if attribute_nbr is NULL)
-  ## strFilter - an additional filter to add (e.g., 'cond.owncd%20=%2011', 'tree.cclcd%20in20%(1,2,3))
-  
-  
+  ## strFilter - an additional filter to add (e.g., 'cond.owncd%20=%2011', 'tree.cclcd%20in%20(1,2,3)').
+  ##             note: rowvar does not seem to work correctly when using cond filter.
+
   
   require("httr")
   ## LAND_BASIS - c('Forest land', Timberland', 'All land')
@@ -351,19 +373,19 @@ getAPIest <- function(evalid,
   ## Define row/col variables for FIESTA (ROWCOL) and EVALIDator (ROWCOLVAL)
   rowcoldf <- data.frame(
     ROWCOL = c('ALSTKCD', 'DSTRDCD', 'DSTRBCD1', 'FORTYPCD', 'FORTYPGRPCD', 
-               'INVYR', 'LANDUSE', 'COND_CLASS_CD', 'LANDUSE', 
-               'ADFORCD', 'ALPFORCD', 
+               'LANDUSE', 'COND_CLASS_CD', 'LANDUSE', 
+               'ADFORCD', 'ALP_ADFORCD', 
                'OWNCD', 'OWNGRPCD', 
-               'DSTRBCD', 'RESERVCD', 'STDSZCD',
-               'SPCD', 'SPGRPCD',
-               'RDDISTCD'),
+               'RESERVCD', 'STDSZCD', 'TRTCD1',
+               'SPCD', 'SPGRPCD', 'TREECLCD',
+               'RDDISTCD', 'PHYSCLCD', 'COUNTYCD', 'INVYR'),
     EVALROWCOL = c('All live stocking', 'Distance to road', 'Disturbance 1', 'Forest type', 'Forest type group', 
-                   'Inventory year', 'Land Use - Major', 'Land class', 'Land use', 
-                   'National Forests', 'National Forests:ALP',
+                   'Land Use - Major', 'Land class', 'Land use', 
+                   'National Forests', 'National Forests: ALP',
                    'Ownership class', 'Ownership group', 
-                   'Primary disturbance', 'Reserved status class', 'Stand-size class',
-                   'Species', 'Species group',
-                   'Distance to road'))
+                   'Reserved status class', 'Stand-size class', 'Stand treatment 1',
+                   'Species', 'Species group', 'Tree class',
+                   'Distance to road', 'Physiographic class', 'County code and name', 'Inventory year'))
   
   
   #  ## Define estn_type
@@ -380,6 +402,14 @@ getAPIest <- function(evalid,
   #    }
   #  } 
   
+  
+  ## Check strFilter
+  if (!is.null(strFilter)) {
+    strFilter <- FIESTAutils::RtoSQL(strFilter)
+    strFilter <- gsub(" ", "%20", strFilter)
+  }
+  
+  
   ###############################################################################
   ## Get attribute number for EVALIDator estimate
   ###############################################################################
@@ -391,12 +421,20 @@ getAPIest <- function(evalid,
                 estvar.filter = estvar.filter,
                 landarea = landarea, 
                 chng_type = chng_type,
+                chng_measurements = chng_measurements,
                 woodland = woodland,
-                dia5inch = dia5inch)
+                saplings = saplings,
+                dia5inch = dia5inch,
+                EVALIDATOR_POP_ESTIMATE = EVALIDATOR_POP_ESTIMATE)
     
     if (ratio) {
       if (ratiotype == "PERACRE") {
-        attribute_nbrd <- 2
+        attribute_nbrd <- 
+          getattnbr(popType = "CURR",
+                    conn = conn,
+                    landarea = landarea, 
+                    EVALIDATOR_POP_ESTIMATE = EVALIDATOR_POP_ESTIMATE)
+        
       } else {
         
         ## Define estn_type
@@ -420,7 +458,10 @@ getAPIest <- function(evalid,
                     estvar.filter = estvard.filter,
                     landarea = landarea, 
                     chng_type = chng_type,
-                    dia5inch = dia5inch)
+                    chng_measurements = chng_measurements,
+                    dia5inch = dia5inch,
+                    saplings = saplings,
+                    EVALIDATOR_POP_ESTIMATE = EVALIDATOR_POP_ESTIMATE)
       }
     }
   }  else {
@@ -484,8 +525,7 @@ getAPIest <- function(evalid,
       attribute_nbrd <- NULL
     }
      
-    url <- tryCatch(
-      paste0("https://apps.fs.usda.gov/fiadb-api/fullreport?",
+    url <- paste0("https://apps.fs.usda.gov/fiadb-api/fullreport?",
              "pselected=State%20code",
              "&rselected=", rowvarstr,
              "&cselected=", colvarstr,
@@ -493,37 +533,22 @@ getAPIest <- function(evalid,
              "&sdenom=", attribute_nbrd,
              "&strFilter=", strFilter,
              "&wc=", evalgrp,
-             "&outputFormat=NJSON"),
-      error = function(e) {
-        message(e,"\n")
-        return(NULL) })
-    
-    out <- fiadb_api_GET(url = url)
-    head(out$estimates)
-    
+             "&outputFormat=NJSON")
     
   } else if (popType == "CHNG") {
     
-    url <- tryCatch(
-      paste0("https://apps.fs.usda.gov/fiadb-api/fullreport?",
+    url <- paste0("https://apps.fs.usda.gov/fiadb-api/fullreport?",
              "pselected=State%20code",
              "&rselected=", rowvarstr, "&rtime=Previous",
              "&cselected=", colvarstr,
              "&snum=", attribute_nbr,
              "&wc=", evalgrp, 
-             "&outputFormat=NJSON"),
-      error = function(e) {
-        message(e,"\n")
-        return(NULL) })
+             "&outputFormat=NJSON")
     
   } else {
     stop()
   }
-  if (is.null(url)) {
-    message("invalid url for ", evalid)
-    break()
-  }
-  
+
   # call api and get total estimate for 
   res <- tryCatch(
     fiadb_api_GET(url = url),
@@ -534,7 +559,7 @@ getAPIest <- function(evalid,
   if (is.null(res)) {
     message("invalid url for: ", evalid)
     message(url)
-    return(NULL)
+    stop()
   }
   
   eval_res_estimates <- res[['estimates']]
@@ -548,6 +573,10 @@ getAPIest <- function(evalid,
                     eval_colest = eval_res_colvar,
                     eval_grpest = eval_res_grpvar,
                     eval_totest = eval_res_totals)
+  
+  returnlst$sql <- res$metadata$sql
+  returnlst$numEstDesc <- res$metadata$numEstDesc
+  
   return(returnlst)
 }
 
@@ -780,36 +809,71 @@ compareAPI <- function(EVALIDatorlst,
     
   } else if (compareType == "ROW") {
     eval_rowest <- EVALIDatorlst$eval_rowest
+    if (is.null(eval_rowest)) {
+      stop("no eval_rowest exists")
+    }
     if ("fiesta_rowest" %in% names(FIESTAlst)) {
       fiesta_rowest <- FIESTAlst$fiesta_rowest
     } else {
       fiesta_rowest <- FIESTAlst$raw$rowest
     }
     fiesta_rowest <- fiesta_rowest[fiesta_rowest$est > 0,]
+    if (names(fiesta_rowest)[1] == "INVYR") {
+      fiesta_rowest <- fiesta_rowest[order(fiesta_rowest$INVYR, decreasing=TRUE),]
+    }
+    
+    if (nrow(eval_rowest) != nrow(fiesta_rowest)) {
+      message("number of rows are not equal")
+      if (nrow(eval_rowest) < nrow(fiesta_rowest)) {
+        fiesta_rowest <- fiesta_rowest[1:nrow(eval_rowest),]
+      } else {
+        eval_rowest <- eval_rowest[1:nrow(fiesta_rowest),]
+      }
+    }
+    #fiesta_rowest <- fiesta_rowest[!is.na(as.character(fiesta_rowest[[1]])),]
     df <- data.frame(fiesta_rowest[,1, drop=FALSE], 
                      Estimate.fiesta = fiesta_rowest$est,
                      ESTIMATE = unlist(eval_rowest$ESTIMATE))
     
   } else if (compareType == "COL") {
     eval_colest <- EVALIDatorlst$eval_colest
+    if (is.null(eval_colest)) {
+      stop("no eval_colest exists")
+    }
     if ("fiesta_colest" %in% names(FIESTAlst)) {
       fiesta_colest <- FIESTAlst$fiesta_colest
     } else {
       fiesta_colest <- FIESTAlst$raw$colest
     }
     fiesta_colest <- fiesta_colest[fiesta_colest$est > 0,]
+    if (names(fiesta_colest)[1] == "INVYR") {
+      fiesta_colest <- fiesta_colest[order(fiesta_colest$INVYR, decreasing=TRUE),]
+    }
+    
     df <- data.frame(fiesta_colest[,1, drop=FALSE], 
                      Estimate.fiesta = fiesta_colest$est,
                      ESTIMATE = unlist(eval_colest$ESTIMATE))
     
   } else if (compareType == "GRP") {
     eval_grpest <- EVALIDatorlst$eval_grpest
+    if (is.null(eval_grpest)) {
+      stop("no eval_grpest exists")
+    }
     if ("fiesta_grpest" %in% names(FIESTAlst)) {
       fiesta_grpest <- FIESTAlst$fiesta_grpest
     } else {
       fiesta_grpest <- FIESTAlst$raw$grpest
     }
     fiesta_grpest <- fiesta_grpest[fiesta_grpest$est > 0,]
+    fiesta_grpest <- fiesta_grpest[!is.na(as.character(fiesta_grpest[[1]])),]
+    if ("INVYR" %in% names(fiesta_grpest)) {
+      if ("INVYR" %in% names(fiesta_grpest)[1]) {
+        fiesta_grpest <- data.table::setorderv(fiesta_grpest, cols=names(fiesta_grpest)[1:2], order=c(-1,1), na.last=TRUE)
+      } else if ("INVYR" %in% names(fiesta_grpest[2])) {
+        fiesta_grpest <- data.table::setorderv(fiesta_grpest, cols=names(fiesta_grpest)[1:2], order=c(1,-1), na.last=TRUE)
+      }
+    }
+    
     df <- data.frame(fiesta_grpest[,1, drop=FALSE], 
                      Estimate.fiesta = fiesta_grpest$est,
                      ESTIMATE = unlist(eval_grpest$ESTIMATE))
