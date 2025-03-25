@@ -305,7 +305,8 @@ anGBdata <- function(bnd_layer,
                             strat_layer = strat_layer, 
                             strat_dsn = strat_dsn, 
                             strvar = strvar, 
-                            rast.NODATA = rast.NODATA)
+                            rast.NODATA = rast.NODATA,
+                            savedata_opts = savedata_opts)
     pltassgn <- data.table::setDT(stratdat$pltassgn)
     unitarea <- stratdat$unitarea
     unitvar <- stratdat$unitvar
