@@ -44,21 +44,6 @@ Generates a set of core tables based on area of interest.
 \details{
 If variables are NULL, then it will prompt user to input variables.
 }
-\examples{
-
-
-  ## Get population data using strata and area estimates for evaluations ending 2015 to 2019
-  WYbhfn <- system.file("extdata", "sp_data/WYbighorn_adminbnd.shp", package="FIESTA")
-  GBpop <- anGBpop(WYbhfn, datsource="datamart")
-  names(GBpop)
-
-  names(GBpop$GBdata)
-  names(GBpop$GBpopdat)
-
-  ## Run core tables
-  anGBpop_core(GBpopdat=GBpop$GBpopdat, title.ref="Black Hills", xlsx=TRUE)
-
-}
 \author{
 Tracey S. Frescino
 }

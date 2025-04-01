@@ -36,13 +36,7 @@
 #' 
 #' @author Tracey S. Frescino, Chris Toney
 #' @keywords spatial
-#' @examples
 #' 
-#' 	demfn <- system.file("extdata", "sp_data/WYbighorn_dem_250m.img", package="FIESTA")
-#' 
-#' 	anGetDEM_derivatives(demfn, derivatives=c("slope", "aspect"), aspect.derivatives=TRUE)
-#' 	
-#' 		
 #' @export anGetDEM_derivatives
 anGetDEM_derivatives <- function(demfn, 
                               derivatives = c("slope", "aspect", "roughness", "TRI", "TPI"), 
@@ -70,7 +64,6 @@ anGetDEM_derivatives <- function(demfn,
   of=dstnodata=co=addOptions <- NULL
   gui <- FALSE
   returnlst <- list()
-  library(gdalUtils)
 
   drivers <- data.frame(
 	fmt = c("raster", "ascii", "SAGA", "IDRISI", "CDF", "GTiff", "ENVI", 
@@ -211,7 +204,7 @@ anGetDEM_derivatives <- function(demfn,
     if (d == "aspect" && aspect.derivatives) {
       ## Define data type and NODATA value
       dtName <- "Int16"
-      nodata.val <- FIESTAutils::DEFAULT_NODATA[[dtName]]
+      nodata.val <- gdalraster::DEFAULT_NODATA[[dtName]]
       
       ## Aspect northness
       aspnfn <- getoutfn("aspect_northness", 

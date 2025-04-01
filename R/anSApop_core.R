@@ -83,7 +83,7 @@ anSApop_core <- function(SApopdatlst,
   ##################################################################
 
   ## Check SApopdatlst
-  if (class(SApopdatlst) != "list") {
+  if (!is.list(SApopdatlst)) {
     SApopdatlst <- list(SApopdatlst)
   } else if ("condx" %in% names(SApopdatlst)) {
     SApopdatlst <- list(SApopdatlst)

@@ -5,5 +5,8 @@
 #' @importFrom stats aggregate na.omit xtabs var
 #' @importFrom utils tail installed.packages select.list
 #' @importFrom methods canCoerce
+#' @importFrom arcpullr get_spatial_layer
+#' @importFrom parallel detectCores
+#' @importFrom httr GET
 #' 
 NULL

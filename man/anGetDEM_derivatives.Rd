@@ -65,14 +65,6 @@ DEM Derivatives:\cr
 \tab northness - aspect northness\cr
 \tab eastness - aspect eastness\cr }
 }
-\examples{
-
-	demfn <- system.file("extdata", "sp_data/WYbighorn_dem_250m.img", package="FIESTA")
-
-	anGetDEM_derivatives(demfn, derivatives=c("slope", "aspect"), aspect.derivatives=TRUE)
-	
-		
-}
 \author{
 Tracey S. Frescino, Chris Toney
 }

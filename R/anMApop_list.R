@@ -65,7 +65,7 @@ anMApop_list <- function(datalst,
   
   ## Extract FIA data and model data
   ###########################################################################
-  if (class(datalst) != "list") {
+  if (!is.list(datalst)) {
     datalst <- list(datalst)
   }
 

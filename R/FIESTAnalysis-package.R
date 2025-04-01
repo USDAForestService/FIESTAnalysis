@@ -193,4 +193,16 @@ NULL
 #' @keywords datasets
 NULL
 
+#' Reference table - 20-year stand age classes(STDAGE).
+#' 
+#' Table with min (MIN), and stand age class name (STDAGECLNM).
+#' 
+#' 
+#' @name ref_unit
+#' @docType data
+#' @format A dataframe with 3 columns: STATECD, VALUE, and MEANING
+#' @source Imported from comma-delimited file.
+#' @keywords datasets
+NULL
+
 

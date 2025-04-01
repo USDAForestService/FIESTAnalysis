@@ -63,7 +63,7 @@ anGetAuxiliary_list <- function(xydatlst,
   
   ## Extract FIA data and model data
   ###########################################################################
-  if (class(xydatlst) != "list") {
+  if (!is.list(xydatlst)) {
     stop("xydatlst must be a list object output from anGetXY_list")
   }
   
