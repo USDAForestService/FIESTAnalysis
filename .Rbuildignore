@@ -1,2 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^vignettes/articles$
+.gitignore
+^inst\extdata$
+^README\.Rmd$
+^_pkgdown\.yml$

@@ -54,7 +54,7 @@ anSApop_report <- function(SApopdatlst,
   gui <- FALSE
   
   ## Check SApopdatlst
-  if (class(SApopdatlst) != "list") {
+  if (!is.list(SApopdatlst)) {
     SApopdatlst <- list(SApopdatlst)
   } else if ("condx" %in% names(SApopdatlst)) {
     SApopdatlst <- list(SApopdatlst)

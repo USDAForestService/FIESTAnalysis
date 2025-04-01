@@ -291,7 +291,31 @@ getattnbr <- function(popType = "CURR",
   return(attribute_nbr) 
 }  
 
-
+#' Get estimate from EVALIDator API
+#'
+#' @param evalid 6 digit Evaluation ID
+#' @param attribute_nbr EVALIDator attribute number for estimation variable. Using attribute_nbr replaces: estvar, estvar.filter, landarea, and chng_type
+#' @param estvar estimation variable
+#' @param estvar.filter estimation filter ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1'). Similar to EVALIDator estn_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
+#' @param landarea ('FOREST', 'TIMBERLAND', 'ALL'). Similar to EVALIDator land_basis ('Forest land', Timberland', 'All land')
+#' @param rowvar row domain to estimate by
+#' @param colvar column domain to estimate by
+#' @param ratio if ratio estimation
+#' @param ratiotype type of ratio ('PERACRE', 'PERTREE')
+#' @param attribute_nbrd EVALIDator attribute number for denominator estimation variable.
+#' @param estvard estimation variable for denominator
+#' @param estvard.filter estimation filter for denominator ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1'). Similar to EVALIDator estd_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
+#' @param chng_type c('total', 'annual')
+#' @param chng_measurements ('both', 'either')
+#' @param woodland ('Y', 'N', 'only') - whether to include woodland tree species
+#' @param saplings Saplings.
+#' @param dia5inch Logical. If TRUE, gets attribute with 5 inches and above
+#' @param dsn data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
+#' @param conn open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
+#' @param strFilter an additional filter to add.
+#' @param EVALIDATOR_POP_ESTIMATE table with attribute numbers (if attribute_nbr is NULL)
+#'             
+#' @export
 getAPIest <- function(evalid, 
                       estvar = NULL,
                       estvar.filter = NULL,
@@ -313,36 +337,6 @@ getAPIest <- function(evalid,
                       strFilter = NULL,
                       EVALIDATOR_POP_ESTIMATE = NULL) {
   
-  ## DESCRIPTION: get estimate from EVALIDator API
-  ##
-  ## ARGUMENTS:
-  ## evalid - 6 digit Evaluation ID
-  ## attribute_nbr - EVALIDator attribute number for estimation variable
-  ##   Using attribute_nbr replaces: estvar, estvar.filter, landarea, and chng_type
-  ## estvar - estimation variable
-  ## estvar.filter - estimation filter ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1')
-  ##   Similar to EVALIDator estn_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
-  ## landarea - ('FOREST', 'TIMBERLAND', 'ALL'). 
-  ##   Similar to EVALIDator land_basis ('Forest land', Timberland', 'All land')
-  ## rowvar - row domain to estimate by
-  ## colvar - column domain to estimate by
-  ## ratio - if ratio estimation
-  ## ratiotype - type of ratio ('PERACRE', 'PERTREE')
-  ## estvard - estimation variable for denominator
-  ## estvard.filter - estimation filter for denominator ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1')
-  ##   Similar to EVALIDator estd_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
-  ## chng_type - c('total', 'annual')
-  ## chng_measurements - ('both', 'either')
-  ## woodland - ('Y', 'N', 'only') - whether to include woodland tree species
-  ## dia5inch Logical. If TRUE, gets attribute with 5 inches and above
-  ## dsn - data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
-  ## conn - open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
-  ## EVALIDATOR_POP_ESTIMATE - table with attribute numbers (if attribute_nbr is NULL)
-  ## strFilter - an additional filter to add (e.g., 'cond.owncd%20=%2011', 'tree.cclcd%20in%20(1,2,3)').
-  ##             note: rowvar does not seem to work correctly when using cond filter.
-
-  
-  require("httr")
   ## LAND_BASIS - c('Forest land', Timberland', 'All land')
   ## estimate - c('AREA CHANGE ANNUAL', 'AREA CHANGE")
   messagerowcol <- ""
@@ -580,7 +574,26 @@ getAPIest <- function(evalid,
   return(returnlst)
 }
 
-
+#' Get FIESTA estimates
+#' 
+#' @param evalid 6 digit Evaluation ID
+#' @param estvar estimation variable
+#' @param estvar.filter estimation filter ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1') Similar to EVALIDator estn_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
+#' @param landarea ('FOREST', 'TIMBERLAND', 'ALL'). Similar to EVALIDator land_basis ('Forest land', Timberland', 'All land')
+#' @param rowvar row domain to estimate by
+#' @param colvar column domain to estimate by
+#' @param ratio if ratio estimation
+#' @param ratiotype type of ratio ('PERACRE', 'PERTREE')
+#' @param estvard estimation variable for denominator
+#' @param estvard.filter estimation filter for denominator ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1') Similar to EVALIDator estd_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
+#' @param chng_type c('total', 'annual')
+#' @param chng_measurements ('both', 'either')
+#' @param woodland ('Y', 'N', 'only') - whether to include woodland tree species
+#' @param defaultVars Bool. Whether or not to return default variables.
+#' @param dsn data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
+#' @param conn open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
+#'
+#' @export
 getFIESTAest <- function(evalid, 
                          estvar = NULL,
                          estvar.filter = NULL,
@@ -597,29 +610,6 @@ getFIESTAest <- function(evalid,
                          defaultVars = FALSE,
                          dsn = NULL, conn = NULL) {
   
-  ## DESCRIPTION: get estimate from FIESTA
-  ##
-  ## ARGUMENTS:
-  ## evalid - 6 digit Evaluation ID
-  ## estvar - estimation variable
-  ## estvar.filter - estimation filter ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1')
-  ##   Similar to EVALIDator estn_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
-  ## landarea - ('FOREST', 'TIMBERLAND', 'ALL'). 
-  ##   Similar to EVALIDator land_basis ('Forest land', Timberland', 'All land')
-  ## rowvar - row domain to estimate by
-  ## colvar - column domain to estimate by
-  ## ratio - if ratio estimation
-  ## ratiotype - type of ratio ('PERACRE', 'PERTREE')
-  ## estvard - estimation variable for denominator
-  ## estvard.filter - estimation filter for denominator ('TREECLCD = 2', 'STATUSCD = 2', 'STATUSCD = 1')
-  ##   Similar to EVALIDator estd_type ('GS'-growing-stock; 'STGD'-standing-dead; 'AL'-all live)
-  ## chng_type - c('total', 'annual')
-  ## chng_measurements - ('both', 'either')
-  ## woodland - ('Y', 'N', 'only') - whether to include woodland tree species
-  ## dsn - data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
-  ## conn - open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
-  
-  require("FIESTA")
   
   ## Check database connection
   if (is.null(conn)) {
@@ -675,7 +665,7 @@ getFIESTAest <- function(evalid,
       return(NULL) })
   if (is.null(popdat)) {
     message("popdat is invalid for ", evalid)
-    break()
+    stop()
   }
 
   ## Get estimates
@@ -764,19 +754,17 @@ getFIESTAest <- function(evalid,
   return(returnlst)
 }
 
-
+#' Compare outputs from EVALIDator and FIESTA
+#' @param EVALIDatorlst List of estimates output from EVALIDator
+#' @param FIESTAlst List of estimates output from FIESTA
+#' @param compareType String ('TOTALS', 'ROW', 'COL', 'GRP')
+#' @param precision_threshold Numeric. How close do estimates have to be to be considered a match?
+#' 
+#' @export
 compareAPI <- function(EVALIDatorlst, 
                        FIESTAlst,
                        compareType = "ROW",
                        precision_threshold = 1) {
-  
-  ## DESCRIPTION: compare outputs from EVALIDator and FIESTA
-  ##
-  ## ARGUMENTS:
-  ## EVALIDatorlst List of estimates output from EVALIDator
-  ## FIESTAlst List of estimates output from FIESTA
-  ## compareType String. ('TOTALS','ROW','COL','GRP')     
-  
   
   ## Define empty list
   compare_res <- list()
@@ -1031,7 +1019,7 @@ compareAPI_evalid <- function(evalids,
     
     if (is.null(EVALIDatorlst)) {
       message("no EVALIDator estimate for ", evalid)
-      break()
+      stop()
     }
     eval_estimate <- EVALIDatorlst$eval_estimate
     eval_rowest <- EVALIDatorlst$eval_rowest
@@ -1060,7 +1048,7 @@ compareAPI_evalid <- function(evalids,
     
     if (is.null(FIESTAlst)) {
       message("no FIESTA estimate for ", evalid)
-      break()
+      stop()
     }
     fiesta_estimate <- FIESTAlst$fiesta_estimate
     fiesta_rowest <- FIESTAlst$fiesta_rowest
@@ -1104,7 +1092,19 @@ compareAPI_evalid <- function(evalids,
   return(evalidlst)
 }
 
-
+#' Get FIADB pop
+#' 
+#' @param state State name
+#' @param evaltype Evaluation Type  c('ALL', 'CURR', 'VOL', 'LULC', 'P2VEG', 'INV', 'DWM', 'CHNG', 'GRM', 'GROW', 'MORT', 'REMV')
+#' @param evalyr Evaluation year (Two digits e.g. 19 for 2019)
+#' @param evalid EVALID
+#' @param datsource Data source ('datamart', 'sqlite')
+#' @param dsn Data source name
+#' @param dbconn Open Database connection
+#' @param schema. Schema name. Optional
+#' @param dbconnopen Bool. Leave dbconn open?
+#' 
+#' @export
 getFIADBpop <- function(state = NULL,
                         evaltype = NULL,
                         evalyr = NULL,
@@ -1348,13 +1348,13 @@ compareADJ <- function(evalids,
         return(NULL) })
     if (is.null(popdat)) {
       message("popdat is invalid for ", evalid)
-      break()
+      stop()
     } 
     
     ## Compare adjustment factors
     pop_compare <- checkpop(FIADBpop, 
                             FIESTApop = popdat$adjfactors, 
-                            evaltype = evalType, 
+                            evalendType = evalType, 
                             rnd = rnd)
     if (nrow(pop_compare) == 0) {
       message("all adjustment factors match...")

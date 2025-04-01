@@ -61,7 +61,7 @@ anGetXY_list <- function(bndlst,
   
   ## Extract FIA data and model data
   ###########################################################################
-  if (class(bndlst) != "list") {
+  if (!is.list(bndlst)) {
     bndlst <- list(bndlst)
   }
   nbrlst <- length(bndlst) 

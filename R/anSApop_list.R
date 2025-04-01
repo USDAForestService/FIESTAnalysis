@@ -85,10 +85,10 @@ anSApop_list <- function(SAdatalst,
   
   ## Extract FIA data and model data
   ###########################################################################
-  if (class(SAdatalst) != "list") {
+  if (!is.list(SAdatalst)) {
     SAdatalst <- list(SAdatalst)
   }
-  if (class(smallbndlst) != "list") {
+  if (!is.list(smallbndlst)) {
     smallbndlst <- list(smallbndlst)
   }
 

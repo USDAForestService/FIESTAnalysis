@@ -6,6 +6,33 @@ wrapSE <- function(x) {
   paste(xsplit, collapse="\r\n (")
 }
 
+#' tabgrp function 
+#' 
+#' @param GBpopdat GB population data 
+#' @param esttype Estimation Type
+#' @param unitvar Unit Variable
+#' @param rowvar Row Variable
+#' @param colvar Col Variable
+#' @param landarea landarea filter
+#' @param pcfilter plot/cond filter
+#' @param estvar Estimation Variable
+#' @param estvar.filter Estimation Variable Filter
+#' @param colgrp colgrp
+#' @param colgrpcd colgrpcd
+#' @param rowgrptot rowgrptot
+#' @param colgrptot colgrptot
+#' @param sumunits sumunits
+#' @param rowgrp.subtot rowgrp.subtot 
+#' @param rowgrp2.subtot rowgrp2.subtot
+#' @param title.rowgrp title.rowgrp
+#' @param title.colgrp title.colgrp 
+#' @param table_opts table options
+#' @param title_opts title options
+#'  
+#' @return list
+#' @author Tracey S. Frescino
+#' @keywords data
+#'
 #' @export
 tabgrp <- function(GBpopdat = NULL,
                    esttype,

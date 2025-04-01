@@ -64,7 +64,7 @@ anGetPlots_list <- function(auxdatlst,
   
   ## Extract FIA data and model data
   ###########################################################################
-  if (class(auxdatlst) != "list") {
+  if (!is.list(auxdatlst)) {
     stop("auxdatlst must be a list object output from anGetAuxiliary_list")
   }
 

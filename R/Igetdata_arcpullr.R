@@ -1,7 +1,5 @@
 getnfs <- function(region) {
   
-  require(arcpullr)
-  require(FIESTA)
   URLadminfs <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_ForestSystemBoundaries_01/MapServer/0"
   ## US Forest Service Administrative Forest Boundaries
   
@@ -34,8 +32,6 @@ getnfs <- function(region) {
 
 getdistrict <- function(region) {
   
-  require(arcpullr)
-  require(FIESTA)
   URLdistricts <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RangerDistricts_01/MapServer/0"
   ## US Forest Service Ranger District Boundaries
   
@@ -58,8 +54,7 @@ getdistrict <- function(region) {
 
 getNFSwatershed <- function(forest = NULL) {
   
-  require(arcpullr)
-  require(FIESTA)
+
   URLwatershedsNFS <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_PriorityWatersheds_01/MapServer/0"
   ## U.S. Forest Service Priority Watersheds - HUC12 (from the Watershed Boundary Dataset)
   
@@ -144,8 +139,6 @@ getALP <- function(forest = NULL, region = NULL) {
   options(timeout = max(1000, getOption("timeout")))
   #Sys.setenv(ALL_PROXY = "YOUR_PROXY_HOST")
   
-  require(arcpullr)
-  require(FIESTA)
   URLalp <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_BasicOwnership_01/MapServer/0"
   #URLalp_info <- arcpullr::get_layer_info(url = URLalp)
   #URLalp_info$fields$name

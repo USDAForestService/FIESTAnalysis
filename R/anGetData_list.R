@@ -89,7 +89,7 @@ anGetData_list <- function(bndlst,
   ###########################################################################
   datalst <- list()
 
-  if (class(bndlst) != "list") {
+  if (!is.list(bndlst)) {
     bndlst <- list(bndlst)
   }
   

@@ -29,12 +29,14 @@ Imports:
     sqldf,
     methods,
     gdalraster,
+    arcpullr,
+    parallel,
+    httr,
     RSQLite
 Suggests:
-    arcgisbinding,
-    knitr,
+    gdalUtils,
     terra,
-    geodata,
+    knitr,
     rmarkdown,
     units,
     xml2,
@@ -42,4 +44,5 @@ Suggests:
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: gzip
 RoxygenNote: 7.3.2
