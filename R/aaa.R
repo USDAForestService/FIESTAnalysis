@@ -7,6 +7,6 @@
 #' @importFrom methods canCoerce
 #' @importFrom arcpullr get_spatial_layer
 #' @importFrom parallel detectCores
-#' @importFrom httr GET
+#' @importFrom httr GET content
 #' 
 NULL
