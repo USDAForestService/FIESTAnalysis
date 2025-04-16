@@ -283,12 +283,13 @@ anGetData <- function(bnd_layer,
   polyvarlst <- unique(polyatts[polyatts %in% names(bnd)])
 
   if (length(polyvarlst) > 0) {
-    extpoly <- tryCatch(spExtractPoly(xyplt = spxy, 
-                                    polyvlst = bnd, 
-                                    xy.uniqueid = xy.uniqueid, 
-                                    polyvarlst = polyvarlst, 
-                                    keepNA = FALSE),
-                        error=function(e) {
+    extpoly <- tryCatch(
+      spExtractPoly(xyplt = spxy, 
+                    polyvlst = bnd, 
+                    xy.uniqueid = xy.uniqueid, 
+                    polyvarlst = polyvarlst, 
+                    keepNA = FALSE),
+                error=function(e) {
                           message(e, "\n")
                           return(NULL) })
     if (is.null(extpoly)) {
