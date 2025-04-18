@@ -30,24 +30,88 @@ getnfs <- function(region) {
 
 
 
-getdistrict <- function(region) {
+getdistrict <- function(forest = NULL, region = NULL) {
   
   URLdistricts <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_RangerDistricts_01/MapServer/0"
   ## US Forest Service Ranger District Boundaries
   
+  
+  FORESTNAMES <- c('Allegheny National Forest','Angeles National Forest','Apache-Sitgreaves National Forests',
+                   'Arapaho and Roosevelt National Forests','Ashley National Forest',
+                   'Beaverhead-Deerlodge National Forest','Bighorn National Forest','Bitterroot National Forest',
+                   'Black Hills National Forest','Boise National Forest','Bridger-Teton National Forest',
+                   'Caribou-Targhee National Forest','Carson National Forest','Chequamegon-Nicolet National Forest',
+                   'Chippewa National Forest','Chugach National Forest','Cibola National Forest','Cleveland National Forest',
+                   'Coconino National Forest','Columbia River Gorge National Scenic Area','Colville National Forest',
+                   'Coronado National Forest','Custer Gallatin National Forest',
+                   'Dakota Prairie Grasslands','Deschutes National Forest','Dixie National Forest',
+                   'Eldorado National Forest','Fishlake National Forest','Flathead National Forest','Fremont-Winema National Forest',
+                   'Gifford Pinchot National Forest','Gila National Forest','Grand Mesa, Uncompahgre and Gunnison National Forests',
+                   'Green Mountain and Finger Lakes National Forests',
+                   'Helena-Lewis and Clark National Forest','Hiawatha National Forest','Hoosier National Forest',
+                   'Humboldt-Toiyabe National Forest','Huron-Manistee National Forest',
+                   'Idaho Panhandle National Forests','Inyo National Forest',
+                   'Kaibab National Forest','Klamath National Forest','Kootenai National Forest',
+                   'Lake Tahoe Basin Management Unit','Lassen National Forest','Lincoln National Forest',
+                   'Lolo National Forest','Los Padres National Forest',
+                   'Malheur National Forest','Manti-La Sal National Forest','Mark Twain National Forest',
+                   'Medicine Bow-Routt National Forest','Mendocino National Forest','Midewin National Tallgrass Prairie',
+                   'Modoc National Forest','Monongahela National Forest','Mt. Baker-Snoqualmie National Forest','Mt. Hood National Forest',
+                   'Nebraska National Forest','Nez Perce-Clearwater National Forest',
+                   'Ochoco National Forest','Okanogan-Wenatchee National Forest','Olympic National Forest','Ottawa National Forest',
+                   'Payette National Forest','Pike and San Isabel National Forests','Plumas National Forest','Prescott National Forest',
+                   'Rio Grande National Forest','Rogue River-Siskiyou National Forests',
+                   'Salmon-Challis National Forest','San Bernardino National Forest','San Juan National Forest',
+                   'Santa Fe National Forest','Sawtooth National Forest','Sequoia National Forest',
+                   'Shasta-Trinity National Forest','Shawnee National Forest','Shoshone National Forest',
+                   'Sierra National Forest','Siuslaw National Forest','Six Rivers National Forest',
+                   'Stanislaus National Forest','Superior National Forest',
+                   'Tahoe National Forest','Tongass National Forest','Tonto National Forest',
+                   'Uinta-Wasatch-Cache National Forest','Umatilla National Forest','Umpqua National Forest',
+                   'Wallowa-Whitman National Forest','Wayne National Forest','White Mountain National Forest','White River National Forest')
+  
+  
   regionlst <- c(1:6,8:10)
-  if (!region %in% regionlst) {
-    stop("region must be in: ", toString(regionlst))
+  
+  if (is.null(forest)) {
+    if (!is.null(region)) {
+      if (!region %in% regionlst) {
+        stop("region must be in: ", toString(regionlst))
+      }
+    } else {
+      ## select region from dropdown menu
+      region <- select.list(regionlst, title="region", multiple=TRUE)
+    }
+    
+    regionC <- sapply(region, formatC, digits=2, width=2, flag="0")
+    region.filter <- FIESTAutils::getfilter("REGION", regionC, syntax="sql")
+    
+    
+    ## Get Administrative forest district boundaries
+    ALPregion <- arcpullr::get_spatial_layer(url = URLalp,
+                                             where = region.filter)
+    FORESTNAMES <- sort(unique(ALPregion$FORESTNAME))
+    
+    ## Select forest from dropdown menu
+    forest <- select.list(FORESTNAMES, title="forest names", multiple=TRUE)
+    
+  } else {
+    
+    if (!all(forest %in% FORESTNAMES)) {
+      message("invalid forest: \n", toString(FORESTNAMES))
+      forest <- select.list(FORESTNAMES, title="forest names", multiple=TRUE)
+    }
   }
   
-  regionC <- sapply(region, formatC, digits=2, width=2, flag="0")
-  region.filter <- FIESTAutils::getfilter("REGION", regionC, syntax="sql")
+  
+  ## Get forest filter
+  forest.filter <- paste0("FORESTNAME IN(", toString(encodeString(forest, quote="'")), ")")
   
   
   ## Get Administrative forest district boundaries
-  districtsRegion <- arcpullr::get_spatial_layer(url = URLdistricts,
-                                                 where = region.filter)
-  return(districtsRegion)
+  districts <- arcpullr::get_spatial_layer(url = URLdistricts,
+                                           where = forest.filter)
+  return(districts)
 }
 
 
@@ -213,7 +277,8 @@ getALP <- function(forest = NULL, region = NULL) {
     
   
   ## Get forest filter
-  forest.filter <- paste("OWNERCLASSIFICATION = 'USDA FOREST SERVICE' AND FORESTNAME =", encodeString(forest, quote="'"))
+  forest.filter <- paste0("OWNERCLASSIFICATION = 'USDA FOREST SERVICE' AND FORESTNAME IN(", 
+                          toString(encodeString(forest, quote="'")), ")")
   
   ## Get forest boundaries
   forest <- arcpullr::get_spatial_layer(url = URLalp,
