@@ -23,9 +23,15 @@ getnfs <- function(region) {
   
   
   ## Get Administrative forest boundaries
-  nfsR9 <- arcpullr::get_spatial_layer(url = URLadminfs,
+  nfsbnd <- arcpullr::get_spatial_layer(url = URLadminfs,
                                        where = region.filter)
-  return(nfsR9)
+  
+  ## check validation of polygons
+  if (!any(sf::st_is_valid(nfsbnd))) {
+    nfsbnd <- polyfix.sf(nfsbnd)
+  }
+  
+  return(nfsbnd)
 }
 
 
@@ -111,6 +117,12 @@ getdistrict <- function(forest = NULL, region = NULL) {
   ## Get Administrative forest district boundaries
   districts <- arcpullr::get_spatial_layer(url = URLdistricts,
                                            where = forest.filter)
+  
+  ## check validation of polygons
+  if (!any(sf::st_is_valid(districts))) {
+    districts <- polyfix.sf(districts)
+  }
+  
   return(districts)
 }
 
@@ -193,6 +205,12 @@ getNFSwatershed <- function(forest = NULL) {
                                                 out_fields = out_fields)
   }
   
+  ## check validation of polygons
+  if (!any(sf::st_is_valid(watershedNFS))) {
+    watershedNFS <- polyfix.sf(watershedNFS)
+  }
+  
+  
   return(watershedNFS)
 }
 
@@ -262,10 +280,18 @@ getALP <- function(forest = NULL, region = NULL) {
     ## Get Administrative forest district boundaries
     ALPregion <- arcpullr::get_spatial_layer(url = URLalp,
                                            where = region.filter)
-    FORESTNAMES <- sort(unique(ALPregion$FORESTNAME))
     
-    ## Select forest from dropdown menu
-    forest <- select.list(FORESTNAMES, title="forest names", multiple=TRUE)
+    ## check validation of polygons
+    if (!any(sf::st_is_valid(ALPregion))) {
+      ALPregion <- polyfix.sf(ALPregion)
+    }
+    
+    return(ALPregion)
+    
+#    FORESTNAMES <- sort(unique(ALPregion$FORESTNAME))
+    
+#    ## Select forest from dropdown menu
+#    forest <- select.list(FORESTNAMES, title="forest names", multiple=TRUE)
     
   } else {
   
@@ -284,6 +310,83 @@ getALP <- function(forest = NULL, region = NULL) {
   forest <- arcpullr::get_spatial_layer(url = URLalp,
                                         where = forest.filter)
   
+  ## check validation of polygons
+  if (!any(sf::st_is_valid(forest))) {
+    forest <- polyfix.sf(forest)
+  }
+  
   return(forest)
 }
+
+
+
+getfiresEDW <- function(fireyear, minacres = NULL) {
+  
+  ## Final Fire Perimeter (All Years)
+  ## The FirePerimeterFinal polygon layer represents final mapped wildland fire perimeters. 
+  ## USDA Forest Service National Forest System Lands GIS and Fire personnel
+  
+  require(arcpullr)
+  require(FIESTA)
+  #URLfire <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_FireOccurrenceAndPerimeter_01/MapServer/"
+  URLfile <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_FireOccurrenceAndPerimeter_01/MapServer/10"
+  
+  ## Define out_fields
+  out_fields <- c("UNIQFIREID", "FIRENAME", "TOTALACRES", "FIREYEAR", "OWNERAGENCY")
+  
+  if (fireyear == 2017) {
+    year <- c(2017,2018)
+  } else {
+    year <- fireyear
+  }
+  
+  ## Build filter for fires
+  fireyear.filter <- paste0("FIREYEAR IS NOT NULL AND ", FIESTAutils::getfilter("FIREYEAR", year, syntax="sql"))
+  
+  if (!is.null(minacres)) {
+    if (!is.numeric(minacres)) {
+      stop("invalid minacres... must be numeric")
+    }
+   fireyear.filter <- paste0(fireyear.filter, 
+                            " AND TOTALACRES >= ", minacres) 
+  }
+  
+  
+  ## Get fires
+  fires <- arcpullr::get_spatial_layer(url = URLfile,
+                                       out_fields = out_fields,
+                                       where = fireyear.filter)
+  if (fireyear == 2017) {
+    fires[fires$FIREYEAR == 2017,]
+  }
+  
+  
+  # URLfire <- "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_FireOccurrenceAndPerimeter_01/MapServer/"
+  # 
+  # fireyears <- 2016:2023
+  # if (!fireyear %in% fireyears) {
+  #   stop("fire year must be between 2016 and 2023") 
+  # }
+  # end <- ifelse (fireyear == 2016, 5, 
+  #           ifelse (fireyear == 2017, 4, 
+  #              ifelse (fireyear == 2018, 3, 
+  #                  ifelse (fireyear == 2019, 17, 
+  #                      ifelse (fireyear == 2020, 20, 
+  #                          ifelse (fireyear == 2021, 24, 
+  #                               ifelse (fireyear == 2022, 27, 30)))))))
+  # URLfireYEAR <- paste0(URLfire, end)
+  
+  
+  ## Get fires
+  #fire <- arcpullr::get_spatial_layer(url = URLfireYEAR,
+  #                      out_fields = out_fields)
+  
+  ## check validation of polygons
+  if (!any(sf::st_is_valid(fires))) {
+    fires <- polyfix.sf(fires)
+  }
+  
+  return(fires)
+}
+
 
