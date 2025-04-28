@@ -28,7 +28,7 @@ getnfs <- function(region) {
   
   ## check validation of polygons
   if (!any(sf::st_is_valid(nfsbnd))) {
-    nfsbnd <- polyfix.sf(nfsbnd)
+    nfsbnd <- FIESTAutils::polyfix.sf(nfsbnd)
   }
   
   return(nfsbnd)
@@ -120,7 +120,7 @@ getdistrict <- function(forest = NULL, region = NULL) {
   
   ## check validation of polygons
   if (!any(sf::st_is_valid(districts))) {
-    districts <- polyfix.sf(districts)
+    districts <- FIESTAutils::polyfix.sf(districts)
   }
   
   return(districts)
@@ -207,7 +207,7 @@ getNFSwatershed <- function(forest = NULL) {
   
   ## check validation of polygons
   if (!any(sf::st_is_valid(watershedNFS))) {
-    watershedNFS <- polyfix.sf(watershedNFS)
+    watershedNFS <- FIESTAutils::polyfix.sf(watershedNFS)
   }
   
   
@@ -283,7 +283,7 @@ getALP <- function(forest = NULL, region = NULL) {
     
     ## check validation of polygons
     if (!any(sf::st_is_valid(ALPregion))) {
-      ALPregion <- polyfix.sf(ALPregion)
+      ALPregion <- FIESTAutils::polyfix.sf(ALPregion)
     }
     
     return(ALPregion)
@@ -312,7 +312,7 @@ getALP <- function(forest = NULL, region = NULL) {
   
   ## check validation of polygons
   if (!any(sf::st_is_valid(forest))) {
-    forest <- polyfix.sf(forest)
+    forest <- FIESTAutils::polyfix.sf(forest)
   }
   
   return(forest)
@@ -383,7 +383,7 @@ getfiresEDW <- function(fireyear, minacres = NULL) {
   
   ## check validation of polygons
   if (!any(sf::st_is_valid(fires))) {
-    fires <- polyfix.sf(fires)
+    fires <- FIESTAutils::polyfix.sf(fires)
   }
   
   return(fires)
