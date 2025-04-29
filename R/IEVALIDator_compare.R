@@ -17,7 +17,7 @@
 
 fiadb_api_GET <- function(url){
   ## DESCRIPTION: Get EVALIDator url
-  resp <- GET(url=url)
+  resp <- httr::GET(url=url)
   respObj <- content(resp, "parsed", encoding = "ISO-8859-1")
   outputList <- list()
   outputList[['estimates']] <- as.data.frame(do.call(rbind,respObj$estimates))
