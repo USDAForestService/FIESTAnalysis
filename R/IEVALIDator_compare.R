@@ -397,12 +397,19 @@ getAPIest <- function(evalid,
   #  } 
   
   
-  ## Check strFilter
+  # Check strFilter
   if (!is.null(strFilter)) {
     strFilter <- FIESTAutils::RtoSQL(strFilter)
+    # if (grepl("SPCD", strFilter, ignore.case = TRUE) && !grepl("tree.SPCD", strFilter, ignore.case = TRUE)) {
+    #   if (grepl("SPCD", strFilter, ignore.case = FALSE)) {
+    #     strFilter <- gsub("SPCD", "tree.SPCD", strFilter)
+    #   } else {
+    #     strFilter <- gsub("spcd", "tree.SPCD", strFilter)
+    #   }
+    # }
     strFilter <- gsub(" ", "%20", strFilter)
   }
-  
+
   
   ###############################################################################
   ## Get attribute number for EVALIDator estimate
@@ -533,7 +540,8 @@ getAPIest <- function(evalid,
     
     url <- paste0("https://apps.fs.usda.gov/fiadb-api/fullreport?",
              "pselected=State%20code",
-             "&rselected=", rowvarstr, "&rtime=Previous",
+             "&rselected=", rowvarstr, 
+             "&rtime=Previous",
              "&cselected=", colvarstr,
              "&snum=", attribute_nbr,
              "&wc=", evalgrp, 
@@ -553,6 +561,9 @@ getAPIest <- function(evalid,
   if (is.null(res)) {
     message("invalid url for: ", evalid)
     message(url)
+    if (!is.null(strFilter)) {
+      message("check if table prefixes are included with variables (e.g., tree.SPCD %in% c(122,202)")
+    }
     stop()
   }
   
@@ -570,6 +581,11 @@ getAPIest <- function(evalid,
   
   returnlst$sql <- res$metadata$sql
   returnlst$numEstDesc <- res$metadata$numEstDesc
+  returnlst$url <- url
+  returnlst$attribute_nbr = attribute_nbr
+  if (ratio) {
+    returnlst$attribute_nbrd = attribute_nbrd
+  }
   
   return(returnlst)
 }
