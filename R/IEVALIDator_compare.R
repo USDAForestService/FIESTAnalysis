@@ -18,7 +18,7 @@
 fiadb_api_GET <- function(url){
   ## DESCRIPTION: Get EVALIDator url
   resp <- httr::GET(url=url)
-  respObj <- content(resp, "parsed", encoding = "ISO-8859-1")
+  respObj <- httr::content(resp, "parsed", encoding = "ISO-8859-1")
   outputList <- list()
   outputList[['estimates']] <- as.data.frame(do.call(rbind,respObj$estimates))
   
@@ -1154,7 +1154,7 @@ getFIADBpop <- function(state = NULL,
     }
     evalid <- as.numeric(paste0(stcd, evalyr, evaltype))
   } else {
-    stcd <- substr(evalid[1], 1, nchar(evalid[1]) - 4)
+    stcd <- as.numeric(substr(evalid[1], 1, nchar(evalid[1]) - 4))
     evaltype <- substr(evalid[1], nchar(evalid[1]) - 1, nchar(evalid[1]))
     state <- FIESTAutils::pcheck.states(stcd)
   }
