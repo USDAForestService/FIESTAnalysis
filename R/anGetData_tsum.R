@@ -137,6 +137,8 @@ anGetData_tsum <- function(bnd_layer,
   addmean <- FALSE
   sumvars=pltassgn2=strvar2 <- NULL
   cround=tround=3
+  adj <- ifelse (getadjplot, "plot", "none")
+  
 
 ## To add
 ## 1) subset plot data
@@ -490,7 +492,7 @@ anGetData_tsum <- function(bnd_layer,
   #####################################################
   popdat <- modMApop(pltdat = pltdat, 
                      auxdat = auxdat, 
-                     adjplot = getadjplot, 
+                     adj = adj, 
                      standardize = FALSE) 
   treex <- popdat$treex
 
@@ -533,6 +535,7 @@ anGetData_tsum <- function(bnd_layer,
   adjtree <- ifelse(getadjplot, TRUE, FALSE)
 
   ## Summarize tree data to plot-level
+source("C:/_tsf/_GitHub/FIESTA/R/datSumTree.R")
   treedatp <- datSumTree(tree = treex, 
                          plt = cdatp,
                          cond = cond,
@@ -542,7 +545,8 @@ anGetData_tsum <- function(bnd_layer,
                          tfilter = estvar.filter, 
                          datSum_opts = list(adjtree = adjtree, 
                                             TPA = TPA,
-                                            tround = tround))
+                                            tround = tround,
+                                            keepall = TRUE))
   tdatp <- treedatp$treedat
   sumvars <- unique(c(csumvar, treedatp$sumvars))
   tdatp_meta <- treedatp$meta  
@@ -557,15 +561,17 @@ anGetData_tsum <- function(bnd_layer,
                          tfilter = estvar.filter, 
                          datSum_opts = list(adjtree = adjtree, 
                                             TPA = TPA,
-                                            tround = tround))
+                                            tround = tround,
+                                            keepall = TRUE))
   tdatc <- treedatc$treedat
   sumvars <- unique(c(csumvar, treedatc$sumvars))
   tdatc_meta <- treedatc$meta  
   tdatc_meta <- rbind(tdatc_meta, forprop_meta)
  
   if (addmean) {
+    uniqueid <- treedatp$tsumuniqueid
     tpltassgn <- setDT(merge(pltassgn[, c(pltassgnid, unitvar)], tdatp, 
-				by.x=pltassgnid, by.y=puniqueid))
+				by.x=pltassgnid, by.y=uniqueid))
 
     varnm.mean <- paste0(sumvars, "_mean")
     varnm.var <- paste0(sumvars, "_var")
@@ -582,7 +588,7 @@ anGetData_tsum <- function(bnd_layer,
   }
 
   pltvars <- names(pltassgn)[!names(pltassgn) %in% names(tdatp)]
-  pltassgn <- pltassgn[pltassgn$PLT_CN %in% tdatp$CN, unique(c(pltassgnid, pltvars, outnames))]
+  pltassgn <- pltassgn[pltassgn$PLT_CN %in% tdatp[[uniqueid]], unique(c(pltassgnid, pltvars, outnames))]
 
   if (nrow(tdatp) != length(unique(tdatc$PLT_CN))) {
     message("number of plots are different")
@@ -633,8 +639,8 @@ anGetData_tsum <- function(bnd_layer,
     returnlst$spxy <- spxy
     returnlst$xy.uniqueid <- xy.uniqueid
   }
-  returnlst$tsumdatp_meta <- tdatp_meta
-  returnlst$tsumdatc_meta <- tdatc_meta
+  #returnlst$tsumdatp_meta <- tdatp_meta
+  #returnlst$tsumdatc_meta <- tdatc_meta
   returnlst$args <- args
 
   if (saveobj) {
@@ -719,23 +725,23 @@ anGetData_tsum <- function(bnd_layer,
                             outfn.pre=outfn.pre, 
                             outfn.date=outfn.date, 
                             overwrite_layer=overwrite_layer))  
-    datExportData(tdatp_meta, 
-            savedata_opts=list(outfolder=outfolder, 
-                            out_fmt=out_fmt, 
-                            out_dsn=out_dsn, 
-                            out_layer="tsumdatp_meta", 
-                            outfn.pre=outfn.pre, 
-                            outfn.date=outfn.date, 
-                            overwrite_layer=overwrite_layer)) 
-
-    datExportData(tdatc_meta, 
-            savedata_opts=list(outfolder=outfolder, 
-                            out_fmt=out_fmt, 
-                            out_dsn=out_dsn, 
-                            out_layer="tsumdatc_meta", 
-                            outfn.pre=outfn.pre, 
-                            outfn.date=outfn.date, 
-                            overwrite_layer=overwrite_layer))  
+    # datExportData(tdatp_meta, 
+    #         savedata_opts=list(outfolder=outfolder, 
+    #                         out_fmt=out_fmt, 
+    #                         out_dsn=out_dsn, 
+    #                         out_layer="tsumdatp_meta", 
+    #                         outfn.pre=outfn.pre, 
+    #                         outfn.date=outfn.date, 
+    #                         overwrite_layer=overwrite_layer)) 
+    # 
+    # datExportData(tdatc_meta, 
+    #         savedata_opts=list(outfolder=outfolder, 
+    #                         out_fmt=out_fmt, 
+    #                         out_dsn=out_dsn, 
+    #                         out_layer="tsumdatc_meta", 
+    #                         outfn.pre=outfn.pre, 
+    #                         outfn.date=outfn.date, 
+    #                         overwrite_layer=overwrite_layer))  
  
 
   }
