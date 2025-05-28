@@ -407,3 +407,114 @@ getfiresEDW <- function(fireyear, minacres = NULL) {
 }
 
 
+
+#' get landfire
+#'
+#' @param bnd sf boundary
+#' @param type landfire type ('evc', 'evh', 'evt')
+#' @param getlut if TRUE, gets attribute look up table from web
+#' @param dstfile filename if want to write to file
+#' @export
+getlandfire <- function(bnd, type = "evc", getlut=FALSE, dstfile=NULL) {
+  
+  URL <- "https://lfps.usgs.gov/arcgis/rest/services/Landfire_LF240"
+  ## Landfire LF240 (2023)
+  
+  message("downloading data for Landfire 2023...")
+  
+  ## evc - existing vegetation cover
+  ## evh - existing vegetation height
+  ## evt - existing vegetation type
+
+  if (type == "evc") {
+    url <- paste0(URL, "/US_240EVC/ImageServer")
+    if (getlut) {
+      lut <- fread("https://landfire.gov/sites/default/files/CSV/2024/LF2024_EVC.csv")
+    }
+  } else if (type == "evh") {
+    url <- paste0(URL, "/US_240EVH/ImageServer")
+    if (getlut) {
+      lut <- fread("https://landfire.gov/sites/default/files/CSV/2024/LF2024_EVH.csv")
+    }
+  } else if (type == "evt") {
+    url <- paste0(URL, "/US_240EVT/ImageServer")
+    if (getlut) {
+      lut <- fread("https://landfire.gov/sites/default/files/CSV/2024/LF2024_EVT.csv")
+    }
+  }
+  
+  rast <- arcpullr::get_image_layer(url = url, 
+                                    sf_object = bnd, format = "tiff")
+  
+  if (!is.null(dstfile)) {
+    terra::writeRaster(rast, filename = dstfile, overwrite = TRUE)
+  }
+  
+  if (getlut) {
+    return(list(rast=rast, lut=lut))
+  } else {
+    return(rast)
+  }
+}
+
+
+#' get dem
+#'
+#' @param bnd sf boundary
+#' @param type dem type ('ned', 'srtm')
+#' @param dstfile filename if want to write to file
+#' @export
+getdem <- function(bnd, type = "ned", dstfile = NULL) {
+  
+  URL <- "https://lfps.usgs.gov/arcgis/rest/services/Topo"
+  ## Topo
+  
+  ## ned - topochange_ned_dem
+  ## srtm - topochange_srtm_dem
+
+  if (type == "ned") {
+    url <- paste0(URL, "/Topochange_NED_DEM/ImageServer")
+  } else if (type == "srtm") {
+    url <- paste0(URL, "/Topochange_SRTM_DEM/ImageServer")
+  }
+  
+  rast <- arcpullr::get_image_layer(url = url, 
+                                    sf_object = bnd, format = "tiff")
+  
+  if (!is.null(dstfile)) {
+    terra::writeRaster(rast, filename = dstfile, overwrite = TRUE)
+  }
+  
+  return(rast)
+}
+
+
+
+#' get bigmap products
+#'
+#' @param bnd sf boundary
+#' @param type bigmap type ('abovebio')
+#' @param dstfile filename if want to write to file
+#' @export
+getbigmap <- function(bnd, type = "abovebio", dstfile = NULL) {
+  
+  URL <- "https://di-usfsdata.img.arcgis.com/arcgis/rest/services"
+  ## 2018 species aboveground biomass
+  
+  ## abovebio - topochange_ned_dem
+  
+  if (type == "abovebio") {
+    url <- paste0(URL, "/FIA_BIGMAP_2018_Species_Aboveground_Biomass/ImageServer")
+  }
+  
+  rast <- arcpullr::get_image_layer(url = url, 
+                                    sf_object = bnd, format = "tiff")
+  
+  if (!is.null(dstfile)) {
+    terra::writeRaster(rast, filename = dstfile, overwrite = TRUE)
+  }
+  
+  return(rast)
+}
+
+
