@@ -312,7 +312,7 @@ getattnbr <- function(popType = "CURR",
 #' @param dia5inch Logical. If TRUE, gets attribute with 5 inches and above
 #' @param dsn data source name of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
 #' @param conn open connection of SQLite database with EVALIDATOR_POP_ESTIMATE table (if attribute_nbr is NULL)
-#' @param strFilter an additional filter to add.
+#' @param strFilter an additional filter to add. Include table prefix (e.g., 'cond.adforcd = 0410')
 #' @param EVALIDATOR_POP_ESTIMATE table with attribute numbers (if attribute_nbr is NULL)
 #'             
 #' @export
@@ -343,12 +343,12 @@ getAPIest <- function(evalid,
   rowvarstr=colvarstr <- NULL
   
   ## Check evalid
-  if (is.null(evalid) || (!is.null(evalid) && length(evalid) > 1)) {
-    stop("invalid evalid")
+  if (is.null(evalid)) {
+    stop("must include evalid")
   }
   
   ## Get evalType from evalid
-  evalType <- substr(evalid, nchar(evalid)-1, nchar(evalid))
+  evalType <- unique(substr(evalid, nchar(evalid)-1, nchar(evalid)))
   
   ## Get popType from evalType
   if (!evalType %in% c("01", "03", "10")) {
@@ -410,7 +410,6 @@ getAPIest <- function(evalid,
     strFilter <- gsub(" ", "%20", strFilter)
   }
 
-  
   ###############################################################################
   ## Get attribute number for EVALIDator estimate
   ###############################################################################
@@ -508,18 +507,20 @@ getAPIest <- function(evalid,
   ## EVALIDator estimates
   ############################################################################
   
-  # get evalgrp
-  evalst <- substr(evalid, 1, nchar(evalid)-4)
-  if (nchar(evalst) == 1) {
-    evalst <- paste0("0", evalst)
+  # define function
+  getevalgrp <- function(x) {
+    ## DESCRIPTION: get evalgrp from an evalid (x)
+    x2 <- substr(x, 1, nchar(x)-4) 
+    if (nchar(x2) == 1) x2 <- paste0("0", x2)
+    x2 <- paste0(x2, "20", substr(x, nchar(x)-3, nchar(x)-2))
+    return(x2)
   }
-  evalyr <- paste0("20", substr(evalid, nchar(evalid)-3, nchar(evalid)-2))
-  evalgrp <- paste0(evalst, evalyr)
+  evalgrp <- sapply(evalid, getevalgrp)
+  evalgrp <- gsub(" ", "", toString(evalgrp))
   if (evalgrp == "642016") {
     evalgrp <- "646416"
   }
-  
-  
+
   # get url for evalidator api call
   if (popType %in% c("CURR", "VOL")) {
     if (popType == "CURR") {
@@ -559,7 +560,7 @@ getAPIest <- function(evalid,
       return(NULL) })
   
   if (is.null(res)) {
-    message("invalid url for: ", evalid)
+    message("invalid url for: ", toString(evalid))
     message(url)
     if (!is.null(strFilter)) {
       message("check if table prefixes are included with variables (e.g., tree.SPCD %in% c(122,202)")
@@ -662,7 +663,7 @@ getFIESTAest <- function(evalid,
   ## Get FIESTA estimate 
   ###############################################################################
   popdat <- tryCatch(
-    modGBpop(popType = popType,
+    FIESTA::modGBpop(popType = popType,
              popFilter = list(evalid = evalid),
              pltassgn = "POP_PLOT_STRATUM_ASSGN",
              dsn = dsn,
@@ -687,7 +688,7 @@ getFIESTAest <- function(evalid,
   ## Get estimates
   if (popType == "CURR") {
     est <- tryCatch(
-      modGBarea(GBpopdat = popdat, 
+      FIESTA::modGBarea(GBpopdat = popdat, 
                 sumunits = TRUE, 
                 rowvar = rowvar,
                 colvar = colvar,
@@ -703,7 +704,7 @@ getFIESTAest <- function(evalid,
     
     if (ratio) {
       est <- tryCatch(
-        modGBratio(GBpopdat = popdat,
+        FIESTA::modGBratio(GBpopdat = popdat,
                    ratiotype = ratiotype,
                    sumunits = TRUE, 
                    landarea = landarea,
@@ -719,7 +720,7 @@ getFIESTAest <- function(evalid,
           return(NULL) })
     } else {
       est <- tryCatch(
-        modGBtree(GBpopdat = popdat, 
+        FIESTA::modGBtree(GBpopdat = popdat, 
                   sumunits = TRUE, 
                   landarea = landarea,
                   estvar = estvar, 
@@ -737,7 +738,7 @@ getFIESTAest <- function(evalid,
     
   } else if (popType == "CHNG") {
     est <- tryCatch(
-      modGBchng(GBpopdat = popdat,
+      FIESTA::modGBchng(GBpopdat = popdat,
                 sumunits = TRUE,
                 landarea = landarea,
                 rowvar = rowvar,
@@ -1361,7 +1362,7 @@ compareADJ <- function(evalids,
     
     ## Get POP data (stratalut) from FIESTA
     popdat <- tryCatch(
-      modGBpop(popType = popType,
+      FIESTA::modGBpop(popType = popType,
                popFilter = list(evalid=evalids[i]),
                pltassgn = "POP_PLOT_STRATUM_ASSGN",
                dbconn = conn,
