@@ -535,7 +535,6 @@ anGetData_tsum <- function(bnd_layer,
   adjtree <- ifelse(getadjplot, TRUE, FALSE)
 
   ## Summarize tree data to plot-level
-source("C:/_tsf/_GitHub/FIESTA/R/datSumTree.R")
   treedatp <- datSumTree(tree = treex, 
                          plt = cdatp,
                          cond = cond,
