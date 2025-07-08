@@ -1155,8 +1155,12 @@ getFIADBpop <- function(state = NULL,
     }
     evalid <- as.numeric(paste0(stcd, evalyr, evaltype))
   } else {
-    stcd <- as.numeric(substr(evalid[1], 1, nchar(evalid[1]) - 4))
-    evaltype <- substr(evalid[1], nchar(evalid[1]) - 1, nchar(evalid[1]))
+    stcd <- sapply(evalid, function(x) as.numeric(substr(x[1], 1, nchar(x[1]) - 4)))
+    evaltype <- sapply(evalid, function(x) substr(x[1], nchar(x[1]) - 1, nchar(x[1])))
+    if (length(stcd) > 1 && length(unique(evaltype)) > 1) {
+      stop("only 1 evaltype is allowed: ", toString(evaltype))
+    }
+    evaltype <- unique(evaltype)
     state <- FIESTAutils::pcheck.states(stcd)
   }
   
@@ -1199,14 +1203,14 @@ getFIADBpop <- function(state = NULL,
   pop_estn_unit_qry <- 
     paste0("SELECT STATECD, ESTN_UNIT, ESTN_UNIT_DESCR, AREA_USED", 
            "\nFROM ", schema., "POP_ESTN_UNIT", 
-           "\nWHERE evalid = ", evalid, 
-           "\nORDER BY ESTN_UNIT")
+           "\nWHERE evalid IN(", toString(evalid), ")", 
+           "\nORDER BY STATECD, ESTN_UNIT")
   
   pop_stratum_qry <- 
     paste0("SELECT *",
            "\nFROM ", schema., "POP_STRATUM", 
-           "\nWHERE evalid = ", evalid, 
-           "\nORDER BY ESTN_UNIT, STRATUMCD")
+           "\nWHERE evalid IN(", toString(evalid), ")", 
+           "\nORDER BY STATECD, ESTN_UNIT, STRATUMCD")
   
   if (!is.null(dbconn)) {
     message("querying pop tables from database...")
@@ -1226,7 +1230,7 @@ getFIADBpop <- function(state = NULL,
   pop_stratum <- pop_stratum[order(pop_stratum$statecd, pop_stratum$estn_unit, pop_stratum$stratumcd), ]
   pop_estn_unit <- pop_estn_unit[order(pop_estn_unit$statecd, pop_estn_unit$estn_unit), ]
   pop_stratum$stratumcd <- as.character(pop_stratum$stratumcd)
-  pop_stratum <- pop_stratum[order(pop_stratum$estn_unit, pop_stratum$stratumcd),]
+  pop_stratum <- pop_stratum[order(pop_stratum$statecd, pop_stratum$estn_unit, pop_stratum$stratumcd),]
   
   if (!dbconnopen && !is.null(dbconn)) {
     DBI::dbDisconnect(dbconn)
@@ -1293,7 +1297,7 @@ checkpop <- function(FIADBpop, FIESTApop, evalendType = "01", rnd = 10) {
   FIESTApopvars <- popvars[popvars %in% names(FIESTApop)]
   
   
-  stratvars <- c("estn_unit", "stratumcd")
+  stratvars <- c("statecd", "estn_unit", "stratumcd")
   FIESTApop <- data.table::setDT(FIESTApop)[, c(stratvars, FIESTApopvars), with=FALSE]
 
   chkclass <- FIESTAutils::check.matchclass(FIADBpop, FIESTApop, stratvars)
